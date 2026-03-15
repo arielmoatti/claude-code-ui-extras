@@ -11,6 +11,9 @@ A subtle border around your messages, making it easy to visually separate your p
 Toggle on/off with a right-click on the ↑↓⤓ navigation button.
 Default color is configurable in `ui.conf`.
 
+### Session History (multi-line)
+The Claude Code sidebar normally truncates session names to a single line. This fix expands each entry to up to 3 lines, so you can actually read what a session was about.
+
 ### Message Navigation (↑ ↓ ⤓)
 Three buttons injected into the input footer:
 - **↑** — jump to previous user message

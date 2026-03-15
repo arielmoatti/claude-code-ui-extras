@@ -31,6 +31,10 @@ for dir in "$HOME/.vscode/extensions"/anthropic.claude-code-*/webview; do
 $CSS_START
 [class*="userMessage_"]{border:2px solid $BORDER_COLOR !important;}
 .interactive-request .chat-markdown-part{border:2px solid $BORDER_COLOR !important;border-radius:4px;padding:4px 8px;}
+[class*="sessionName_"]{overflow:auto !important;text-overflow:unset !important;white-space:normal !important;}
+[class*="sessionsButtonText_"]{white-space:normal !important;display:-webkit-box !important;-webkit-line-clamp:3 !important;-webkit-box-orient:vertical !important;overflow:hidden !important;}
+[class*="sessionsButtonContent_"]{max-width:unset !important;}
+[class*="sessionsButton_"]{max-width:unset !important;}
 $CSS_END
 CSSPATCH
   CHANGED=true
