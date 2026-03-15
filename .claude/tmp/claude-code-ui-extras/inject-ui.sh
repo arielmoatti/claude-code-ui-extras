@@ -71,7 +71,7 @@ CSSPATCH
     var msgs=Array.from(document.querySelectorAll('[class*="message_"][class*="userMessageContainer_"]'));
     if(!msgs.length)return;
     if(navIdx<0||navIdx>=msgs.length) navIdx=dir===-1?msgs.length-1:0;
-    else { navIdx+=dir; if(navIdx<0)navIdx=msgs.length-1; if(navIdx>=msgs.length)navIdx=0; }
+    else { navIdx+=dir; if(navIdx<0)navIdx=0; if(navIdx>=msgs.length)navIdx=msgs.length-1; }
     var t=msgs[navIdx];
     t.scrollIntoView({behavior:'smooth',block:'center'});
     t.classList.remove('claude-ui-highlight');
@@ -143,12 +143,10 @@ CSSPATCH
     var end=document.createElement('button'); end.title='Jump to bottom (⤓)'; end.innerHTML=END;
     end.addEventListener('click',function(e){
       e.preventDefault(); e.stopPropagation();
-      var el=footer,scroller=null;
-      while(el&&el!==document.body){el=el.parentElement;if(el&&el.scrollHeight>el.clientHeight+10){var ov=window.getComputedStyle(el).overflowY;if(ov==='auto'||ov==='scroll'){scroller=el;break;}}}
-      if(scroller){scroller.scrollTo({top:scroller.scrollHeight,behavior:'smooth'});}
-      else{window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});}
+      var scroller=document.querySelector('[class*="messagesContainer_"]');
+      if(scroller&&scroller.lastElementChild){scroller.lastElementChild.scrollIntoView({behavior:'smooth',block:'end'});}
       var msgs=document.querySelectorAll('[class*="message_"][class*="userMessageContainer_"]');
-      navIdx=msgs.length;
+      navIdx=msgs.length-1;
     });
 
     nav.appendChild(up); nav.appendChild(dn); nav.appendChild(end);
