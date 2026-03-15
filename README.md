@@ -1,16 +1,30 @@
 # Claude Code UI Extras
 
-Small quality-of-life enhancements for the Claude Code VS Code extension.
-No RTL, no auto-approve — just UI polish.
+Quality-of-life UI enhancements for Claude Code (VSCode extension).
+No RTL. No auto-approve. Just useful UI tweaks.
+
+---
 
 ## Features
 
-- **User message border** — a subtle colored border around your messages, so you can visually scan the conversation at a glance. Toggle on/off at any time.
-- **Message navigation (↑↓)** — two buttons injected into the prompt footer that jump between your messages in the conversation, with a pulse highlight on landing.
+### User Message Border
+A subtle border around your messages, making it easy to visually separate your prompts from Claude's responses.
+Toggle on/off with a right-click on the ↑ or ↓ navigation button.
+Default color is configurable in `ui.conf`.
+
+### Message Navigation (↑ ↓ ⤓)
+Three buttons injected into the input footer:
+- **↑** — jump to previous user message
+- **↓** — jump to next user message
+- **⤓** — scroll to the absolute bottom of the conversation (past all messages, including the latest model response)
+- Navigation stops at the first / last message — no looping
+- Highlights the target message with a brief pulse animation
+
+---
 
 ## Install via Claude Code
 
-> Copy everything between the lines and paste it into Claude Code:
+Copy and paste the following into your Claude Code chat:
 
 ---
 
@@ -30,34 +44,25 @@ Step 4 — Ask me to do Reload Window (Ctrl+Shift+P → Developer: Reload Window
 
 ---
 
-## Manual install
+The script will:
+- Inject the UI enhancements into Claude Code's webview
+- Register a `SessionStart` hook so the injection is re-applied automatically after every Claude Code update
 
-```bash
-git clone https://github.com/arielmoatti/claude-code-ui-extras.git
-cd claude-code-ui-extras
-bash inject-ui.sh
-```
+---
 
-Reload VS Code after running.
+## Configuration
 
-## Customize border color
-
-Edit `scripts/ui.conf` (or download it alongside the script):
+Edit `scripts/ui.conf` to change the border color:
 
 ```
 border_color=rgba(249,131,131,0.5)
 ```
 
-Accepts any valid CSS color — hex, rgb, rgba, hsl.
-Re-run the script after changing, then reload VS Code.
+Then re-run `bash scripts/inject-ui.sh` and reload VSCode.
 
-## Usage
+---
 
-| Action | Result |
-|--------|--------|
-| Click ↑ / ↓ | Jump to previous / next user message |
-| Right-click ↑ or ↓ | Toggle the message border on/off |
+## Uninstall
 
-## After Claude Code updates
-
-The script registers itself as a SessionStart hook — it re-runs automatically on every new session and re-injects if Claude Code was updated.
+Delete the injected block from Claude Code's `webview/index.js` and `webview/index.css`
+(look for `/* Claude UI Extras Patch Start */`), then remove the `SessionStart` hook from `~/.claude/settings.json`.
