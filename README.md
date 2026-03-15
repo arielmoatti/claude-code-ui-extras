@@ -14,15 +14,19 @@ No RTL, no auto-approve — just UI polish.
 
 ---
 
-Download and run the UI extras injection script:
-
 ```
-mkdir -p scripts
-curl -o scripts/inject-ui.sh https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/inject-ui.sh
-bash scripts/inject-ui.sh
-```
+Install the Claude Code UI extras (message border + navigation arrows).
+Do all these steps:
 
-Then reload VS Code: `Ctrl+Shift+P` → **Developer: Reload Window**
+Step 1 — Create a scripts directory in the current working directory (if it doesn't exist).
+
+Step 2 — Download the script from the repo and save it to scripts/:
+  curl -o scripts/inject-ui.sh https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/inject-ui.sh
+
+Step 3 — Run the script once to apply the fix.
+
+Step 4 — Ask me to do Reload Window (Ctrl+Shift+P → Developer: Reload Window).
+```
 
 ---
 
@@ -38,14 +42,14 @@ Reload VS Code after running.
 
 ## Customize border color
 
-Edit `ui.conf` before running the script:
+Edit `scripts/ui.conf` (or download it alongside the script):
 
 ```
 border_color=rgba(249,131,131,0.5)
 ```
 
 Accepts any valid CSS color — hex, rgb, rgba, hsl.
-Re-run the script after changing.
+Re-run the script after changing, then reload VS Code.
 
 ## Usage
 
@@ -54,12 +58,6 @@ Re-run the script after changing.
 | Click ↑ / ↓ | Jump to previous / next user message |
 | Right-click ↑ or ↓ | Toggle the message border on/off |
 
-## Re-run after Claude Code updates
+## After Claude Code updates
 
-Claude Code updates overwrite the injected files. Just run the script again:
-
-```bash
-bash scripts/inject-ui.sh
-```
-
-Then reload VS Code.
+The script registers itself as a SessionStart hook — it re-runs automatically on every new session and re-injects if Claude Code was updated.
