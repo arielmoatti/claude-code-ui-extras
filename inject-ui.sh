@@ -55,15 +55,9 @@ CSSPATCH
   function applyBorder(){
     var ID='claude-ui-extras-border-style';
     var el=document.getElementById(ID);
-    if(getBorder()){
-      if(!el){
-        el=document.createElement('style');
-        el.id=ID;
-        el.textContent=
-          '[class*="userMessage_"]{border:2px solid '+BORDER_COLOR+' !important;}'+
-          '.interactive-request .chat-markdown-part{border:2px solid '+BORDER_COLOR+' !important;border-radius:4px;padding:4px 8px;}';
-        document.head.appendChild(el);
-      }
+    if(!getBorder()){
+      if(!el){el=document.createElement('style');el.id=ID;document.head.appendChild(el);}
+      el.textContent='[class*="userMessage_"]{border:none !important;}.interactive-request .chat-markdown-part{border:none !important;}';
     } else { if(el)el.remove(); }
   }
 
@@ -86,17 +80,25 @@ CSSPATCH
     if(ex){ex.remove();return;}
     var p=document.createElement('div');
     p.className='claude-ui-border-popup';
-    p.style.cssText='position:fixed;bottom:56px;right:16px;background:var(--vscode-menu-background,#2d2d2d);border:1px solid var(--vscode-menu-border,#454545);border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;z-index:9999;cursor:pointer;font-size:12px;color:var(--vscode-foreground,#ccc);';
+    var nav=document.getElementById('claude-ui-nav');
+    var navRect=nav?nav.getBoundingClientRect():{bottom:60,left:window.innerWidth-80};
+    p.style.cssText='position:fixed;bottom:'+(window.innerHeight-navRect.top+6)+'px;left:'+navRect.left+'px;background:var(--vscode-menu-background,#2d2d2d);border:1px solid var(--vscode-menu-border,#454545);border-radius:6px;padding:6px 10px;display:flex;align-items:center;gap:8px;z-index:9999;cursor:pointer;font-size:12px;color:var(--vscode-foreground,#ccc);white-space:nowrap;';
     var on=getBorder();
-    var dot=document.createElement('span');
-    dot.style.cssText='width:10px;height:10px;border-radius:50%;background:'+(on?BORDER_COLOR:'#555')+';flex-shrink:0;transition:background 0.2s;';
+    var sw=document.createElement('span');
+    sw.style.cssText='position:relative;display:inline-block;width:28px;height:16px;flex-shrink:0;';
+    var track=document.createElement('span');
+    track.style.cssText='position:absolute;inset:0;border-radius:8px;background:'+(on?BORDER_COLOR:'#555')+';transition:background 0.2s;';
+    var thumb=document.createElement('span');
+    thumb.style.cssText='position:absolute;top:2px;left:'+(on?'14px':'2px')+';width:12px;height:12px;border-radius:50%;background:#fff;transition:left 0.2s;';
+    sw.appendChild(track); sw.appendChild(thumb);
     var lbl=document.createElement('span'); lbl.textContent='User message border';
-    p.appendChild(dot); p.appendChild(lbl);
+    p.appendChild(sw); p.appendChild(lbl);
     document.body.appendChild(p);
     p.addEventListener('click',function(ev){
       ev.preventDefault(); ev.stopPropagation();
       var v=!getBorder(); setBorder(v);
-      dot.style.background=v?BORDER_COLOR:'#555';
+      track.style.background=v?BORDER_COLOR:'#555';
+      thumb.style.left=v?'14px':'2px';
     });
     setTimeout(function(){
       document.addEventListener('mousedown',function fn(ev){
@@ -148,6 +150,7 @@ CSSPATCH
       var msgs=document.querySelectorAll('[class*="message_"][class*="userMessageContainer_"]');
       navIdx=msgs.length-1;
     });
+    end.addEventListener('contextmenu',showToggle);
 
     nav.appendChild(up); nav.appendChild(dn); nav.appendChild(end);
     footer.insertBefore(nav,addBtn);
