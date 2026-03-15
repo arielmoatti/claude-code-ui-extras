@@ -130,6 +130,7 @@ CSSPATCH
 
     var UP='<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5"/></svg>';
     var DN='<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>';
+    var END='<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/><line x1="4.5" y1="19.5" x2="19.5" y2="19.5" stroke-linecap="round"/></svg>';
 
     var up=document.createElement('button'); up.title='Previous message (↑)'; up.innerHTML=UP;
     up.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();navigate(-1);});
@@ -139,7 +140,15 @@ CSSPATCH
     dn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();navigate(1);});
     dn.addEventListener('contextmenu',showToggle);
 
-    nav.appendChild(up); nav.appendChild(dn);
+    var end=document.createElement('button'); end.title='Jump to bottom (⤓)'; end.innerHTML=END;
+    end.addEventListener('click',function(e){
+      e.preventDefault(); e.stopPropagation();
+      var msgs=document.querySelectorAll('[class*="message_"][class*="userMessageContainer_"]');
+      if(msgs.length){ msgs[msgs.length-1].scrollIntoView({behavior:'smooth',block:'end'}); }
+      navIdx=msgs.length-1;
+    });
+
+    nav.appendChild(up); nav.appendChild(dn); nav.appendChild(end);
     footer.insertBefore(nav,addBtn);
   }
 
