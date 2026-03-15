@@ -12,16 +12,13 @@ A subtle border around your messages, making it easy to visually separate your p
 Toggle on/off with a right-click on the ↑ or ↓ button.
 Default color is configurable in `ui.conf`.
 
-### Message Navigation (↑ ↓)
-Two buttons injected into the input footer:
+### Message Navigation (↑ ↓ ⤓)
+Three buttons injected into the input footer:
 - **↑** — jump to previous user message
 - **↓** — jump to next user message
-- Stops at the first / last message (no looping)
+- **⤓** — scroll to the absolute bottom of the conversation (past all messages, including the latest model response)
+- Navigation stops at the first / last message — no looping
 - Highlights the target message with a brief pulse animation
-
-### Scroll to Bottom (⤓)
-A third button that scrolls the conversation to the absolute bottom — past all messages including the latest model response.
-After clicking ⤓, the ↑↓ navigation resumes from the last user message.
 
 ---
 
