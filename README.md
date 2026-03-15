@@ -1,7 +1,6 @@
 # Claude Code UI Extras
 
 Quality-of-life UI enhancements for Claude Code (VSCode extension).
-No RTL. No auto-approve. Just useful UI tweaks.
 
 ---
 
@@ -9,7 +8,7 @@ No RTL. No auto-approve. Just useful UI tweaks.
 
 ### User Message Border
 A subtle border around your messages, making it easy to visually separate your prompts from Claude's responses.
-Toggle on/off with a right-click on the ↑ or ↓ navigation button.
+Toggle on/off with a right-click on the ↑↓⤓ navigation button.
 Default color is configurable in `ui.conf`.
 
 ### Message Navigation (↑ ↓ ⤓)
