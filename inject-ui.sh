@@ -164,6 +164,104 @@ CSSPATCH
   applyBorder();
   setInterval(injectNav, 200);
 })();
+
+/* ── Copy as Markdown context menu ── */
+;(function(){
+  function htmlToMd(node){
+    if(node.nodeType===3)return node.textContent;
+    if(node.nodeType!==1)return '';
+    var tag=node.tagName.toLowerCase();
+    if(tag==='script'||tag==='style')return '';
+    var inner=Array.from(node.childNodes).map(htmlToMd).join('');
+    switch(tag){
+      case 'h1':return'\n# '+inner.trim()+'\n\n';
+      case 'h2':return'\n## '+inner.trim()+'\n\n';
+      case 'h3':return'\n### '+inner.trim()+'\n\n';
+      case 'h4':return'\n#### '+inner.trim()+'\n\n';
+      case 'h5':return'\n##### '+inner.trim()+'\n\n';
+      case 'h6':return'\n###### '+inner.trim()+'\n\n';
+      case 'strong':case 'b':return'**'+inner+'**';
+      case 'em':case 'i':return'*'+inner+'*';
+      case 'code':
+        if(node.parentElement&&node.parentElement.tagName.toLowerCase()==='pre')return inner;
+        return'`'+inner+'`';
+      case 'pre':{
+        var ce=node.querySelector('code');
+        var lang='';
+        if(ce){var m=(ce.className||'').match(/language-(\w+)/);if(m)lang=m[1];}
+        return'\n```'+lang+'\n'+(ce?ce.textContent:node.textContent)+'\n```\n\n';
+      }
+      case 'p':return inner.trim()+'\n\n';
+      case 'br':return'\n';
+      case 'hr':return'\n---\n\n';
+      case 'a':return'['+inner+']('+(node.getAttribute('href')||'')+')';
+      case 'img':return'!['+(node.getAttribute('alt')||'')+']('+(node.getAttribute('src')||'')+')';
+      case 'li':return inner.trim();
+      case 'ul':return'\n'+Array.from(node.children).map(function(li){return'- '+htmlToMd(li).trim();}).join('\n')+'\n\n';
+      case 'ol':return'\n'+Array.from(node.children).map(function(li,i){return(i+1)+'. '+htmlToMd(li).trim();}).join('\n')+'\n\n';
+      case 'blockquote':return inner.trim().split('\n').map(function(l){return'> '+l;}).join('\n')+'\n\n';
+      case 'tr':{var cells=Array.from(node.children).map(function(td){return htmlToMd(td).trim();});return'| '+cells.join(' | ')+' |\n';}
+      case 'thead':case 'tbody':case 'table':case 'th':case 'td':return inner;
+      default:return inner;
+    }
+  }
+
+  function getSelDiv(){
+    var sel=window.getSelection();
+    if(!sel||sel.rangeCount===0||sel.isCollapsed)return null;
+    var div=document.createElement('div');
+    for(var i=0;i<sel.rangeCount;i++)div.appendChild(sel.getRangeAt(i).cloneContents());
+    return div;
+  }
+
+  function showCopyMenu(x,y){
+    var old=document.getElementById('claude-copy-menu');
+    if(old)old.remove();
+    var savedDiv=getSelDiv();
+    if(!savedDiv)return;
+
+    var menu=document.createElement('div');
+    menu.id='claude-copy-menu';
+    menu.style.cssText='position:fixed;left:'+x+'px;top:'+y+'px;background:var(--vscode-menu-background,#2d2d2d);border:1px solid var(--vscode-menu-border,#454545);border-radius:4px;padding:4px 0;z-index:99999;min-width:180px;box-shadow:0 2px 8px rgba(0,0,0,0.5);font-size:13px;font-family:var(--vscode-font-family,sans-serif);';
+
+    function item(label,hint,fn){
+      var el=document.createElement('div');
+      el.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:5px 16px;cursor:pointer;color:var(--vscode-menu-foreground,#ccc);gap:24px;white-space:nowrap;';
+      var sp=document.createElement('span');sp.textContent=label;
+      var sh=document.createElement('span');sh.textContent=hint;sh.style.cssText='opacity:0.5;font-size:11px;';
+      el.appendChild(sp);el.appendChild(sh);
+      el.addEventListener('mouseenter',function(){el.style.background='var(--vscode-menu-selectionBackground,#094771)';el.style.color='var(--vscode-menu-selectionForeground,#fff)';});
+      el.addEventListener('mouseleave',function(){el.style.background='';el.style.color='var(--vscode-menu-foreground,#ccc)';});
+      el.addEventListener('mousedown',function(e){e.preventDefault();});
+      el.addEventListener('click',function(e){e.stopPropagation();menu.remove();fn();});
+      return el;
+    }
+
+    menu.appendChild(item('Copy','Ctrl+C',function(){document.execCommand('copy');}));
+    menu.appendChild(item('Copy as Markdown','',function(){
+      var md=htmlToMd(savedDiv).replace(/\n{3,}/g,'\n\n').trim();
+      navigator.clipboard.writeText(md);
+    }));
+
+    document.body.appendChild(menu);
+    var r=menu.getBoundingClientRect();
+    if(r.right>window.innerWidth)menu.style.left=(window.innerWidth-r.width-8)+'px';
+    if(r.bottom>window.innerHeight)menu.style.top=(y-r.height)+'px';
+
+    setTimeout(function(){
+      document.addEventListener('mousedown',function fn(e){
+        if(!menu.contains(e.target)){menu.remove();document.removeEventListener('mousedown',fn,true);}
+      },true);
+    },0);
+  }
+
+  document.addEventListener('contextmenu',function(e){
+    var sel=window.getSelection();
+    if(!sel||sel.isCollapsed)return;
+    e.preventDefault();
+    showCopyMenu(e.clientX,e.clientY);
+  },true);
+})();
 /* Claude UI Extras JS End */
 JSPATCH
 

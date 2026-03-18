@@ -11,6 +11,13 @@ A subtle border around your messages, making it easy to visually separate your p
 Toggle on/off with a right-click on the ↑↓⤓ navigation button.
 Default color is configurable in `ui.conf`.
 
+### Copy as Markdown
+Right-click on any selected text in the conversation to get a context menu with two options:
+- **Copy** — copies the selection as rich text (preserves formatting when pasting into Word, Notion, etc.)
+- **Copy as Markdown** — converts the selection to raw Markdown (`**bold**`, `# heading`, `` `code` ``, etc.) and copies it as plain text
+
+This menu only appears when text is selected. When nothing is selected, right-click behaves normally.
+
 ### Session History (multi-line)
 The Claude Code sidebar normally truncates session names to a single line. This fix expands each entry to up to 3 lines, so you can actually read what a session was about.
 
