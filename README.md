@@ -11,6 +11,9 @@ A subtle border around your messages, making it easy to visually separate your p
 Toggle on/off with a right-click on the ↑↓⤓ navigation button.
 Default color is configurable in `ui.conf`.
 
+### User Message Expand
+Claude Code collapses long user messages to ~3 lines with a "show more" button. This fix raises the limit to ~7 lines, so short-to-medium messages are fully visible without any interaction.
+
 ### Copy as Markdown
 Right-click on any selected text in the conversation to get a context menu with two options:
 - **Copy** — copies the selection as rich text (preserves formatting when pasting into Word, Notion, etc.)

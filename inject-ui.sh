@@ -33,6 +33,7 @@ $CSS_START
 .interactive-request .chat-markdown-part{border:2px solid $BORDER_COLOR !important;border-radius:4px;padding:4px 8px;}
 [class*="sessionItem_"]{height:auto !important;min-height:28px !important;align-items:flex-start !important;padding-top:4px !important;padding-bottom:4px !important;}
 [class*="sessionName_"]{white-space:normal !important;display:-webkit-box !important;-webkit-line-clamp:3 !important;-webkit-box-orient:vertical !important;overflow:hidden !important;}
+[class*="userMessage_"] [class*="content_"][class*="collapsed_"]{max-height:175px !important;}
 [class*="sessionsButtonText_"]{white-space:normal !important;display:-webkit-box !important;-webkit-line-clamp:3 !important;-webkit-box-orient:vertical !important;overflow:hidden !important;}
 [class*="sessionsButtonContent_"]{max-width:unset !important;}
 [class*="sessionsButton_"]{max-width:unset !important;}
