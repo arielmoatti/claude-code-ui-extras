@@ -40,25 +40,9 @@
 
 העתק והדבק את הפקודה הבאה לצ'אט של קלוד קוד:
 
----
+`Install the Claude Code UI extras (message border + navigation arrows).`
 
-</div>
-
-```
-Install the Claude Code UI extras (message border + navigation arrows).
-Do all these steps:
-
-Step 1 — Create a scripts directory in the current working directory (if it doesn't exist).
-
-Step 2 — Download the script from the repo and save it to scripts/:
-  curl -o scripts/inject-ui.sh https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/inject-ui.sh
-
-Step 3 — Run the script once to apply the fix.
-
-Step 4 — Ask me to do Reload Window (Ctrl+Shift+P → Developer: Reload Window).
-```
-
-<div dir="rtl">
+הפקודה המלאה עם כל השלבים נמצאת בגרסה האנגלית למטה.
 
 ---
 
