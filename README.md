@@ -37,6 +37,13 @@
 - הניווט עוצר בהודעה הראשונה / האחרונה — ללא לולאה
 - מדגיש את ההודעה שאליה קפצת עם אנימציית פולס קצרה
 
+### תג חשבון (API / SUB)
+תג קטן שמופיע מימין לכפתורי הניווט ומציג את סוג החשבון של החלון הנוכחי:
+- **API** (כתום) — חלון שעובד עם מפתח API
+- **SUB** (כחול) — חלון שמחובר עם מנוי Claude.ai
+
+הזיהוי מתבצע בזמן ריצה דרך המסר `get_claude_state_response` שהתוסף שולח לכל חלון בנפרד — כך שכל חלון VSCode מציג את סוג החשבון הנכון שלו.
+
 ---
 
 ## התקנה דרך קלוד קוד
@@ -110,6 +117,13 @@ Three buttons injected into the input footer:
 - **⤓** — scroll to the absolute bottom of the conversation (past all messages, including the latest model response)
 - Navigation stops at the first / last message — no looping
 - Highlights the target message with a brief pulse animation
+
+### Account Badge (API / SUB)
+A small badge displayed to the right of the navigation buttons, showing the account type for the current window:
+- **API** (orange) — window running with an API key
+- **SUB** (blue) — window signed in with a Claude.ai subscription
+
+Detection happens at runtime via the `get_claude_state_response` message that the extension sends to each window independently — so each VSCode window shows its own correct account type.
 
 ---
 

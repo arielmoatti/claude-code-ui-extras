@@ -13,6 +13,7 @@ if [ -f "$CONF_FILE" ]; then
   [ -n "$val" ] && BORDER_COLOR="$val"
 fi
 
+
 FOUND=false
 for dir in "$HOME/.vscode/extensions"/anthropic.claude-code-*/webview; do
   css="$dir/index.css"
@@ -46,7 +47,6 @@ CSSPATCH
     if grep -qF "$JS_START" "$js"; then
       sed -i '/\/\* Claude UI Extras JS Start \*\//,/\/\* Claude UI Extras JS End \*\//d' "$js"
     fi
-
     cat >> "$js" << 'JSPATCH'
 
 /* Claude UI Extras JS Start */
@@ -54,6 +54,23 @@ CSSPATCH
   var BORDER_COLOR='__BORDER_COLOR__';
   var BORDER_KEY='claude-ui-extras-border';
   var navIdx=-1;
+
+  /* Billing badge: read authMethod from update_state message (per-window, no race condition) */
+  var billingLabel='…';
+  /* Listen for get_claude_state_response — fired once per window on load.
+     RAM:    account.tokenSource === "apiKeyHelper"  → show "API"
+     Others: account has email/subscriptionType      → show "SUB" */
+  window.addEventListener('message',function(e){
+    var d=e.data;
+    if(!d||d.type!=='from-extension')return;
+    var resp=d.message&&d.message.response;
+    if(!resp||resp.type!=='get_claude_state_response')return;
+    var acct=resp.config&&resp.config.account;
+    var isApi=(acct&&acct.tokenSource==='apiKeyHelper');
+    billingLabel=isApi?'API':'SUB';
+    var b=document.getElementById('claude-ui-billing-badge');
+    if(b){b.textContent=billingLabel;b.style.color=isApi?'#e8a84f':'#7ec8e3';b.style.borderColor=isApi?'#e8a84f':'#7ec8e3';}
+  });
 
   function getBorder(){ return localStorage.getItem(BORDER_KEY)!=='false'; }
   function setBorder(on){ localStorage.setItem(BORDER_KEY,String(on)); applyBorder(); }
@@ -159,6 +176,16 @@ CSSPATCH
     end.addEventListener('contextmenu',showToggle);
 
     nav.appendChild(up); nav.appendChild(dn); nav.appendChild(end);
+
+    /* Claude UI Billing Badge — text updated live from update_state message */
+    var badge=document.createElement('span');
+    badge.id='claude-ui-billing-badge';
+    badge.textContent=billingLabel;
+    badge.title='Account type';
+    badge.style.cssText='font-size:10px;font-weight:700;padding:2px 5px;border:1px solid #888;border-radius:3px;line-height:1;cursor:default;margin-left:4px;align-self:center;color:#888;';
+    nav.appendChild(badge);
+    /* End billing badge */
+
     footer.insertBefore(nav,addBtn);
   }
 
@@ -263,8 +290,11 @@ CSSPATCH
     showCopyMenu(e.clientX,e.clientY);
   },true);
 })();
-/* Claude UI Extras JS End */
 JSPATCH
+
+    cat >> "$js" << 'JSEND'
+/* Claude UI Extras JS End */
+JSEND
 
     # Substitute border color placeholder
     sed -i "s|__BORDER_COLOR__|$BORDER_COLOR|g" "$js"
