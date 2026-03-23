@@ -55,21 +55,38 @@ CSSPATCH
   var BORDER_KEY='claude-ui-extras-border';
   var navIdx=-1;
 
-  /* Billing badge: read authMethod from update_state message (per-window, no race condition) */
+  /* Billing badge + cost display.
+     Source: get_claude_state_response (once on load) → account type
+             result io_message (after each response)  → total_cost_usd (API only) */
   var billingLabel='…';
-  /* Listen for get_claude_state_response — fired once per window on load.
-     RAM:    account.tokenSource === "apiKeyHelper"  → show "API"
-     Others: account has email/subscriptionType      → show "SUB" */
+  var isApiMode=false;
+
+  /* get_claude_state_response — determines API vs SUB per window */
   window.addEventListener('message',function(e){
     var d=e.data;
     if(!d||d.type!=='from-extension')return;
     var resp=d.message&&d.message.response;
     if(!resp||resp.type!=='get_claude_state_response')return;
     var acct=resp.config&&resp.config.account;
-    var isApi=(acct&&acct.tokenSource==='apiKeyHelper');
-    billingLabel=isApi?'API':'SUB';
+    isApiMode=(acct&&acct.tokenSource==='apiKeyHelper')||false;
+    billingLabel=isApiMode?'API':'SUB';
     var b=document.getElementById('claude-ui-billing-badge');
-    if(b){b.textContent=billingLabel;b.style.color=isApi?'#e8a84f':'#7ec8e3';b.style.borderColor=isApi?'#e8a84f':'#7ec8e3';}
+    if(b){b.textContent=billingLabel;b.style.color=isApiMode?'#e8a84f':'#7ec8e3';b.style.borderColor=isApiMode?'#e8a84f':'#7ec8e3';}
+    /* Show/hide cost badge based on account type */
+    var c=document.getElementById('claude-ui-cost-badge');
+    if(c)c.style.display=isApiMode?'inline-flex':'none';
+  });
+
+  /* result io_message — fired after every response, contains cumulative session cost */
+  window.addEventListener('message',function(e){
+    var d=e.data;
+    if(!d||d.type!=='from-extension')return;
+    var msg=d.message;
+    if(!msg||msg.type!=='io_message')return;
+    var m=msg.message;
+    if(!m||m.type!=='result'||typeof m.total_cost_usd!=='number')return;
+    var c=document.getElementById('claude-ui-cost-badge');
+    if(c)c.textContent='$'+m.total_cost_usd.toFixed(3);
   });
 
   function getBorder(){ return localStorage.getItem(BORDER_KEY)!=='false'; }
@@ -184,7 +201,14 @@ CSSPATCH
     badge.title='Account type';
     badge.style.cssText='font-size:10px;font-weight:700;padding:2px 5px;border:1px solid #888;border-radius:3px;line-height:1;cursor:default;margin-left:4px;align-self:center;color:#888;';
     nav.appendChild(badge);
-    /* End billing badge */
+
+    /* Cost badge — API mode only, updates after each response */
+    var cost=document.createElement('span');
+    cost.id='claude-ui-cost-badge';
+    cost.textContent='$0.000';
+    cost.title='Session cost (API)';
+    cost.style.cssText='font-size:10px;font-weight:700;padding:2px 5px;border:1px solid #e8a84f;border-radius:3px;line-height:1;cursor:default;margin-left:4px;align-self:center;color:#e8a84f;display:'+(isApiMode?'inline-flex':'none')+';';
+    nav.appendChild(cost);
 
     footer.insertBefore(nav,addBtn);
   }

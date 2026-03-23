@@ -47,6 +47,16 @@
 
 הזיהוי מתבצע בזמן ריצה דרך המסר `get_claude_state_response` שהתוסף שולח לכל חלון בנפרד — כך שכל חלון VSCode מציג את סוג החשבון הנכון שלו.
 
+### עלות סשן (API בלבד)
+בחלונות שעובדים עם מפתח API, מופיע תג נוסף (כתום) שמציג את עלות הסשן הנוכחי בדולרים:
+
+<ul dir="rtl">
+<li>מתחיל ב-<b>$0.000</b> בתחילת כל שיחה</li>
+<li>מתעדכן אוטומטית אחרי כל תגובה</li>
+<li>מבוסס על <code>total_cost_usd</code> מהמסר <code>result</code> שהתוסף שולח בסוף כל תגובה</li>
+<li>לא מוצג בחלונות SUB</li>
+</ul>
+
 ---
 
 ## התקנה דרך קלוד קוד
@@ -127,6 +137,13 @@ A small badge displayed to the right of the navigation buttons, showing the acco
 - **SUB** (blue) — window signed in with a Claude.ai subscription
 
 Detection happens at runtime via the `get_claude_state_response` message that the extension sends to each window independently — so each VSCode window shows its own correct account type.
+
+### Session Cost (API only)
+In windows running with an API key, an additional orange badge shows the cumulative cost of the current session:
+- Starts at **$0.000** at the beginning of each conversation
+- Updates automatically after every response
+- Based on `total_cost_usd` from the `result` message the extension sends at the end of each response
+- Not shown in SUB windows
 
 ---
 
