@@ -47,15 +47,14 @@
 
 הזיהוי מתבצע בזמן ריצה דרך המסר `get_claude_state_response` שהתוסף שולח לכל חלון בנפרד — כך שכל חלון VSCode מציג את סוג החשבון הנכון שלו.
 
-### עלות סשן (API בלבד)
-בחלונות שעובדים עם מפתח API, מופיע תג נוסף (כתום) שמציג את עלות הסשן הנוכחי בדולרים:
+### עלות סשן
 
-<ul dir="rtl">
-<li>מתחיל ב-<b>$0.000</b> בתחילת כל שיחה</li>
-<li>מתעדכן אוטומטית אחרי כל תגובה</li>
-<li>מבוסס על <code>total_cost_usd</code> מהמסר <code>result</code> שהתוסף שולח בסוף כל תגובה</li>
-<li>לא מוצג בחלונות SUB</li>
-</ul>
+<p dir="rtl">תג עלות שמתעדכן אוטומטית אחרי כל תגובה. מבוסס על <code>total_cost_usd</code> מהמסר <code>result</code> שהתוסף שולח בסוף כל turn.</p>
+
+<table dir="rtl">
+<tr><td><img src="screenshots/api-cost.jpg" alt="API with cost badge" width="400"/></td><td><b>API</b> — עלות מצטברת של הסשן הנוכחי. מוצג תמיד.</td></tr>
+<tr><td><img src="screenshots/sub-extra.jpg" alt="SUB with extra usage cost" width="400"/></td><td><b>SUB + Extra Usage</b> — עלות חריגה מצטברת (באדום). מוצג רק כאשר <code>isUsingOverage</code> פעיל — כלומר עברת את המכסה השעתית וה-Extra Usage מופעל בחשבון.</td></tr>
+</table>
 
 ---
 
@@ -138,12 +137,14 @@ A small badge displayed to the right of the navigation buttons, showing the acco
 
 Detection happens at runtime via the `get_claude_state_response` message that the extension sends to each window independently — so each VSCode window shows its own correct account type.
 
-### Session Cost (API only)
-In windows running with an API key, an additional orange badge shows the cumulative cost of the current session:
-- Starts at **$0.000** at the beginning of each conversation
-- Updates automatically after every response
-- Based on `total_cost_usd` from the `result` message the extension sends at the end of each response
-- Not shown in SUB windows
+### Session Cost
+
+A cost badge that updates automatically after every response, based on `total_cost_usd` from the `result` message.
+
+| | Mode |
+|---|---|
+| ![API with cost badge](screenshots/api-cost.jpg) | **API** — cumulative session cost, always visible |
+| ![SUB with extra usage cost](screenshots/sub-extra.jpg) | **SUB + Extra Usage** — overage cost (red), shown only when `isUsingOverage` is active — i.e. you've exceeded the hourly quota and Extra Usage is enabled on your account |
 
 ---
 

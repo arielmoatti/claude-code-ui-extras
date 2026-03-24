@@ -57,9 +57,12 @@ CSSPATCH
 
   /* Billing badge + cost display.
      Source: get_claude_state_response (once on load) → account type
-             result io_message (after each response)  → total_cost_usd (API only) */
+             result io_message (after each response)  → total_cost_usd
+             rate_limit_event                         → isUsingOverage (SUB only) */
   var billingLabel='…';
   var isApiMode=false;
+  var lastTotalCost=0;       /* last known cumulative session cost */
+  var overageBaseline=null;  /* cost at moment overage started; null = not in overage */
 
   /* get_claude_state_response — determines API vs SUB per window */
   window.addEventListener('message',function(e){
@@ -72,9 +75,30 @@ CSSPATCH
     billingLabel=isApiMode?'API':'SUB';
     var b=document.getElementById('claude-ui-billing-badge');
     if(b){b.textContent=billingLabel;b.style.color=isApiMode?'#e8a84f':'#7ec8e3';b.style.borderColor=isApiMode?'#e8a84f':'#7ec8e3';}
-    /* Show/hide cost badge based on account type */
     var c=document.getElementById('claude-ui-cost-badge');
     if(c)c.style.display=isApiMode?'inline-flex':'none';
+  });
+
+  /* rate_limit_event — detects Extra Usage start/end (SUB mode only) */
+  window.addEventListener('message',function(e){
+    var d=e.data;
+    if(!d||d.type!=='from-extension')return;
+    var msg=d.message;
+    if(!msg||msg.type!=='io_message')return;
+    var m=msg.message;
+    if(!m||m.type!=='rate_limit_event')return;
+    var info=m.rate_limit_info;
+    if(!info||isApiMode)return;
+    var c=document.getElementById('claude-ui-cost-badge');
+    if(info.isUsingOverage&&overageBaseline===null){
+      /* Extra Usage just started — capture baseline and show badge */
+      overageBaseline=lastTotalCost;
+      if(c){c.style.display='inline-flex';c.style.color='#e05c5c';c.style.borderColor='#e05c5c';c.textContent='extra $0.000';}
+    } else if(!info.isUsingOverage&&overageBaseline!==null){
+      /* Overage ended (window reset) — hide badge */
+      overageBaseline=null;
+      if(c)c.style.display='none';
+    }
   });
 
   /* result io_message — fired after every response, contains cumulative session cost */
@@ -85,8 +109,14 @@ CSSPATCH
     if(!msg||msg.type!=='io_message')return;
     var m=msg.message;
     if(!m||m.type!=='result'||typeof m.total_cost_usd!=='number')return;
+    lastTotalCost=m.total_cost_usd;
     var c=document.getElementById('claude-ui-cost-badge');
-    if(c)c.textContent='$'+m.total_cost_usd.toFixed(3);
+    if(!c)return;
+    if(isApiMode){
+      c.textContent='$'+m.total_cost_usd.toFixed(3);
+    } else if(overageBaseline!==null){
+      c.textContent='extra $'+(m.total_cost_usd-overageBaseline).toFixed(3);
+    }
   });
 
   function getBorder(){ return localStorage.getItem(BORDER_KEY)!=='false'; }
