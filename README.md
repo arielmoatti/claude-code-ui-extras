@@ -13,6 +13,10 @@
 ניתן להדליק/לכבות עם קליק ימני על כפתורי הניווט ↑↓⤓.
 צבע ברירת המחדל ניתן לשינוי בקובץ `ui.conf`.
 
+<div dir="rtl">
+<img src="screenshots/border.jpg" alt="border around user message" height="300"/>
+</div>
+
 ### הרחבת הודעות משתמש
 קלוד קוד מכווץ הודעות ארוכות לכ-3 שורות עם כפתור "הצג עוד". הפיצ'ר הזה מגדיל את המגבלה לכ-7 שורות, כך שהודעות בינוניות נראות במלואן בלי שום לחיצה.
 
@@ -25,9 +29,15 @@
 </ul>
 
 התפריט מופיע רק כשיש טקסט מסומן. בלי סימון — קליק ימני עובד כרגיל.
+<div dir="rtl">
+<img src="screenshots/copy as markdown.jpg" alt="copy as markdown" height="300"/>
+</div>
 
 ### היסטוריית שיחות (רב-שורתי)
 קלוד קוד רגיל חותך את שמות השיחות בסיידבר לשורה אחת. הפיצ'ר הזה מאפשר לכל פריט להציג עד 3 שורות, כדי שתוכל לקרוא על מה דובר בשיחה.
+<div dir="rtl">
+<img src="screenshots/3 liner.jpg" alt="3 liner history" height="300"/>
+</div>
 
 ### ניווט בין הודעות (↑ ↓ ⤓)
 שלושה כפתורים שמוזרקים לאזור הקלט:
@@ -36,6 +46,10 @@
 - **⤓** — גלילה לתחתית השיחה (אחרי כל ההודעות, כולל התגובה האחרונה)
 - הניווט עוצר בהודעה הראשונה / האחרונה — ללא לולאה
 - מדגיש את ההודעה שאליה קפצת עם אנימציית פולס קצרה
+
+<div dir="rtl">
+<img src="screenshots/navigation arrows.jpg" alt="navigation arrows" height="300"/>
+</div>
 
 ### תג חשבון (API / SUB)
 תג קטן שמופיע מימין לכפתורי הניווט ומציג את סוג החשבון של החלון הנוכחי:
@@ -53,6 +67,7 @@
 
 <table dir="rtl">
 <tr><td><img src="screenshots/api-cost.jpg" alt="API with cost badge" width="400"/></td><td><b>API</b> — עלות מצטברת של הסשן הנוכחי. מוצג תמיד.</td></tr>
+<tr><td><img src="screenshots/sub.jpg" alt="SUB only" width="400"/></td><td><b>SUB</b> — מוצג כאשר הסשן מחויב תחת המינוי החודשי</td></tr>
 <tr><td><img src="screenshots/sub-extra.jpg" alt="SUB with extra usage cost" width="400"/></td><td><b>SUB + Extra Usage</b> — עלות חריגה מצטברת (באדום). מוצג רק כאשר <code>isUsingOverage</code> פעיל — כלומר עברת את המכסה השעתית וה-Extra Usage מופעל בחשבון.</td></tr>
 </table>
 
