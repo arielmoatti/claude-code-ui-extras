@@ -2,7 +2,7 @@
 
 # תוספות ממשק לקלוד קוד
 
-שיפורים קטנים לחוויית השימוש בתוסף Claude Code לVSCode.
+שיפורים קטנים לחוויית השימוש בתוסף Claude Code ל-VSCode.
 
 ---
 
@@ -13,9 +13,7 @@
 ניתן להדליק/לכבות עם קליק ימני על כפתורי הניווט ↑↓⤓.
 צבע ברירת המחדל ניתן לשינוי בקובץ `ui.conf`.
 
-<div dir="rtl">
-<img src="screenshots/border.jpg" alt="border around user message" height="300"/>
-</div>
+<p align="right"><img src="screenshots/border.jpg" alt="border around user message" height="300"/></p>
 
 ### הרחבת הודעות משתמש
 קלוד קוד מכווץ הודעות ארוכות לכ-3 שורות עם כפתור "הצג עוד". הפיצ'ר הזה מגדיל את המגבלה לכ-7 שורות, כך שהודעות בינוניות נראות במלואן בלי שום לחיצה.
@@ -29,47 +27,51 @@
 </ul>
 
 התפריט מופיע רק כשיש טקסט מסומן. בלי סימון — קליק ימני עובד כרגיל.
-<div dir="rtl">
-<img src="screenshots/copy as markdown.jpg" alt="copy as markdown" height="300"/>
-</div>
+
+<p align="right"><img src="screenshots/copy as markdown.jpg" alt="copy as markdown" height="300"/></p>
 
 ### היסטוריית שיחות (רב-שורתי)
 קלוד קוד רגיל חותך את שמות השיחות בסיידבר לשורה אחת. הפיצ'ר הזה מאפשר לכל פריט להציג עד 3 שורות, כדי שתוכל לקרוא על מה דובר בשיחה.
-<div dir="rtl">
-<img src="screenshots/3 liner.jpg" alt="3 liner history" height="300"/>
-</div>
+
+<p align="right"><img src="screenshots/3 liner.jpg" alt="3 liner history" height="300"/></p>
 
 ### ניווט בין הודעות (↑ ↓ ⤓)
 שלושה כפתורים שמוזרקים לאזור הקלט:
-- **↑** — קפיצה להודעת המשתמש הקודמת
-- **↓** — קפיצה להודעת המשתמש הבאה
-- **⤓** — גלילה לתחתית השיחה (אחרי כל ההודעות, כולל התגובה האחרונה)
-- הניווט עוצר בהודעה הראשונה / האחרונה — ללא לולאה
-- מדגיש את ההודעה שאליה קפצת עם אנימציית פולס קצרה
-
-<div dir="rtl">
-<img src="screenshots/navigation arrows.jpg" alt="navigation arrows" height="300"/>
-</div>
-
-### תג חשבון (API / SUB)
-תג קטן שמופיע מימין לכפתורי הניווט ומציג את סוג החשבון של החלון הנוכחי:
 
 <ul dir="rtl">
-<li><b>API</b> (כתום) — חלון שעובד עם מפתח API</li>
-<li><b>SUB</b> (כחול) — חלון שמחובר עם מנוי Claude.ai</li>
+<li><b>↑</b> — קפיצה להודעת המשתמש הקודמת</li>
+<li><b>↓</b> — קפיצה להודעת המשתמש הבאה</li>
+<li><b>⤓</b> — גלילה לתחתית השיחה (אחרי כל ההודעות, כולל התגובה האחרונה)</li>
 </ul>
 
-הזיהוי מתבצע בזמן ריצה דרך המסר `get_claude_state_response` שהתוסף שולח לכל חלון בנפרד — כך שכל חלון VSCode מציג את סוג החשבון הנכון שלו.
+הניווט עוצר בהודעה הראשונה / האחרונה — ללא לולאה.
+מדגיש את ההודעה שאליה קפצת עם אנימציית פולס קצרה.
 
-### עלות סשן
+<p align="right"><img src="screenshots/navigation arrows.jpg" alt="navigation arrows" height="80"/></p>
 
-<p dir="rtl">תג עלות שמתעדכן אוטומטית אחרי כל תגובה. מבוסס על <code>total_cost_usd</code> מהמסר <code>result</code> שהתוסף שולח בסוף כל turn.</p>
+### תג חשבון ועלות סשן
 
-<table dir="rtl">
-<tr><td><img src="screenshots/api-cost.jpg" alt="API with cost badge" width="400"/></td><td><b>API</b> — עלות מצטברת של הסשן הנוכחי. מוצג תמיד.</td></tr>
-<tr><td><img src="screenshots/sub.jpg" alt="SUB only" width="400"/></td><td><b>SUB</b> — מוצג כאשר הסשן מחויב תחת המינוי החודשי</td></tr>
-<tr><td><img src="screenshots/sub-extra.jpg" alt="SUB with extra usage cost" width="400"/></td><td><b>SUB + Extra Usage</b> — עלות חריגה מצטברת (באדום). מוצג רק כאשר <code>isUsingOverage</code> פעיל — כלומר עברת את המכסה השעתית וה-Extra Usage מופעל בחשבון.</td></tr>
+תג קטן שמופיע מימין לכפתורי הניווט ומציג את סוג החשבון של החלון הנוכחי.
+הזיהוי מתבצע בזמן ריצה דרך המסר `get_claude_state_response` שהתוסף שולח לכל חלון בנפרד — כך שכל חלון VSCode מציג את סוג החשבון הנכון שלו, ללא race condition.
+
+</div>
+
+<table>
+<tr>
+<td align="center"><img src="screenshots/sub.jpg" alt="SUB badge" width="360"/></td>
+<td align="right" dir="rtl"><b>SUB</b> (כחול)<br>מנוי Claude.ai — מצב רגיל, ללא תצוגת עלות</td>
+</tr>
+<tr>
+<td align="center"><img src="screenshots/sub-extra.jpg" alt="SUB with extra usage" width="360"/></td>
+<td align="right" dir="rtl"><b>SUB + Extra Usage</b> (אדום)<br>עברת את המכסה השעתית — עלות חריגה מצטברת מרגע ה-overage</td>
+</tr>
+<tr>
+<td align="center"><img src="screenshots/api-cost.jpg" alt="API with cost" width="360"/></td>
+<td align="right" dir="rtl"><b>API</b> (כתום)<br>מפתח API — עלות מצטברת של הסשן, מוצג תמיד</td>
+</tr>
 </table>
+
+<div dir="rtl">
 
 ---
 
@@ -84,8 +86,11 @@
 ---
 
 הסקריפט יבצע:
-- הזרקת השיפורים לתוך ה-webview של קלוד קוד
-- רישום `SessionStart` hook כדי שההזרקה תתבצע אוטומטית אחרי כל עדכון של קלוד קוד
+
+<ul dir="rtl">
+<li>הזרקת השיפורים לתוך ה-webview של קלוד קוד</li>
+<li>רישום <code>SessionStart</code> hook כדי שההזרקה תתבצע אוטומטית אחרי כל עדכון של קלוד קוד</li>
+</ul>
 
 ---
 
@@ -121,8 +126,10 @@ border_color=rgba(249,131,131,0.5)
 
 ### User Message Border
 A subtle border around your messages, making it easy to visually separate your prompts from Claude's responses.
-Toggle on/off with a right-click on the ↑↓⤓ navigation button.
+Toggle on/off with a right-click on the ↑↓⤓ navigation buttons.
 Default color is configurable in `ui.conf`.
+
+<p><img src="screenshots/border.jpg" alt="border around user message" height="300"/></p>
 
 ### User Message Expand
 Claude Code collapses long user messages to ~3 lines with a "show more" button. This fix raises the limit to ~7 lines, so short-to-medium messages are fully visible without any interaction.
@@ -134,8 +141,12 @@ Right-click on any selected text in the conversation to get a context menu with 
 
 This menu only appears when text is selected. When nothing is selected, right-click behaves normally.
 
+<p><img src="screenshots/copy as markdown.jpg" alt="copy as markdown" height="300"/></p>
+
 ### Session History (multi-line)
 The Claude Code sidebar normally truncates session names to a single line. This fix expands each entry to up to 3 lines, so you can actually read what a session was about.
+
+<p><img src="screenshots/3 liner.jpg" alt="3 liner history" height="300"/></p>
 
 ### Message Navigation (↑ ↓ ⤓)
 Three buttons injected into the input footer:
@@ -145,21 +156,17 @@ Three buttons injected into the input footer:
 - Navigation stops at the first / last message — no looping
 - Highlights the target message with a brief pulse animation
 
-### Account Badge (API / SUB)
-A small badge displayed to the right of the navigation buttons, showing the account type for the current window:
-- **API** (orange) — window running with an API key
-- **SUB** (blue) — window signed in with a Claude.ai subscription
+<p><img src="screenshots/navigation arrows.jpg" alt="navigation arrows" height="80"/></p>
 
-Detection happens at runtime via the `get_claude_state_response` message that the extension sends to each window independently — so each VSCode window shows its own correct account type.
+### Account Badge & Session Cost
 
-### Session Cost
-
-A cost badge that updates automatically after every response, based on `total_cost_usd` from the `result` message.
+A small badge next to the navigation buttons showing the account type. Detection happens at runtime via `get_claude_state_response` — each VSCode window shows its own correct account type, with no race condition.
 
 | | Mode |
 |---|---|
-| ![API with cost badge](screenshots/api-cost.jpg) | **API** — cumulative session cost, always visible |
-| ![SUB with extra usage cost](screenshots/sub-extra.jpg) | **SUB + Extra Usage** — overage cost (red), shown only when `isUsingOverage` is active — i.e. you've exceeded the hourly quota and Extra Usage is enabled on your account |
+| ![SUB badge](screenshots/sub.jpg) | **SUB** (blue) — Claude.ai subscription, no cost displayed |
+| ![SUB with extra usage](screenshots/sub-extra.jpg) | **SUB + Extra Usage** (red) — exceeded hourly quota, shows overage cost since the moment it started |
+| ![API with cost](screenshots/api-cost.jpg) | **API** (orange) — API key, cumulative session cost always visible |
 
 ---
 
