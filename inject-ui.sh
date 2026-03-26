@@ -75,8 +75,9 @@ CSSPATCH
     billingLabel=isApiMode?'API':'SUB';
     var b=document.getElementById('claude-ui-billing-badge');
     if(b){b.textContent=billingLabel;b.style.color=isApiMode?'#e8a84f':'#7ec8e3';b.style.borderColor=isApiMode?'#e8a84f':'#7ec8e3';}
+    /* Show cost badge for API mode, or if SUB with active overage */
     var c=document.getElementById('claude-ui-cost-badge');
-    if(c)c.style.display=isApiMode?'inline-flex':'none';
+    if(c)c.style.display=(isApiMode||overageBaseline!==null)?'inline-flex':'none';
   });
 
   /* rate_limit_event — detects Extra Usage start/end (SUB mode only) */
