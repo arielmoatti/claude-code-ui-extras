@@ -89,14 +89,14 @@ CSSPATCH
     var m=msg.message;
     if(!m||m.type!=='rate_limit_event')return;
     var info=m.rate_limit_info;
-    if(!info||isApiMode)return;
+    if(!info||isApiMode||info.rateLimitType!=='five_hour')return;
     var c=document.getElementById('claude-ui-cost-badge');
-    if(info.isUsingOverage&&overageBaseline===null){
-      /* Extra Usage just started — capture baseline and show badge */
+    if(info.utilization>=1&&overageBaseline===null){
+      /* Hit 100% — capture baseline and show extra cost badge */
       overageBaseline=lastTotalCost;
       if(c){c.style.display='inline-flex';c.style.color='#e05c5c';c.style.borderColor='#e05c5c';c.textContent='extra $0.000';}
-    } else if(!info.isUsingOverage&&overageBaseline!==null){
-      /* Overage ended (window reset) — hide badge */
+    } else if(info.utilization<1&&overageBaseline!==null){
+      /* Back under limit (window reset) — hide badge */
       overageBaseline=null;
       if(c)c.style.display='none';
     }
