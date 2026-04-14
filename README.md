@@ -94,23 +94,55 @@
 
 ---
 
-## התקנה דרך קלוד קוד
+## התקנה
 
-העתק והדבק את הפקודה הבאה לצ'אט של קלוד קוד:
+### התקנה מהירה (הדבקה לתוך Claude Code)
 
-`Install the Claude Code UI extras (message border + navigation arrows).`
+העתיקו את הבלוק הבא והדביקו אותו לתוך Claude Code — הוא יעשה את השאר:
 
-הפקודה המלאה עם כל השלבים נמצאת בגרסה האנגלית למטה.
+</div>
 
----
+<div dir="ltr">
+
+```
+Install the Claude Code UI extras (UI enhancements + .claude/ bypass hook).
+Do all these steps:
+
+Step 1 — Create a scripts directory in the current working directory (if it doesn't exist).
+
+Step 2 — Download the install script from the repo and save it to scripts/:
+  curl -o scripts/inject-ui.sh https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/inject-ui.sh
+
+Step 3 — Run the script once (`bash scripts/inject-ui.sh`). This patches the webview, installs the bypass hook to ~/.claude/scripts/, and registers both SessionStart and PermissionRequest hooks in ~/.claude/settings.json.
+
+Step 4 — Ask me to do Reload Window (Ctrl+Shift+P → Developer: Reload Window).
+
+Step 5 — After the reload, remind me to press Shift+Tab once to enter bypassPermissions mode — otherwise the `.claude/` bypass hook has nothing to act on (Claude Code opens sessions in Ask mode by default due to a separate extension bug).
+```
+
+</div>
+
+<div dir="rtl">
+
+> **שימו לב:** הפרומפט באנגלית בכוונה — כי קלוד צריך להבין את ההוראות ולבצע אותן.
 
 הסקריפט יבצע:
 
 <ul dir="rtl">
-<li>הזרקת השיפורים לתוך ה-webview של קלוד קוד</li>
-<li>רישום <code>SessionStart</code> hook כדי שההזרקה תתבצע אוטומטית אחרי כל עדכון של קלוד קוד</li>
-<li>התקנת <code>bypass-claude-dir.js</code> ל-<code>~/.claude/scripts/</code> ורישום <code>PermissionRequest</code> hook לעקיפת חלוניות <code>.claude/</code> במצב bypass</li>
+<li>הזרקת שיפורי ה-UI לתוך ה-<code>webview</code> של קלוד קוד</li>
+<li>רישום <code>SessionStart</code> hook כדי שההזרקה תבוצע אוטומטית אחרי כל עדכון של התוסף</li>
+<li>התקנת <code>bypass-claude-dir.js</code> ל-<code>~/.claude/scripts/</code></li>
+<li>רישום <code>PermissionRequest</code> hook לעקיפת חלוניות האישור על <code>.claude/</code> במצב bypass</li>
 </ul>
+
+### התקנה ידנית
+
+<ol dir="rtl">
+<li>הורידו את <code dir="ltr">inject-ui.sh</code> לתיקיית <code dir="ltr">scripts/</code> בפרויקט</li>
+<li>הריצו <code dir="ltr">bash scripts/inject-ui.sh</code></li>
+<li>עשו Reload Window ב-VSCode (<code dir="ltr">Ctrl+Shift+P → Developer: Reload Window</code>)</li>
+<li>לחצו <code dir="ltr">Shift+Tab</code> בתחילת כל סשן חדש כדי להיכנס למצב bypassPermissions</li>
+</ol>
 
 ---
 
@@ -211,32 +243,40 @@ The fix: a small `PermissionRequest` hook (`bypass-claude-dir.js`, ~25 lines of 
 
 ---
 
-## Install via Claude Code
+## Install
 
-Copy and paste the following into your Claude Code chat:
+### Quick install (paste into Claude Code)
 
----
+Copy and paste the following into your Claude Code chat — it will handle everything:
 
 ```
-Install the Claude Code UI extras (message border + navigation arrows).
+Install the Claude Code UI extras (UI enhancements + .claude/ bypass hook).
 Do all these steps:
 
 Step 1 — Create a scripts directory in the current working directory (if it doesn't exist).
 
-Step 2 — Download the script from the repo and save it to scripts/:
+Step 2 — Download the install script from the repo and save it to scripts/:
   curl -o scripts/inject-ui.sh https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/inject-ui.sh
 
-Step 3 — Run the script once to apply the fix.
+Step 3 — Run the script once (`bash scripts/inject-ui.sh`). This patches the webview, installs the bypass hook to ~/.claude/scripts/, and registers both SessionStart and PermissionRequest hooks in ~/.claude/settings.json.
 
 Step 4 — Ask me to do Reload Window (Ctrl+Shift+P → Developer: Reload Window).
-```
 
----
+Step 5 — After the reload, remind me to press Shift+Tab once to enter bypassPermissions mode — otherwise the `.claude/` bypass hook has nothing to act on (Claude Code opens sessions in Ask mode by default due to a separate extension bug).
+```
 
 The script will:
 - Inject the UI enhancements into Claude Code's webview
 - Register a `SessionStart` hook so the injection is re-applied automatically after every Claude Code update
-- Install `bypass-claude-dir.js` to `~/.claude/scripts/` and register a `PermissionRequest` hook that auto-approves `.claude/` operations when the session is in bypassPermissions mode
+- Install `bypass-claude-dir.js` to `~/.claude/scripts/`
+- Register a `PermissionRequest` hook that auto-approves `.claude/` operations when the session is in bypassPermissions mode
+
+### Manual install
+
+1. Download `inject-ui.sh` to your project's `scripts/` directory
+2. Run `bash scripts/inject-ui.sh`
+3. Reload VSCode window (`Ctrl+Shift+P → Developer: Reload Window`)
+4. At the start of each new session, press `Shift+Tab` once to enter `bypassPermissions` mode
 
 ---
 
