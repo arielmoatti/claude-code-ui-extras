@@ -73,6 +73,25 @@
 
 <div dir="rtl">
 
+### עקיפת חלוניות הרשאה ב-`.claude/` (bypass mode)
+
+מגרסה v2.1.78, Claude Code מציגה חלונית אישור בכל כתיבה ל-`.claude/commands/`, `.claude/agents/`, ו-`.claude/skills/` — **גם כשהסשן במצב `bypassPermissions` מלא**. זה באג ידוע שמתועד ב-[META issue #39523](https://github.com/anthropics/claude-code/issues/39523), פתוח תשעה חודשים ולא פתור. שום הגדרה, allow rules, `--dangerously-skip-permissions` או wildcards לא פותרים את זה.
+
+הפתרון: `PermissionRequest` hook קטן (`bypass-claude-dir.js`, כ-25 שורות Node) שמאשר אוטומטית פעולות Edit/Write/MultiEdit/NotebookEdit ו-Bash שנוגעות ב-`.claude` — **אבל רק כשהסשן כבר ב-`bypassPermissions`**. במצב Ask/Plan/acceptEdits ההוק שקט לחלוטין, והחלוניות הרגילות מופיעות כרגיל.
+
+**מטריצת התנהגות:**
+
+| מצב | כתיבה ל-`.claude/` | כתיבה רגילה | Bash על `.claude/` |
+|---|---|---|---|
+| `bypassPermissions` | שקט ✓ | שקט ✓ | שקט ✓ |
+| `default` (Ask) | חלונית | חלונית | חלונית |
+| `plan` | plan mode מכובד | plan mode מכובד | plan mode מכובד |
+| `acceptEdits` | ללא השפעה | שקט ✓ | ללא השפעה |
+
+**איך זה עובד:** ההוק קורא את ה-payload של קריאת הכלי מ-stdin, מזהה `.claude` בנתיב הקובץ או בפקודת Bash, בודק ש-`permission_mode === 'bypassPermissions'`, ומחזיר את הפורמט הנכון `hookSpecificOutput.decision.behavior: "allow"`. חשוב: פורמט שטוח `{"behavior":"allow"}` **לא עובד** ב-Claude Code v2.1.107 — הסכמה המקוננת היא המחייבת.
+
+**מגבלה ידועה:** לתוסף Claude Code ל-VSCode יש [באג נפרד](https://github.com/anthropics/claude-code/issues/36348) — `defaultMode: "bypassPermissions"` ב-settings.json לא נתפס בפתיחת סשן, כל סשן חדש נפתח במצב `default` (Ask). עדיין צריך לחיצה ידנית אחת על `Shift+Tab` בפתיחה כדי להיכנס ל-bypass. מרגע זה והלאה, ההוק שומר על הסשן שקט.
+
 ---
 
 ## התקנה דרך קלוד קוד
@@ -90,6 +109,7 @@
 <ul dir="rtl">
 <li>הזרקת השיפורים לתוך ה-webview של קלוד קוד</li>
 <li>רישום <code>SessionStart</code> hook כדי שההזרקה תתבצע אוטומטית אחרי כל עדכון של קלוד קוד</li>
+<li>התקנת <code>bypass-claude-dir.js</code> ל-<code>~/.claude/scripts/</code> ורישום <code>PermissionRequest</code> hook לעקיפת חלוניות <code>.claude/</code> במצב bypass</li>
 </ul>
 
 ---
@@ -114,6 +134,8 @@ border_color=rgba(249,131,131,0.5)
 
 מחק את הבלוק המוזרק מתוך `webview/index.js` ו-`webview/index.css`
 (חפש `/* Claude UI Extras Patch Start */`), ולאחר מכן הסר את הרשומה מ-`SessionStart` hook ב-`~/.claude/settings.json`.
+
+להסרת ה-bypass hook: מחק את `~/.claude/scripts/bypass-claude-dir.js` והסר את הרשומה מ-`PermissionRequest` hook ב-`~/.claude/settings.json`.
 
 </div>
 
@@ -168,6 +190,25 @@ A small badge next to the navigation buttons showing the account type. Detection
 | ![SUB with extra usage](screenshots/sub-extra.jpg) | **SUB + Extra Usage** (red) — exceeded hourly quota, shows overage cost since the moment it started |
 | ![API with cost](screenshots/api-cost.jpg) | **API** (orange) — API key, cumulative session cost always visible |
 
+### Bypass `.claude/` permission prompts
+
+Since Claude Code v2.1.78, a hardcoded guard prompts for every Edit/Write into `.claude/commands/`, `.claude/agents/`, and `.claude/skills/` — **even when the session is in `bypassPermissions` mode**. This is a known open bug tracked in [META issue #39523](https://github.com/anthropics/claude-code/issues/39523), unresolved for 9+ months. Settings overrides, allow rules, `--dangerously-skip-permissions`, and wildcard rules all fail to work around it.
+
+The fix: a small `PermissionRequest` hook (`bypass-claude-dir.js`, ~25 lines of Node) that auto-approves Edit/Write/MultiEdit/NotebookEdit and Bash operations touching `.claude` paths — **but only when the session is already in `bypassPermissions` mode**. In Ask/Plan/acceptEdits modes, the hook stays silent and normal dialogs appear untouched.
+
+**Behavior matrix:**
+
+| Mode | `.claude/` writes | Regular writes | Bash on `.claude/` |
+|---|---|---|---|
+| `bypassPermissions` | silent ✓ | silent ✓ | silent ✓ |
+| `default` (Ask) | dialog | dialog | dialog |
+| `plan` | plan mode respected | plan mode respected | plan mode respected |
+| `acceptEdits` | unaffected | silent ✓ | unaffected |
+
+**How it works:** the hook reads the tool call payload from stdin, matches on `.claude` in the file path or Bash command, checks `permission_mode === 'bypassPermissions'`, and returns the correctly-formatted `hookSpecificOutput.decision.behavior: "allow"` response. A flat `{"behavior":"allow"}` is silently ignored by Claude Code v2.1.107 — the nested schema is required.
+
+**Known limitation:** the Claude Code VSCode extension also has [a separate bug](https://github.com/anthropics/claude-code/issues/36348) where `defaultMode: "bypassPermissions"` in `settings.json` is not honored on session start — each session opens in `default` (Ask) mode. You still need one manual `Shift+Tab` at session start to enter bypass. Once there, this hook keeps the rest of the session silent.
+
 ---
 
 ## Install via Claude Code
@@ -195,6 +236,7 @@ Step 4 — Ask me to do Reload Window (Ctrl+Shift+P → Developer: Reload Window
 The script will:
 - Inject the UI enhancements into Claude Code's webview
 - Register a `SessionStart` hook so the injection is re-applied automatically after every Claude Code update
+- Install `bypass-claude-dir.js` to `~/.claude/scripts/` and register a `PermissionRequest` hook that auto-approves `.claude/` operations when the session is in bypassPermissions mode
 
 ---
 
@@ -214,5 +256,7 @@ Then re-run `bash scripts/inject-ui.sh` and reload VSCode.
 
 Delete the injected block from Claude Code's `webview/index.js` and `webview/index.css`
 (look for `/* Claude UI Extras Patch Start */`), then remove the `SessionStart` hook from `~/.claude/settings.json`.
+
+To remove the bypass hook: delete `~/.claude/scripts/bypass-claude-dir.js` and remove the `PermissionRequest` hook entry from `~/.claude/settings.json`.
 
 </details>

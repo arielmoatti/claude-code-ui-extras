@@ -13,7 +13,6 @@ if [ -f "$CONF_FILE" ]; then
   [ -n "$val" ] && BORDER_COLOR="$val"
 fi
 
-
 FOUND=false
 for dir in "$HOME/.vscode/extensions"/anthropic.claude-code-*/webview; do
   css="$dir/index.css"
@@ -21,6 +20,7 @@ for dir in "$HOME/.vscode/extensions"/anthropic.claude-code-*/webview; do
   [ -f "$css" ] || continue
   FOUND=true
   CHANGED=false
+
 
   # ── CSS ──────────────────────────────────────────────────────────────
   if grep -qF "$CSS_START" "$css"; then
@@ -47,6 +47,8 @@ CSSPATCH
     if grep -qF "$JS_START" "$js"; then
       sed -i '/\/\* Claude UI Extras JS Start \*\//,/\/\* Claude UI Extras JS End \*\//d' "$js"
     fi
+
+
     cat >> "$js" << 'JSPATCH'
 
 /* Claude UI Extras JS Start */
@@ -119,6 +121,7 @@ CSSPATCH
       c.textContent='extra $'+(m.total_cost_usd-overageBaseline).toFixed(3);
     }
   });
+
 
   function getBorder(){ return localStorage.getItem(BORDER_KEY)!=='false'; }
   function setBorder(on){ localStorage.setItem(BORDER_KEY,String(on)); applyBorder(); }
@@ -237,7 +240,7 @@ CSSPATCH
     var cost=document.createElement('span');
     cost.id='claude-ui-cost-badge';
     cost.textContent='$0.000';
-    cost.title='Session cost (API)';
+    cost.title='Session cost';
     cost.style.cssText='font-size:10px;font-weight:700;padding:2px 5px;border:1px solid #e8a84f;border-radius:3px;line-height:1;cursor:default;margin-left:4px;align-self:center;color:#e8a84f;display:'+(isApiMode?'inline-flex':'none')+';';
     nav.appendChild(cost);
 
@@ -366,29 +369,86 @@ if [ "$FOUND" = false ]; then
   exit 1
 fi
 
-# ── Register SessionStart hook in ~/.claude/settings.json ────────────────────
+# ── Install bypass-claude-dir.js hook script ──────────────────────────────
+BYPASS_HOOK_PATH="$HOME/.claude/scripts/bypass-claude-dir.js"
+mkdir -p "$(dirname "$BYPASS_HOOK_PATH")"
+cat > "$BYPASS_HOOK_PATH" << 'BYPASSHOOK'
+/*
+ * bypass-claude-dir.js — PermissionRequest hook
+ * Auto-approves Edit/Write/Bash on .claude/ paths, but only when session
+ * is already in bypassPermissions mode. Respects plan/ask/acceptEdits.
+ * Works around anthropics/claude-code#39523.
+ */
+let d = '';
+process.stdin.on('data', c => d += c);
+process.stdin.on('end', () => {
+  try {
+    const input = JSON.parse(d);
+    const tool = input.tool_name || '';
+    const ti = input.tool_input || {};
+    const filePath = ti.file_path || '';
+    const command = ti.command || '';
+    const isEditLike = /^(Edit|Write|MultiEdit|NotebookEdit)$/.test(tool);
+    const isBash = tool === 'Bash';
+    const shouldAllow = (isEditLike && filePath.includes('.claude'))
+                     || (isBash && command.includes('.claude'));
+    const inBypass = input.permission_mode === 'bypassPermissions';
+    if (shouldAllow && inBypass) {
+      process.stdout.write(JSON.stringify({
+        hookSpecificOutput: {
+          hookEventName: 'PermissionRequest',
+          decision: { behavior: 'allow' }
+        }
+      }));
+    }
+  } catch (e) {}
+});
+BYPASSHOOK
+echo "BYPASS_HOOK_WRITTEN: $BYPASS_HOOK_PATH"
+
+# ── Register hooks in ~/.claude/settings.json ────────────────────────────
 SETTINGS="$HOME/.claude/settings.json"
 HOOK_CMD="bash $SCRIPT_DIR/inject-ui.sh"
 SCRIPT_ID="inject-ui.sh"
+BYPASS_CMD="node $BYPASS_HOOK_PATH"
 
-SETTINGS_PATH="$SETTINGS" HOOK_CMD="$HOOK_CMD" SCRIPT_ID="$SCRIPT_ID" \
+SETTINGS_PATH="$SETTINGS" HOOK_CMD="$HOOK_CMD" SCRIPT_ID="$SCRIPT_ID" BYPASS_CMD="$BYPASS_CMD" \
 node -e "
 var fs = require('fs');
 var p = process.env.SETTINGS_PATH;
 var cmd = process.env.HOOK_CMD;
 var id = process.env.SCRIPT_ID;
+var bypassCmd = process.env.BYPASS_CMD;
 var s = {};
 if (fs.existsSync(p)) { try { s = JSON.parse(fs.readFileSync(p,'utf8')); } catch(e) {} }
 if (!s.hooks) s.hooks = {};
+
+// SessionStart hook (UI injection)
 if (!s.hooks.SessionStart) s.hooks.SessionStart = [];
-var already = s.hooks.SessionStart.some(function(h){
+var sessionAlready = s.hooks.SessionStart.some(function(h){
   return h.hooks && h.hooks.some(function(hh){ return hh.command && hh.command.indexOf(id) !== -1; });
 });
-if (!already) {
+if (!sessionAlready) {
   s.hooks.SessionStart.push({ hooks: [{ type: 'command', command: cmd }] });
-  fs.writeFileSync(p, JSON.stringify(s, null, 2), 'utf8');
-  console.log('Hook registered:', cmd);
+  console.log('SessionStart hook registered:', cmd);
 } else {
-  console.log('Hook already registered');
+  console.log('SessionStart hook already registered');
 }
-" 2>/dev/null || echo "Note: could not register hook (node not found)"
+
+// PermissionRequest hook (bypass .claude/ guard)
+if (!s.hooks.PermissionRequest) s.hooks.PermissionRequest = [];
+var permAlready = s.hooks.PermissionRequest.some(function(h){
+  return h.hooks && h.hooks.some(function(hh){ return hh.command && hh.command.indexOf('bypass-claude-dir.js') !== -1; });
+});
+if (!permAlready) {
+  s.hooks.PermissionRequest.push({
+    matcher: 'Edit|Write|MultiEdit|NotebookEdit|Bash',
+    hooks: [{ type: 'command', command: bypassCmd }]
+  });
+  console.log('PermissionRequest hook registered:', bypassCmd);
+} else {
+  console.log('PermissionRequest hook already registered');
+}
+
+fs.writeFileSync(p, JSON.stringify(s, null, 2), 'utf8');
+" 2>/dev/null || echo "Note: could not register hooks (node not found)"
