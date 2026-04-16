@@ -325,7 +325,7 @@ CSSPATCH
 
     menu.appendChild(item('Copy','Ctrl+C',function(){document.execCommand('copy');}));
     menu.appendChild(item('Copy as Markdown','',function(){
-      var md=htmlToMd(savedDiv).replace(/\n{3,}/g,'\n\n').trim();
+      var md=htmlToMd(savedDiv).replace(/[\u200F\u200E]/g,'').replace(/\n{3,}/g,'\n\n').trim();
       navigator.clipboard.writeText(md);
     }));
 
@@ -346,6 +346,15 @@ CSSPATCH
     if(!sel||sel.isCollapsed)return;
     e.preventDefault();
     showCopyMenu(e.clientX,e.clientY);
+  },true);
+
+  /* Strip invisible RTL/LTR marks from any copy (Ctrl+C or menu Copy) */
+  document.addEventListener('copy',function(e){
+    var sel=window.getSelection();
+    if(!sel||sel.isCollapsed)return;
+    var text=sel.toString().replace(/[\u200F\u200E]/g,'');
+    e.clipboardData.setData('text/plain',text);
+    e.preventDefault();
   },true);
 })();
 JSPATCH
