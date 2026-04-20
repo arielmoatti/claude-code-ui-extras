@@ -178,16 +178,10 @@ CSSPATCH
       if(raw===0)return;
       if(raw===lastCtxRaw)return; /* dedupe identical streaming events */
       lastCtxRaw=raw;
-      /* Cap: detected once usage crosses 200K, pinned in localStorage so it survives reloads
-         and low-context turns (sub-agents) don't flicker us back to 200K. */
-      var cap=200000;
-      if(raw>200000)cap=1000000;
-      try{
-        if(cap===1000000)localStorage.setItem('claude-ui-ctx-cap','1M');
-        else if(localStorage.getItem('claude-ui-ctx-cap')==='1M')cap=1000000;
-      }catch(_){ }
+      /* 1M detection: Opus is always 1M; models with [1m] tag are 1M; usage >200K = 1M */
+      var is1M=/opus/i.test(currentModel)||/\[1m\]/i.test(currentModel)||raw>200000;
+      var cap=is1M?1000000:200000;
       var pct=Math.round(raw*100/cap);
-      console.log('[ctx-badge] raw:',raw,'('+pct+'% of '+(cap===1000000?'1M':'200K')+')');
       var x=document.getElementById('claude-ui-context-badge');
       if(!x)return;
       x.textContent=fmtTokens(raw)+' / '+fmtCap(cap)+' ('+pct+'%)';

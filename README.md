@@ -15,7 +15,7 @@
 
 <ul dir="rtl">
 <li>פורמט: <code dir="ltr">349.4k / 1.0M (35%)</code> — טוקנים שנצרכו / תקרת המודל / אחוז</li>
-<li>זיהוי אוטומטי של תקרה — 200K או 1M (מודל עם חלון מורחב). ברגע שהחלון זוהה כ-1M הוא נשמר ב-<code>localStorage</code> ולא חוזר ל-200K גם אחרי reload</li>
+<li>זיהוי אוטומטי של תקרה — 200K או 1M (מודל עם חלון מורחב), מבוסס על ה-usage בפועל</li>
 <li>צבעים לפי שימוש: ירוק (&lt;50%), כתום (50-79%), אדום (≥80%)</li>
 <li>ניתן לכבות/להדליק עם דגל <code>show_context_window</code> ב-<code>ui.conf</code> (ברירת מחדל: דולק)</li>
 </ul>
@@ -207,7 +207,7 @@ Ordered newest-first — when you come back after a while, the top of the list s
 A small badge in the right corner of the input area showing **how much of the current conversation's context window is in use**. Each VSCode window has its own badge, reflecting its own session.
 
 - Format: `349.4k / 1.0M (35%)` — used tokens / model cap / percentage
-- Auto-detects cap — 200K or 1M (extended-window model). Once 1M is observed, it's pinned in `localStorage` and stays correct across reloads.
+- Auto-detects cap — 200K or 1M (extended-window model), based on live usage data
 - Color thresholds: green (<50%), orange (50-79%), red (≥80%)
 - Toggle via `show_context_window` flag in `ui.conf` (default: on)
 
