@@ -20,7 +20,7 @@
 <li>ניתן לכבות/להדליק עם דגל <code>show_context_window</code> ב-<code>ui.conf</code> (ברירת מחדל: דולק)</li>
 </ul>
 
-<p align="right"><img src="screenshots/context-window.jpg" alt="context window badge" height="90"/></p>
+<p align="right"><img src="screenshots/context-window.jpg" alt="context window badge" height="110"/></p>
 
 ### עקיפת חלוניות הרשאה ב-`.claude/` (bypass mode)
 
