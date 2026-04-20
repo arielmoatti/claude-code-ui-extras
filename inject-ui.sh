@@ -13,6 +13,13 @@ if [ -f "$CONF_FILE" ]; then
   [ -n "$val" ] && BORDER_COLOR="$val"
 fi
 
+# Read context window flag (default: true)
+SHOW_CONTEXT_WINDOW="true"
+if [ -f "$CONF_FILE" ]; then
+  val="$(grep '^show_context_window=' "$CONF_FILE" | cut -d= -f2-)"
+  [ -n "$val" ] && SHOW_CONTEXT_WINDOW="$val"
+fi
+
 FOUND=false
 for dir in "$HOME/.vscode/extensions"/anthropic.claude-code-*/webview; do
   css="$dir/index.css"
@@ -66,7 +73,9 @@ CSSPATCH
   var lastTotalCost=0;       /* last known cumulative session cost */
   var overageBaseline=null;  /* cost at moment overage started; null = not in overage */
 
-  /* get_claude_state_response — determines API vs SUB per window */
+  /* get_claude_state_response — determines API vs SUB per window.
+     API mode: show "API" badge + $ cost. SUB mode: hide billing badge entirely
+     (most users are on SUB — the label is noise); cost badge stays hidden unless overage. */
   window.addEventListener('message',function(e){
     var d=e.data;
     if(!d||d.type!=='from-extension')return;
@@ -74,9 +83,18 @@ CSSPATCH
     if(!resp||resp.type!=='get_claude_state_response')return;
     var acct=resp.config&&resp.config.account;
     isApiMode=(acct&&acct.tokenSource==='apiKeyHelper')||false;
-    billingLabel=isApiMode?'API':'SUB';
+    billingLabel=isApiMode?'API':'';
     var b=document.getElementById('claude-ui-billing-badge');
-    if(b){b.textContent=billingLabel;b.style.color=isApiMode?'#e8a84f':'#7ec8e3';b.style.borderColor=isApiMode?'#e8a84f':'#7ec8e3';}
+    if(b){
+      if(isApiMode){
+        b.textContent='API';
+        b.style.color='#e8a84f';
+        b.style.borderColor='#e8a84f';
+        b.style.display='inline-flex';
+      } else {
+        b.style.display='none';
+      }
+    }
     /* Show cost badge for API mode, or if SUB with active overage */
     var c=document.getElementById('claude-ui-cost-badge');
     if(c)c.style.display=(isApiMode||overageBaseline!==null)?'inline-flex':'none';
@@ -96,7 +114,7 @@ CSSPATCH
     if(info.utilization>=1&&overageBaseline===null){
       /* Hit 100% — capture baseline and show extra cost badge */
       overageBaseline=lastTotalCost;
-      if(c){c.style.display='inline-flex';c.style.color='#e05c5c';c.style.borderColor='#e05c5c';c.textContent='extra $0.000';}
+      if(c){c.style.display='inline-flex';c.style.color='#e05c5c';c.style.borderColor='#e05c5c';c.textContent='Extra usage $0.000';}
     } else if(info.utilization<1&&overageBaseline!==null){
       /* Back under limit (window reset) — hide badge */
       overageBaseline=null;
@@ -118,9 +136,66 @@ CSSPATCH
     if(isApiMode){
       c.textContent='$'+m.total_cost_usd.toFixed(3);
     } else if(overageBaseline!==null){
-      c.textContent='extra $'+(m.total_cost_usd-overageBaseline).toFixed(3);
+      c.textContent='Extra usage $'+(m.total_cost_usd-overageBaseline).toFixed(3);
     }
   });
+
+  /* Context window badge — per-chat, independent of cost.
+     Model captured from assistant io_messages; token usage from result io_message. */
+  var SHOW_CONTEXT='__SHOW_CONTEXT_WINDOW__'==='true';
+  var currentModel='';
+
+  function fmtTokens(n){
+    if(n>=1000000)return (n/1000000).toFixed(1)+'M';
+    if(n>=1000)return (n/1000).toFixed(1)+'k';
+    return String(n);
+  }
+  function fmtCap(n){
+    if(n>=1000000)return (n/1000000).toFixed(1)+'M';
+    return (n/1000)+'k';
+  }
+
+  /* Assistant io_message — fired ONCE per API call. message.usage = that call's actual
+     context size. Direct display (no max tracking) — assistant usage is accurate and grows
+     monotonically as the conversation grows. Duplicate events (streaming partial + final)
+     are filtered by comparing against the last displayed value. */
+  if(SHOW_CONTEXT){
+    var lastCtxRaw=-1;
+    window.addEventListener('message',function(e){
+      var d=e.data;
+      if(!d||d.type!=='from-extension')return;
+      var msg=d.message;
+      if(!msg||msg.type!=='io_message')return;
+      var m=msg.message;
+      if(!m||m.type!=='assistant')return;
+      var aMsg=m.message;
+      if(!aMsg||!aMsg.usage)return;
+      if(aMsg.model)currentModel=aMsg.model;
+      var u=aMsg.usage;
+      /* Exclude output_tokens — they're not in the current window yet, they roll into the
+         NEXT call's cache_read. Including them double-counts between turns. */
+      var raw=(u.input_tokens||0)+(u.cache_read_input_tokens||0)+(u.cache_creation_input_tokens||0);
+      if(raw===0)return;
+      if(raw===lastCtxRaw)return; /* dedupe identical streaming events */
+      lastCtxRaw=raw;
+      /* Cap: detected once usage crosses 200K, pinned in localStorage so it survives reloads
+         and low-context turns (sub-agents) don't flicker us back to 200K. */
+      var cap=200000;
+      if(raw>200000)cap=1000000;
+      try{
+        if(cap===1000000)localStorage.setItem('claude-ui-ctx-cap','1M');
+        else if(localStorage.getItem('claude-ui-ctx-cap')==='1M')cap=1000000;
+      }catch(_){ }
+      var pct=Math.round(raw*100/cap);
+      console.log('[ctx-badge] raw:',raw,'('+pct+'% of '+(cap===1000000?'1M':'200K')+')');
+      var x=document.getElementById('claude-ui-context-badge');
+      if(!x)return;
+      x.textContent=fmtTokens(raw)+' / '+fmtCap(cap)+' ('+pct+'%)';
+      var col=pct>=80?'#f14c4c':pct>=50?'#e8ab3a':'#3dc9b0';
+      x.style.color=col;
+      x.style.borderColor=col;
+    });
+  }
 
 
   function getBorder(){ return localStorage.getItem(BORDER_KEY)!=='false'; }
@@ -228,12 +303,12 @@ CSSPATCH
 
     nav.appendChild(up); nav.appendChild(dn); nav.appendChild(end);
 
-    /* Claude UI Billing Badge — text updated live from update_state message */
+    /* Claude UI Billing Badge — starts hidden; shown as "API" only if state response confirms API mode */
     var badge=document.createElement('span');
     badge.id='claude-ui-billing-badge';
-    badge.textContent=billingLabel;
+    badge.textContent='';
     badge.title='Account type';
-    badge.style.cssText='font-size:10px;font-weight:700;padding:2px 5px;border:1px solid #888;border-radius:3px;line-height:1;cursor:default;margin-left:4px;align-self:center;color:#888;';
+    badge.style.cssText='font-size:10px;font-weight:700;padding:2px 5px;border:1px solid #888;border-radius:3px;line-height:1;cursor:default;margin-left:4px;align-self:center;color:#888;display:none;';
     nav.appendChild(badge);
 
     /* Cost badge — API mode only, updates after each response */
@@ -243,6 +318,16 @@ CSSPATCH
     cost.title='Session cost';
     cost.style.cssText='font-size:10px;font-weight:700;padding:2px 5px;border:1px solid #e8a84f;border-radius:3px;line-height:1;cursor:default;margin-left:4px;align-self:center;color:#e8a84f;display:'+(isApiMode?'inline-flex':'none')+';';
     nav.appendChild(cost);
+
+    /* Context window badge — rightmost; always visible, shows "…" until first result io_message */
+    if(SHOW_CONTEXT){
+      var ctx=document.createElement('span');
+      ctx.id='claude-ui-context-badge';
+      ctx.textContent='…';
+      ctx.title='Context window usage (per-chat)';
+      ctx.style.cssText='font-size:10px;font-weight:700;padding:2px 5px;border:1px solid #3dc9b0;border-radius:3px;line-height:1;cursor:default;margin-left:4px;align-self:center;color:#3dc9b0;display:inline-flex;';
+      nav.appendChild(ctx);
+    }
 
     footer.insertBefore(nav,addBtn);
   }
@@ -365,6 +450,7 @@ JSEND
 
     # Substitute border color placeholder
     sed -i "s|__BORDER_COLOR__|$BORDER_COLOR|g" "$js"
+    sed -i "s|__SHOW_CONTEXT_WINDOW__|$SHOW_CONTEXT_WINDOW|g" "$js"
     CHANGED=true
   fi
 
