@@ -9,7 +9,7 @@
 
 ## פיצ'רים
 
-### 🆕 חיווי Context Window
+### ‏🆕 חיווי Context Window
 
 <p dir="rtl">‏Badge קטן בפינה הימנית של אזור הקלט שמציג <b>כמה מחלון הקונטקסט של השיחה הנוכחית נצרך כרגע</b>. לכל חלון VSCode חיווי משלו, בהתאם לשיחה שלו.</p>
 
@@ -20,7 +20,7 @@
 <li>ניתן לכבות/להדליק עם דגל <code>show_context_window</code> ב-<code>ui.conf</code> (ברירת מחדל: דולק)</li>
 </ul>
 
-<p align="right"><img src="screenshots/context-window.jpg" alt="context window badge" height="60"/></p>
+<p align="right"><img src="screenshots/context-window.jpg" alt="context window badge" height="78"/></p>
 
 ### עקיפת חלוניות הרשאה ב-`.claude/` (bypass mode)
 
@@ -211,7 +211,7 @@ A small badge in the right corner of the input area showing **how much of the cu
 - Color thresholds: green (<50%), orange (50-79%), red (≥80%)
 - Toggle via `show_context_window` flag in `ui.conf` (default: on)
 
-<p><img src="screenshots/context-window.jpg" alt="context window badge" height="60"/></p>
+<p><img src="screenshots/context-window.jpg" alt="context window badge" height="78"/></p>
 
 ### Bypass `.claude/` permission prompts
 
