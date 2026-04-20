@@ -3,67 +3,43 @@
 # תוספות ממשק לקלוד קוד
 
 שיפורים קטנים לחוויית השימוש בתוסף Claude Code ל-VSCode.
+הפיצ'רים מסודרים מהחדש ביותר לישן (מי שחוזר לאחר תקופה יראה מיד מה חדש).
 
 ---
 
 ## פיצ'רים
 
-### מסגרת להודעות משתמש
-מסגרת עדינה סביב ההודעות שלך, כדי שתוכל לסרוק את השיחה ולהבדיל בקלות בין הפרומפטים שלך לתשובות של קלוד.
-ניתן להדליק/לכבות עם קליק ימני על כפתורי הניווט ↑↓⤓.
-צבע ברירת המחדל ניתן לשינוי בקובץ `ui.conf`.
+### 🆕 חיווי Context Window
 
-<p align="right"><img src="screenshots/border.jpg" alt="border around user message" height="300"/></p>
-
-### הרחבת הודעות משתמש
-קלוד קוד מכווץ הודעות ארוכות לכ-3 שורות עם כפתור "הצג עוד". הפיצ'ר הזה מגדיל את המגבלה לכ-7 שורות, כך שהודעות בינוניות נראות במלואן בלי שום לחיצה.
-
-### העתקה כ-Markdown
-קליק ימני על טקסט מסומן בשיחה פותח תפריט עם שתי אפשרויות:
+Badge קטן בפינה הימנית של אזור הקלט שמציג **כמה מחלון הקונטקסט של השיחה הנוכחית נצרך כרגע**. לכל חלון VSCode חיווי משלו, בהתאם לשיחה שלו.
 
 <ul dir="rtl">
-<li><b>Copy</b><br>מעתיק עם עיצוב מלא, מתאים להדבקה ב-Word, Notion וכדומה</li>
-<li><b>Copy as Markdown</b><br>ממיר את הטקסט ל-Markdown גולמי ומעתיק כטקסט רגיל</li>
+<li>פורמט: <code dir="ltr">349.4k / 1.0M (35%)</code> — טוקנים שנצרכו / תקרת המודל / אחוז</li>
+<li>זיהוי אוטומטי של תקרה — 200K או 1M (מודל עם חלון מורחב). ברגע שהחלון זוהה כ-1M הוא נשמר ב-<code>localStorage</code> ולא חוזר ל-200K גם אחרי reload</li>
+<li>צבעים לפי שימוש: ירוק (&lt;50%), כתום (50-79%), אדום (≥80%)</li>
+<li>ניתן לכבות/להדליק עם דגל <code>show_context_window</code> ב-<code>ui.conf</code> (ברירת מחדל: דולק)</li>
 </ul>
 
-התפריט מופיע רק כשיש טקסט מסומן. בלי סימון — קליק ימני עובד כרגיל.
+<p align="right"><img src="screenshots/context-window.jpg" alt="context window badge" height="60"/></p>
 
-<p align="right"><img src="screenshots/copy as markdown.jpg" alt="copy as markdown" height="300"/></p>
+### חיווי API + עלות סשן (עודכן)
 
-### היסטוריית שיחות (רב-שורתי)
-קלוד קוד רגיל חותך את שמות השיחות בסיידבר לשורה אחת. הפיצ'ר הזה מאפשר לכל פריט להציג עד 3 שורות, כדי שתוכל לקרוא על מה דובר בשיחה.
-
-<p align="right"><img src="screenshots/3 liner.jpg" alt="3 liner history" height="300"/></p>
-
-### ניווט בין הודעות (↑ ↓ ⤓)
-שלושה כפתורים שמוזרקים לאזור הקלט:
+במצב הרגיל (מנוי Claude.ai) אין שום חיווי — נקי ושקט.
+החיווי מופיע **רק** באחד משני המצבים:
 
 <ul dir="rtl">
-<li><b>↑</b> — קפיצה להודעת המשתמש הקודמת</li>
-<li><b>↓</b> — קפיצה להודעת המשתמש הבאה</li>
-<li><b>⤓</b> — גלילה לתחתית השיחה (אחרי כל ההודעות, כולל התגובה האחרונה)</li>
+<li><b>Extra Usage</b> (אדום) — עברת את המכסה השעתית במנוי. מוצג <code dir="ltr">Extra usage $X.XXX</code> עם עלות חריגה מצטברת מרגע ה-overage</li>
+<li><b>API</b> (כתום) — מחובר עם מפתח API. מוצג <code>API</code> + עלות מצטברת של הסשן <code dir="ltr">$X.XXX</code>, תמיד גלוי</li>
 </ul>
 
-הניווט עוצר בהודעה הראשונה / האחרונה — ללא לולאה.
-מדגיש את ההודעה שאליה קפצת עם אנימציית פולס קצרה.
-
-<p align="right"><img src="screenshots/navigation arrows.jpg" alt="navigation arrows" height="80"/></p>
-
-### תג חשבון ועלות סשן
-
-תג קטן שמופיע מימין לכפתורי הניווט ומציג את סוג החשבון של החלון הנוכחי.
-הזיהוי מתבצע בזמן ריצה דרך המסר `get_claude_state_response` שהתוסף שולח לכל חלון בנפרד — כך שכל חלון VSCode מציג את סוג החשבון הנכון שלו, ללא race condition.
+הזיהוי מתבצע בזמן ריצה דרך המסר `get_claude_state_response` שהתוסף שולח לכל חלון בנפרד — כך שכל חלון VSCode מציג את המצב הנכון שלו, ללא race condition.
 
 </div>
 
 <table>
 <tr>
-<td align="center"><img src="screenshots/sub.jpg" alt="SUB badge" width="360"/></td>
-<td align="right" dir="rtl"><b>SUB</b> (כחול)<br>מנוי Claude.ai — מצב רגיל, ללא תצוגת עלות</td>
-</tr>
-<tr>
 <td align="center"><img src="screenshots/sub-extra.jpg" alt="SUB with extra usage" width="360"/></td>
-<td align="right" dir="rtl"><b>SUB + Extra Usage</b> (אדום)<br>עברת את המכסה השעתית — עלות חריגה מצטברת מרגע ה-overage</td>
+<td align="right" dir="rtl"><b>Extra Usage</b> (אדום)<br>עברת את המכסה השעתית — עלות חריגה מצטברת מרגע ה-overage</td>
 </tr>
 <tr>
 <td align="center"><img src="screenshots/api-cost.jpg" alt="API with cost" width="360"/></td>
@@ -91,6 +67,48 @@
 **איך זה עובד:** ההוק קורא את ה-payload של קריאת הכלי מ-stdin, מזהה `.claude` בנתיב הקובץ או בפקודת Bash, בודק ש-`permission_mode === 'bypassPermissions'`, ומחזיר את הפורמט הנכון `hookSpecificOutput.decision.behavior: "allow"`. חשוב: פורמט שטוח `{"behavior":"allow"}` **לא עובד** ב-Claude Code v2.1.107 — הסכמה המקוננת היא המחייבת.
 
 **מגבלה ידועה:** לתוסף Claude Code ל-VSCode יש [באג נפרד](https://github.com/anthropics/claude-code/issues/36348) — `defaultMode: "bypassPermissions"` ב-settings.json לא נתפס בפתיחת סשן, כל סשן חדש נפתח במצב `default` (Ask). עדיין צריך לחיצה ידנית אחת על `Shift+Tab` בפתיחה כדי להיכנס ל-bypass. מרגע זה והלאה, ההוק שומר על הסשן שקט.
+
+### מסגרת להודעות משתמש
+
+מסגרת עדינה סביב ההודעות שלך, כדי שתוכל לסרוק את השיחה ולהבדיל בקלות בין הפרומפטים שלך לתשובות של קלוד.
+ניתן להדליק/לכבות עם קליק ימני על כפתורי הניווט ↑↓⤓.
+צבע ברירת המחדל ניתן לשינוי בקובץ `ui.conf`.
+
+<p align="right"><img src="screenshots/border.jpg" alt="border around user message" height="300"/></p>
+
+### הרחבת הודעות משתמש
+קלוד קוד מכווץ הודעות ארוכות לכ-3 שורות עם כפתור "הצג עוד". הפיצ'ר הזה מגדיל את המגבלה לכ-7 שורות, כך שהודעות בינוניות נראות במלואן בלי שום לחיצה.
+
+### ניווט בין הודעות (↑ ↓ ⤓)
+שלושה כפתורים שמוזרקים לאזור הקלט:
+
+<ul dir="rtl">
+<li><b>↑</b> — קפיצה להודעת המשתמש הקודמת</li>
+<li><b>↓</b> — קפיצה להודעת המשתמש הבאה</li>
+<li><b>⤓</b> — גלילה לתחתית השיחה (אחרי כל ההודעות, כולל התגובה האחרונה)</li>
+</ul>
+
+הניווט עוצר בהודעה הראשונה / האחרונה — ללא לולאה.
+מדגיש את ההודעה שאליה קפצת עם אנימציית פולס קצרה.
+
+<p align="right"><img src="screenshots/navigation arrows.jpg" alt="navigation arrows" height="80"/></p>
+
+### היסטוריית שיחות (רב-שורתי)
+קלוד קוד רגיל חותך את שמות השיחות בסיידבר לשורה אחת. הפיצ'ר הזה מאפשר לכל פריט להציג עד 3 שורות, כדי שתוכל לקרוא על מה דובר בשיחה.
+
+<p align="right"><img src="screenshots/3 liner.jpg" alt="3 liner history" height="300"/></p>
+
+### העתקה כ-Markdown
+קליק ימני על טקסט מסומן בשיחה פותח תפריט עם שתי אפשרויות:
+
+<ul dir="rtl">
+<li><b>Copy</b><br>מעתיק עם עיצוב מלא, מתאים להדבקה ב-Word, Notion וכדומה</li>
+<li><b>Copy as Markdown</b><br>ממיר את הטקסט ל-Markdown גולמי ומעתיק כטקסט רגיל</li>
+</ul>
+
+התפריט מופיע רק כשיש טקסט מסומן. בלי סימון — קליק ימני עובד כרגיל.
+
+<p align="right"><img src="screenshots/copy as markdown.jpg" alt="copy as markdown" height="300"/></p>
 
 ---
 
@@ -148,12 +166,16 @@ Step 5 — After the reload, remind me to press Shift+Tab once to enter bypassPe
 
 ## הגדרות
 
-ערוך את `scripts/ui.conf` כדי לשנות את צבע המסגרת:
+ערוך את `scripts/ui.conf` — שני פרמטרים נתמכים:
 
 </div>
 
 ```
+# צבע מסגרת הודעות משתמש (כל ערך CSS תקין)
 border_color=rgba(249,131,131,0.5)
+
+# הצגת badge של Context Window (true / false)
+show_context_window=true
 ```
 
 <div dir="rtl">
@@ -178,49 +200,30 @@ border_color=rgba(249,131,131,0.5)
 
 ## Features
 
-### User Message Border
-A subtle border around your messages, making it easy to visually separate your prompts from Claude's responses.
-Toggle on/off with a right-click on the ↑↓⤓ navigation buttons.
-Default color is configurable in `ui.conf`.
+Ordered newest-first — when you come back after a while, the top of the list shows what's new.
 
-<p><img src="screenshots/border.jpg" alt="border around user message" height="300"/></p>
+### 🆕 Context Window indicator
 
-### User Message Expand
-Claude Code collapses long user messages to ~3 lines with a "show more" button. This fix raises the limit to ~7 lines, so short-to-medium messages are fully visible without any interaction.
+A small badge in the right corner of the input area showing **how much of the current conversation's context window is in use**. Each VSCode window has its own badge, reflecting its own session.
 
-### Copy as Markdown
-Right-click on any selected text in the conversation to get a context menu with two options:
-- **Copy** — copies the selection as rich text (preserves formatting when pasting into Word, Notion, etc.)
-- **Copy as Markdown** — converts the selection to raw Markdown (`**bold**`, `# heading`, `` `code` ``, etc.) and copies it as plain text
+- Format: `349.4k / 1.0M (35%)` — used tokens / model cap / percentage
+- Auto-detects cap — 200K or 1M (extended-window model). Once 1M is observed, it's pinned in `localStorage` and stays correct across reloads.
+- Color thresholds: green (<50%), orange (50-79%), red (≥80%)
+- Toggle via `show_context_window` flag in `ui.conf` (default: on)
 
-This menu only appears when text is selected. When nothing is selected, right-click behaves normally.
+<p><img src="screenshots/context-window.jpg" alt="context window badge" height="60"/></p>
 
-<p><img src="screenshots/copy as markdown.jpg" alt="copy as markdown" height="300"/></p>
+### API indicator + session cost (updated)
 
-### Session History (multi-line)
-The Claude Code sidebar normally truncates session names to a single line. This fix expands each entry to up to 3 lines, so you can actually read what a session was about.
-
-<p><img src="screenshots/3 liner.jpg" alt="3 liner history" height="300"/></p>
-
-### Message Navigation (↑ ↓ ⤓)
-Three buttons injected into the input footer:
-- **↑** — jump to previous user message
-- **↓** — jump to next user message
-- **⤓** — scroll to the absolute bottom of the conversation (past all messages, including the latest model response)
-- Navigation stops at the first / last message — no looping
-- Highlights the target message with a brief pulse animation
-
-<p><img src="screenshots/navigation arrows.jpg" alt="navigation arrows" height="80"/></p>
-
-### Account Badge & Session Cost
-
-A small badge next to the navigation buttons showing the account type. Detection happens at runtime via `get_claude_state_response` — each VSCode window shows its own correct account type, with no race condition.
+In regular mode (Claude.ai subscription) there's no indicator — clean and quiet.
+The indicator appears **only** in one of two cases:
 
 | | Mode |
 |---|---|
-| ![SUB badge](screenshots/sub.jpg) | **SUB** (blue) — Claude.ai subscription, no cost displayed |
-| ![SUB with extra usage](screenshots/sub-extra.jpg) | **SUB + Extra Usage** (red) — exceeded hourly quota, shows overage cost since the moment it started |
-| ![API with cost](screenshots/api-cost.jpg) | **API** (orange) — API key, cumulative session cost always visible |
+| ![SUB with extra usage](screenshots/sub-extra.jpg) | **Extra Usage** (red) — exceeded hourly quota, shows overage cost since the moment it started |
+| ![API with cost](screenshots/api-cost.jpg) | **API** (orange) — connected via API key, cumulative session cost always visible |
+
+Detection happens at runtime via `get_claude_state_response` — each VSCode window shows its own correct state, with no race condition.
 
 ### Bypass `.claude/` permission prompts
 
@@ -240,6 +243,40 @@ The fix: a small `PermissionRequest` hook (`bypass-claude-dir.js`, ~25 lines of 
 **How it works:** the hook reads the tool call payload from stdin, matches on `.claude` in the file path or Bash command, checks `permission_mode === 'bypassPermissions'`, and returns the correctly-formatted `hookSpecificOutput.decision.behavior: "allow"` response. A flat `{"behavior":"allow"}` is silently ignored by Claude Code v2.1.107 — the nested schema is required.
 
 **Known limitation:** the Claude Code VSCode extension also has [a separate bug](https://github.com/anthropics/claude-code/issues/36348) where `defaultMode: "bypassPermissions"` in `settings.json` is not honored on session start — each session opens in `default` (Ask) mode. You still need one manual `Shift+Tab` at session start to enter bypass. Once there, this hook keeps the rest of the session silent.
+
+### User Message Border
+A subtle border around your messages, making it easy to visually separate your prompts from Claude's responses.
+Toggle on/off with a right-click on the ↑↓⤓ navigation buttons.
+Default color is configurable in `ui.conf`.
+
+<p><img src="screenshots/border.jpg" alt="border around user message" height="300"/></p>
+
+### User Message Expand
+Claude Code collapses long user messages to ~3 lines with a "show more" button. This fix raises the limit to ~7 lines, so short-to-medium messages are fully visible without any interaction.
+
+### Message Navigation (↑ ↓ ⤓)
+Three buttons injected into the input footer:
+- **↑** — jump to previous user message
+- **↓** — jump to next user message
+- **⤓** — scroll to the absolute bottom of the conversation (past all messages, including the latest model response)
+- Navigation stops at the first / last message — no looping
+- Highlights the target message with a brief pulse animation
+
+<p><img src="screenshots/navigation arrows.jpg" alt="navigation arrows" height="80"/></p>
+
+### Session History (multi-line)
+The Claude Code sidebar normally truncates session names to a single line. This fix expands each entry to up to 3 lines, so you can actually read what a session was about.
+
+<p><img src="screenshots/3 liner.jpg" alt="3 liner history" height="300"/></p>
+
+### Copy as Markdown
+Right-click on any selected text in the conversation to get a context menu with two options:
+- **Copy** — copies the selection as rich text (preserves formatting when pasting into Word, Notion, etc.)
+- **Copy as Markdown** — converts the selection to raw Markdown (`**bold**`, `# heading`, `` `code` ``, etc.) and copies it as plain text
+
+This menu only appears when text is selected. When nothing is selected, right-click behaves normally.
+
+<p><img src="screenshots/copy as markdown.jpg" alt="copy as markdown" height="300"/></p>
 
 ---
 
@@ -282,10 +319,14 @@ The script will:
 
 ## Configuration
 
-Edit `scripts/ui.conf` to change the border color:
+Edit `scripts/ui.conf` — two supported parameters:
 
 ```
+# User message border color (any valid CSS color)
 border_color=rgba(249,131,131,0.5)
+
+# Show Context Window badge (true / false)
+show_context_window=true
 ```
 
 Then re-run `bash scripts/inject-ui.sh` and reload VSCode.
