@@ -114,7 +114,7 @@ CSSPATCH
     if(info.utilization>=1&&overageBaseline===null){
       /* Hit 100% — capture baseline and show extra cost badge */
       overageBaseline=lastTotalCost;
-      if(c){c.style.display='inline-flex';c.style.color='#e05c5c';c.style.borderColor='#e05c5c';c.textContent='Extra usage $0.000';}
+      if(c){c.style.display='inline-flex';c.style.color='#e05c5c';c.style.borderColor='#e05c5c';c.textContent='Extra $0.000';}
     } else if(info.utilization<1&&overageBaseline!==null){
       /* Back under limit (window reset) — hide badge */
       overageBaseline=null;
@@ -136,7 +136,7 @@ CSSPATCH
     if(isApiMode){
       c.textContent='$'+m.total_cost_usd.toFixed(3);
     } else if(overageBaseline!==null){
-      c.textContent='Extra usage $'+(m.total_cost_usd-overageBaseline).toFixed(3);
+      c.textContent='Extra $'+(m.total_cost_usd-overageBaseline).toFixed(3);
     }
   });
 

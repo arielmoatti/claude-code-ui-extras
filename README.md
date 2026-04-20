@@ -11,7 +11,7 @@
 
 ### 🆕 חיווי Context Window
 
-Badge קטן בפינה הימנית של אזור הקלט שמציג **כמה מחלון הקונטקסט של השיחה הנוכחית נצרך כרגע**. לכל חלון VSCode חיווי משלו, בהתאם לשיחה שלו.
+<p dir="rtl">‏Badge קטן בפינה הימנית של אזור הקלט שמציג <b>כמה מחלון הקונטקסט של השיחה הנוכחית נצרך כרגע</b>. לכל חלון VSCode חיווי משלו, בהתאם לשיחה שלו.</p>
 
 <ul dir="rtl">
 <li>פורמט: <code dir="ltr">349.4k / 1.0M (35%)</code> — טוקנים שנצרכו / תקרת המודל / אחוז</li>
@@ -21,33 +21,6 @@ Badge קטן בפינה הימנית של אזור הקלט שמציג **כמה 
 </ul>
 
 <p align="right"><img src="screenshots/context-window.jpg" alt="context window badge" height="60"/></p>
-
-### חיווי API + עלות סשן (עודכן)
-
-במצב הרגיל (מנוי Claude.ai) אין שום חיווי — נקי ושקט.
-החיווי מופיע **רק** באחד משני המצבים:
-
-<ul dir="rtl">
-<li><b>Extra Usage</b> (אדום) — עברת את המכסה השעתית במנוי. מוצג <code dir="ltr">Extra usage $X.XXX</code> עם עלות חריגה מצטברת מרגע ה-overage</li>
-<li><b>API</b> (כתום) — מחובר עם מפתח API. מוצג <code>API</code> + עלות מצטברת של הסשן <code dir="ltr">$X.XXX</code>, תמיד גלוי</li>
-</ul>
-
-הזיהוי מתבצע בזמן ריצה דרך המסר `get_claude_state_response` שהתוסף שולח לכל חלון בנפרד — כך שכל חלון VSCode מציג את המצב הנכון שלו, ללא race condition.
-
-</div>
-
-<table>
-<tr>
-<td align="center"><img src="screenshots/sub-extra.jpg" alt="SUB with extra usage" width="360"/></td>
-<td align="right" dir="rtl"><b>Extra Usage</b> (אדום)<br>עברת את המכסה השעתית — עלות חריגה מצטברת מרגע ה-overage</td>
-</tr>
-<tr>
-<td align="center"><img src="screenshots/api-cost.jpg" alt="API with cost" width="360"/></td>
-<td align="right" dir="rtl"><b>API</b> (כתום)<br>מפתח API — עלות מצטברת של הסשן, מוצג תמיד</td>
-</tr>
-</table>
-
-<div dir="rtl">
 
 ### עקיפת חלוניות הרשאה ב-`.claude/` (bypass mode)
 
@@ -68,16 +41,32 @@ Badge קטן בפינה הימנית של אזור הקלט שמציג **כמה 
 
 **מגבלה ידועה:** לתוסף Claude Code ל-VSCode יש [באג נפרד](https://github.com/anthropics/claude-code/issues/36348) — `defaultMode: "bypassPermissions"` ב-settings.json לא נתפס בפתיחת סשן, כל סשן חדש נפתח במצב `default` (Ask). עדיין צריך לחיצה ידנית אחת על `Shift+Tab` בפתיחה כדי להיכנס ל-bypass. מרגע זה והלאה, ההוק שומר על הסשן שקט.
 
-### מסגרת להודעות משתמש
+### חיווי API + עלות סשן (עודכן)
 
-מסגרת עדינה סביב ההודעות שלך, כדי שתוכל לסרוק את השיחה ולהבדיל בקלות בין הפרומפטים שלך לתשובות של קלוד.
-ניתן להדליק/לכבות עם קליק ימני על כפתורי הניווט ↑↓⤓.
-צבע ברירת המחדל ניתן לשינוי בקובץ `ui.conf`.
+במצב הרגיל (מנוי Claude.ai) אין שום חיווי — נקי ושקט.
+החיווי מופיע **רק** באחד משני המצבים:
 
-<p align="right"><img src="screenshots/border.jpg" alt="border around user message" height="300"/></p>
+<ul dir="rtl">
+<li><b>Extra</b> (אדום) — עברת את המכסה השעתית במנוי. מוצג <code dir="ltr">Extra $X.XXX</code> עם עלות חריגה מצטברת מרגע ה-overage</li>
+<li><b>API</b> (כתום) — מחובר עם מפתח API. מוצג <code>API</code> + עלות מצטברת של הסשן <code dir="ltr">$X.XXX</code>, תמיד גלוי</li>
+</ul>
 
-### הרחבת הודעות משתמש
-קלוד קוד מכווץ הודעות ארוכות לכ-3 שורות עם כפתור "הצג עוד". הפיצ'ר הזה מגדיל את המגבלה לכ-7 שורות, כך שהודעות בינוניות נראות במלואן בלי שום לחיצה.
+הזיהוי מתבצע בזמן ריצה דרך המסר `get_claude_state_response` שהתוסף שולח לכל חלון בנפרד — כך שכל חלון VSCode מציג את המצב הנכון שלו.
+
+</div>
+
+<table>
+<tr>
+<td align="center"><img src="screenshots/sub-extra.jpg" alt="Extra usage overage" width="360"/></td>
+<td align="right" dir="rtl"><b>Extra</b> (אדום)<br>עברת את המכסה השעתית — עלות חריגה מצטברת מרגע ה-overage</td>
+</tr>
+<tr>
+<td align="center"><img src="screenshots/api-cost.jpg" alt="API with cost" width="360"/></td>
+<td align="right" dir="rtl"><b>API</b> (כתום)<br>מפתח API — עלות מצטברת של הסשן, מוצג תמיד</td>
+</tr>
+</table>
+
+<div dir="rtl">
 
 ### ניווט בין הודעות (↑ ↓ ⤓)
 שלושה כפתורים שמוזרקים לאזור הקלט:
@@ -92,6 +81,17 @@ Badge קטן בפינה הימנית של אזור הקלט שמציג **כמה 
 מדגיש את ההודעה שאליה קפצת עם אנימציית פולס קצרה.
 
 <p align="right"><img src="screenshots/navigation arrows.jpg" alt="navigation arrows" height="80"/></p>
+
+### מסגרת להודעות משתמש
+
+מסגרת עדינה סביב ההודעות שלך, כדי שתוכל לסרוק את השיחה ולהבדיל בקלות בין הפרומפטים שלך לתשובות של קלוד.
+ניתן להדליק/לכבות עם קליק ימני על כפתורי הניווט ↑↓⤓.
+צבע ברירת המחדל ניתן לשינוי בקובץ `ui.conf`.
+
+<p align="right"><img src="screenshots/border.jpg" alt="border around user message" height="300"/></p>
+
+### הרחבת הודעות משתמש
+קלוד קוד מכווץ הודעות ארוכות לכ-3 שורות עם כפתור "הצג עוד". הפיצ'ר הזה מגדיל את המגבלה לכ-7 שורות, כך שהודעות בינוניות נראות במלואן בלי שום לחיצה.
 
 ### היסטוריית שיחות (רב-שורתי)
 קלוד קוד רגיל חותך את שמות השיחות בסיידבר לשורה אחת. הפיצ'ר הזה מאפשר לכל פריט להציג עד 3 שורות, כדי שתוכל לקרוא על מה דובר בשיחה.
@@ -213,18 +213,6 @@ A small badge in the right corner of the input area showing **how much of the cu
 
 <p><img src="screenshots/context-window.jpg" alt="context window badge" height="60"/></p>
 
-### API indicator + session cost (updated)
-
-In regular mode (Claude.ai subscription) there's no indicator — clean and quiet.
-The indicator appears **only** in one of two cases:
-
-| | Mode |
-|---|---|
-| ![SUB with extra usage](screenshots/sub-extra.jpg) | **Extra Usage** (red) — exceeded hourly quota, shows overage cost since the moment it started |
-| ![API with cost](screenshots/api-cost.jpg) | **API** (orange) — connected via API key, cumulative session cost always visible |
-
-Detection happens at runtime via `get_claude_state_response` — each VSCode window shows its own correct state, with no race condition.
-
 ### Bypass `.claude/` permission prompts
 
 Since Claude Code v2.1.78, a hardcoded guard prompts for every Edit/Write into `.claude/commands/`, `.claude/agents/`, and `.claude/skills/` — **even when the session is in `bypassPermissions` mode**. This is a known open bug tracked in [META issue #39523](https://github.com/anthropics/claude-code/issues/39523), unresolved for 9+ months. Settings overrides, allow rules, `--dangerously-skip-permissions`, and wildcard rules all fail to work around it.
@@ -244,15 +232,17 @@ The fix: a small `PermissionRequest` hook (`bypass-claude-dir.js`, ~25 lines of 
 
 **Known limitation:** the Claude Code VSCode extension also has [a separate bug](https://github.com/anthropics/claude-code/issues/36348) where `defaultMode: "bypassPermissions"` in `settings.json` is not honored on session start — each session opens in `default` (Ask) mode. You still need one manual `Shift+Tab` at session start to enter bypass. Once there, this hook keeps the rest of the session silent.
 
-### User Message Border
-A subtle border around your messages, making it easy to visually separate your prompts from Claude's responses.
-Toggle on/off with a right-click on the ↑↓⤓ navigation buttons.
-Default color is configurable in `ui.conf`.
+### API indicator + session cost (updated)
 
-<p><img src="screenshots/border.jpg" alt="border around user message" height="300"/></p>
+In regular mode (Claude.ai subscription) there's no indicator — clean and quiet.
+The indicator appears **only** in one of two cases:
 
-### User Message Expand
-Claude Code collapses long user messages to ~3 lines with a "show more" button. This fix raises the limit to ~7 lines, so short-to-medium messages are fully visible without any interaction.
+| | Mode |
+|---|---|
+| ![Extra usage overage](screenshots/sub-extra.jpg) | **Extra** (red) — exceeded hourly quota, shows overage cost since the moment it started |
+| ![API with cost](screenshots/api-cost.jpg) | **API** (orange) — connected via API key, cumulative session cost always visible |
+
+Detection happens at runtime via `get_claude_state_response` — each VSCode window shows its own correct state.
 
 ### Message Navigation (↑ ↓ ⤓)
 Three buttons injected into the input footer:
@@ -263,6 +253,16 @@ Three buttons injected into the input footer:
 - Highlights the target message with a brief pulse animation
 
 <p><img src="screenshots/navigation arrows.jpg" alt="navigation arrows" height="80"/></p>
+
+### User Message Border
+A subtle border around your messages, making it easy to visually separate your prompts from Claude's responses.
+Toggle on/off with a right-click on the ↑↓⤓ navigation buttons.
+Default color is configurable in `ui.conf`.
+
+<p><img src="screenshots/border.jpg" alt="border around user message" height="300"/></p>
+
+### User Message Expand
+Claude Code collapses long user messages to ~3 lines with a "show more" button. This fix raises the limit to ~7 lines, so short-to-medium messages are fully visible without any interaction.
 
 ### Session History (multi-line)
 The Claude Code sidebar normally truncates session names to a single line. This fix expands each entry to up to 3 lines, so you can actually read what a session was about.
