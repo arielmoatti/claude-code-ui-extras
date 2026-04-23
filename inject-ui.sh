@@ -20,6 +20,13 @@ if [ -f "$CONF_FILE" ]; then
   [ -n "$val" ] && SHOW_CONTEXT_WINDOW="$val"
 fi
 
+# Read rate_limit_event diagnostic logging flag (default: false)
+RATE_LIMIT_DIAG="false"
+if [ -f "$CONF_FILE" ]; then
+  val="$(grep '^rate_limit_diag=' "$CONF_FILE" | cut -d= -f2-)"
+  [ -n "$val" ] && RATE_LIMIT_DIAG="$val"
+fi
+
 FOUND=false
 for dir in "$HOME/.vscode/extensions"/anthropic.claude-code-*/webview; do
   css="$dir/index.css"
@@ -100,7 +107,12 @@ CSSPATCH
     if(c)c.style.display=(isApiMode||overageBaseline!==null)?'inline-flex':'none';
   });
 
-  /* rate_limit_event — detects Extra Usage start/end (SUB mode only) */
+  /* rate_limit_event — detects Extra Usage start/end (SUB mode only).
+     v2.1.118+ schema: `status` ("allowed"/"rejected"/…) + `rateLimitType` with
+     new `overage` value. The old `utilization>=1` check stopped firing.
+     Triggers: either explicit `overage` type, OR `five_hour` + `rejected`.
+     DIAG flag: __RATE_LIMIT_DIAG__ — console.logs every event until we confirm the new schema live, then flip off. */
+  var RATE_LIMIT_DIAG=__RATE_LIMIT_DIAG__;
   window.addEventListener('message',function(e){
     var d=e.data;
     if(!d||d.type!=='from-extension')return;
@@ -109,14 +121,17 @@ CSSPATCH
     var m=msg.message;
     if(!m||m.type!=='rate_limit_event')return;
     var info=m.rate_limit_info;
-    if(!info||isApiMode||info.rateLimitType!=='five_hour')return;
+    if(RATE_LIMIT_DIAG)console.log('[claude-ui-extras] rate_limit_event',JSON.stringify(info));
+    if(!info||isApiMode)return;
     var c=document.getElementById('claude-ui-cost-badge');
-    if(info.utilization>=1&&overageBaseline===null){
-      /* Hit 100% — capture baseline and show extra cost badge */
+    var inOverage=info.rateLimitType==='overage'||
+                  (info.rateLimitType==='five_hour'&&info.status==='rejected');
+    if(inOverage&&overageBaseline===null){
+      /* Entered overage — capture baseline and show extra cost badge */
       overageBaseline=lastTotalCost;
-      if(c){c.style.display='inline-flex';c.style.color='#e05c5c';c.style.borderColor='#e05c5c';c.textContent='Extra $0.000';}
-    } else if(info.utilization<1&&overageBaseline!==null){
-      /* Back under limit (window reset) — hide badge */
+      if(c){c.style.display='inline-flex';c.style.color='#e05c5c';c.style.borderColor='#e05c5c';c.textContent='extra $0.000';}
+    } else if(info.status==='allowed'&&overageBaseline!==null){
+      /* Window reset — clear overage */
       overageBaseline=null;
       if(c)c.style.display='none';
     }
@@ -136,7 +151,7 @@ CSSPATCH
     if(isApiMode){
       c.textContent='$'+m.total_cost_usd.toFixed(3);
     } else if(overageBaseline!==null){
-      c.textContent='Extra $'+(m.total_cost_usd-overageBaseline).toFixed(3);
+      c.textContent='extra $'+(m.total_cost_usd-overageBaseline).toFixed(3);
     }
   });
 
@@ -445,6 +460,7 @@ JSEND
     # Substitute border color placeholder
     sed -i "s|__BORDER_COLOR__|$BORDER_COLOR|g" "$js"
     sed -i "s|__SHOW_CONTEXT_WINDOW__|$SHOW_CONTEXT_WINDOW|g" "$js"
+    sed -i "s|__RATE_LIMIT_DIAG__|$RATE_LIMIT_DIAG|g" "$js"
     CHANGED=true
   fi
 
