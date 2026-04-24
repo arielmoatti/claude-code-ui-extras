@@ -1,4 +1,11 @@
 #!/bin/bash
+# ── Package version ───────────────────────────────────────────────────────
+# Bump VERSION only on meaningful code changes (not README-only commits).
+# UPDATE_NOTE is shown to users at session start when auto-update runs.
+VERSION="1.1.0"
+UPDATE_NOTE="מנגנון עדכון אוטומטי + תיקון תצוגת \"extra\" לתאימות עם Claude Code v2.1.118+"
+REMOTE_URL="https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/inject-ui.sh"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONF_FILE="$SCRIPT_DIR/ui.conf"
 CSS_START="/* Claude UI Extras Patch Start */"
@@ -25,6 +32,39 @@ RATE_LIMIT_DIAG="false"
 if [ -f "$CONF_FILE" ]; then
   val="$(grep '^rate_limit_diag=' "$CONF_FILE" | cut -d= -f2-)"
   [ -n "$val" ] && RATE_LIMIT_DIAG="$val"
+fi
+
+# Read auto-update flag (default: true). Kill-switch for users who want to pin.
+AUTO_UPDATE="true"
+if [ -f "$CONF_FILE" ]; then
+  val="$(grep '^auto_update=' "$CONF_FILE" | cut -d= -f2-)"
+  [ -n "$val" ] && AUTO_UPDATE="$val"
+fi
+
+# ── Auto-update (once per 24h) ────────────────────────────────────────────
+# Fetches remote script, compares VERSION. If newer and syntax-valid, replaces
+# self and re-executes so the rest of this run uses the updated version.
+# Fails open on any error — never blocks a session because of a flaky network.
+if [ "$AUTO_UPDATE" = "true" ]; then
+  STATE_FILE="$SCRIPT_DIR/.ui-extras-last-update-check"
+  NOW=$(date +%s)
+  LAST=0
+  [ -f "$STATE_FILE" ] && LAST=$(cat "$STATE_FILE" 2>/dev/null || echo 0)
+  if [ $((NOW - LAST)) -gt 86400 ]; then
+    echo "$NOW" > "$STATE_FILE"
+    TMP="$(mktemp 2>/dev/null || echo "/tmp/inject-ui-$$.sh")"
+    if curl -fsSL --connect-timeout 3 --max-time 8 -o "$TMP" "$REMOTE_URL" 2>/dev/null; then
+      REMOTE_VER="$(grep -m1 '^VERSION=' "$TMP" | sed 's/^VERSION="\(.*\)".*/\1/')"
+      REMOTE_NOTE="$(grep -m1 '^UPDATE_NOTE=' "$TMP" | sed 's/^UPDATE_NOTE="\(.*\)".*/\1/')"
+      if [ -n "$REMOTE_VER" ] && [ "$REMOTE_VER" != "$VERSION" ] && bash -n "$TMP" 2>/dev/null; then
+        echo "CLAUDE_UI_UPDATED: חבילת UI Extras עודכנה (v$VERSION → v$REMOTE_VER). שיפורים חדשים: $REMOTE_NOTE"
+        cp "$TMP" "${BASH_SOURCE[0]}"
+        rm -f "$TMP"
+        exec bash "${BASH_SOURCE[0]}" "$@"
+      fi
+    fi
+    rm -f "$TMP"
+  fi
 fi
 
 FOUND=false
