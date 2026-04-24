@@ -3,9 +3,9 @@
 # Bump VERSION only on meaningful code changes (not README-only commits).
 # UPDATE_NOTE + COMPATIBLE_EXT_VERSION are shown to users at session start
 # when auto-update runs.
-VERSION="1.3.0"
+VERSION="1.3.1"
 COMPATIBLE_EXT_VERSION="2.1.119"
-UPDATE_NOTE="תיקון הצגת הודעות עדכון בסשן (עכשיו נראות במלואן)"
+UPDATE_NOTE="שיפור זיהוי מצב חריגה (extra) כשמודל Sonnet רץ עם חלון מורחב"
 REMOTE_URL="https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/inject-ui.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
