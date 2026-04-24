@@ -7,6 +7,9 @@
 
 ---
 
+> [!TIP]
+> 💡 **משהו לא עובד? התצוגה לא מראה את השיפורים?** קודם כל תעשו **Reload Window**. כשקלוד קוד או VSCode מתעדכנים באמצע העבודה, התצוגה שרצה בזיכרון נשארת עם הגרסה הישנה עד ש-VSCode נטען מחדש. `Ctrl+Shift+P` ← `Developer: Reload Window` פותר את זה ברוב המקרים.
+
 ## פיצ'רים
 
 ### ‏🆕 חיווי Context Window
@@ -197,6 +200,9 @@ show_context_window=true
 
 <details>
 <summary>English version</summary>
+
+> [!TIP]
+> 💡 **Something not working? The UI isn't showing the patches?** First try **Reload Window**. When Claude Code or VSCode updates while you're working, the in-memory webview stays on the old version until VSCode reloads. `Ctrl+Shift+P` → `Developer: Reload Window` fixes it in most cases.
 
 ## Features
 
