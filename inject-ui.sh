@@ -3,7 +3,7 @@
 # Bump VERSION only on meaningful code changes (not README-only commits).
 # UPDATE_NOTE is shown to users at session start when auto-update runs.
 VERSION="1.1.0"
-UPDATE_NOTE="מנגנון עדכון אוטומטי + תיקון תצוגת \"extra\" לתאימות עם Claude Code v2.1.118+"
+UPDATE_NOTE="מנגנון עדכון אוטומטי + תיקון תצוגת 'extra' לתאימות עם Claude Code v2.1.118+"
 REMOTE_URL="https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/inject-ui.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
