@@ -57,12 +57,12 @@
 
 <table>
 <tr>
-<td align="center"><img src="screenshots/sub-extra.jpg" alt="Extra usage overage" width="360"/></td>
-<td align="right" dir="rtl"><b>Extra</b> (אדום)<br>עברת את המכסה השעתית — עלות חריגה מצטברת מרגע ה-overage</td>
+<td width="70%" align="center"><img src="screenshots/sub-extra.jpg" alt="Extra usage overage" width="100%"/></td>
+<td width="30%" align="right" dir="rtl"><b>Extra</b> (אדום)<br>עברת את המכסה השעתית — עלות חריגה מצטברת מרגע ה-overage</td>
 </tr>
 <tr>
-<td align="center"><img src="screenshots/api-cost.jpg" alt="API with cost" width="360"/></td>
-<td align="right" dir="rtl"><b>API</b> (כתום)<br>מפתח API — עלות מצטברת של הסשן, מוצג תמיד</td>
+<td width="70%" align="center"><img src="screenshots/api-cost.jpg" alt="API with cost" width="100%"/></td>
+<td width="30%" align="right" dir="rtl"><b>API</b> (כתום)<br>מפתח API — עלות מצטברת של הסשן, מוצג תמיד</td>
 </tr>
 </table>
 
@@ -237,10 +237,16 @@ The fix: a small `PermissionRequest` hook (`bypass-claude-dir.js`, ~25 lines of 
 In regular mode (Claude.ai subscription) there's no indicator — clean and quiet.
 The indicator appears **only** in one of two cases:
 
-| | Mode |
-|---|---|
-| ![Extra usage overage](screenshots/sub-extra.jpg) | **Extra** (red) — exceeded hourly quota, shows overage cost since the moment it started |
-| ![API with cost](screenshots/api-cost.jpg) | **API** (orange) — connected via API key, cumulative session cost always visible |
+<table>
+<tr>
+<td width="70%" align="center"><img src="screenshots/sub-extra.jpg" alt="Extra usage overage" width="100%"/></td>
+<td width="30%"><b>Extra</b> (red) — exceeded hourly quota, shows overage cost since the moment it started</td>
+</tr>
+<tr>
+<td width="70%" align="center"><img src="screenshots/api-cost.jpg" alt="API with cost" width="100%"/></td>
+<td width="30%"><b>API</b> (orange) — connected via API key, cumulative session cost always visible</td>
+</tr>
+</table>
 
 Detection happens at runtime via `get_claude_state_response` — each VSCode window shows its own correct state.
 
