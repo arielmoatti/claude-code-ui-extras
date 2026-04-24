@@ -1,9 +1,11 @@
 #!/bin/bash
 # ── Package version ───────────────────────────────────────────────────────
 # Bump VERSION only on meaningful code changes (not README-only commits).
-# UPDATE_NOTE is shown to users at session start when auto-update runs.
-VERSION="1.1.0"
-UPDATE_NOTE="מנגנון עדכון אוטומטי + תיקון תצוגת 'extra' לתאימות עם Claude Code v2.1.118+"
+# UPDATE_NOTE + COMPATIBLE_EXT_VERSION are shown to users at session start
+# when auto-update runs.
+VERSION="1.2.0"
+COMPATIBLE_EXT_VERSION="2.1.119"
+UPDATE_NOTE="הודעות עדכון בפורמט עברית מעודכן"
 REMOTE_URL="https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/inject-ui.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -56,8 +58,13 @@ if [ "$AUTO_UPDATE" = "true" ]; then
     if curl -fsSL --connect-timeout 3 --max-time 8 -o "$TMP" "$REMOTE_URL" 2>/dev/null; then
       REMOTE_VER="$(grep -m1 '^VERSION=' "$TMP" | sed 's/^VERSION="\(.*\)".*/\1/')"
       REMOTE_NOTE="$(grep -m1 '^UPDATE_NOTE=' "$TMP" | sed 's/^UPDATE_NOTE="\(.*\)".*/\1/')"
+      REMOTE_EXT_VER="$(grep -m1 '^COMPATIBLE_EXT_VERSION=' "$TMP" | sed 's/^COMPATIBLE_EXT_VERSION="\(.*\)".*/\1/')"
       if [ -n "$REMOTE_VER" ] && [ "$REMOTE_VER" != "$VERSION" ] && bash -n "$TMP" 2>/dev/null; then
-        echo "CLAUDE_UI_UPDATED: חבילת UI Extras עודכנה (v$VERSION → v$REMOTE_VER). שיפורים חדשים: $REMOTE_NOTE"
+        echo ""
+        echo "💡 חבילת שיפורי ממשק לקלוד קוד (נבדק מול הגרסה: $REMOTE_EXT_VER)"
+        echo "תיקון חדש: $REMOTE_NOTE"
+        echo "משהו לא עובד? פשוט לעשות Reload."
+        echo ""
         cp "$TMP" "${BASH_SOURCE[0]}"
         rm -f "$TMP"
         exec bash "${BASH_SOURCE[0]}" "$@"
