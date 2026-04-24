@@ -239,12 +239,12 @@ The indicator appears **only** in one of two cases:
 
 <table>
 <tr>
-<td width="70%" align="center"><img src="screenshots/sub-extra.jpg" alt="Extra usage overage" width="100%"/></td>
 <td width="30%"><b>Extra</b> (red) — exceeded hourly quota, shows overage cost since the moment it started</td>
+<td width="70%" align="center"><img src="screenshots/sub-extra.jpg" alt="Extra usage overage" width="100%"/></td>
 </tr>
 <tr>
-<td width="70%" align="center"><img src="screenshots/api-cost.jpg" alt="API with cost" width="100%"/></td>
 <td width="30%"><b>API</b> (orange) — connected via API key, cumulative session cost always visible</td>
+<td width="70%" align="center"><img src="screenshots/api-cost.jpg" alt="API with cost" width="100%"/></td>
 </tr>
 </table>
 
