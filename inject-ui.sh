@@ -3,9 +3,9 @@
 # Bump VERSION only on meaningful code changes (not README-only commits).
 # UPDATE_NOTE + COMPATIBLE_EXT_VERSION are shown to users at session start
 # when auto-update runs.
-VERSION="1.2.0"
+VERSION="1.3.0"
 COMPATIBLE_EXT_VERSION="2.1.119"
-UPDATE_NOTE="הודעות עדכון בפורמט עברית מעודכן"
+UPDATE_NOTE="תיקון הצגת הודעות עדכון בסשן (עכשיו נראות במלואן)"
 REMOTE_URL="https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/inject-ui.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -41,37 +41,6 @@ AUTO_UPDATE="true"
 if [ -f "$CONF_FILE" ]; then
   val="$(grep '^auto_update=' "$CONF_FILE" | cut -d= -f2-)"
   [ -n "$val" ] && AUTO_UPDATE="$val"
-fi
-
-# ── Auto-update (once per 24h) ────────────────────────────────────────────
-# Fetches remote script, compares VERSION. If newer and syntax-valid, replaces
-# self and re-executes so the rest of this run uses the updated version.
-# Fails open on any error — never blocks a session because of a flaky network.
-if [ "$AUTO_UPDATE" = "true" ]; then
-  STATE_FILE="$SCRIPT_DIR/.ui-extras-last-update-check"
-  NOW=$(date +%s)
-  LAST=0
-  [ -f "$STATE_FILE" ] && LAST=$(cat "$STATE_FILE" 2>/dev/null || echo 0)
-  if [ $((NOW - LAST)) -gt 86400 ]; then
-    echo "$NOW" > "$STATE_FILE"
-    TMP="$(mktemp 2>/dev/null || echo "/tmp/inject-ui-$$.sh")"
-    if curl -fsSL --connect-timeout 3 --max-time 8 -o "$TMP" "$REMOTE_URL" 2>/dev/null; then
-      REMOTE_VER="$(grep -m1 '^VERSION=' "$TMP" | sed 's/^VERSION="\(.*\)".*/\1/')"
-      REMOTE_NOTE="$(grep -m1 '^UPDATE_NOTE=' "$TMP" | sed 's/^UPDATE_NOTE="\(.*\)".*/\1/')"
-      REMOTE_EXT_VER="$(grep -m1 '^COMPATIBLE_EXT_VERSION=' "$TMP" | sed 's/^COMPATIBLE_EXT_VERSION="\(.*\)".*/\1/')"
-      if [ -n "$REMOTE_VER" ] && [ "$REMOTE_VER" != "$VERSION" ] && bash -n "$TMP" 2>/dev/null; then
-        echo ""
-        echo "💡 חבילת שיפורי ממשק לקלוד קוד (נבדק מול הגרסה: $REMOTE_EXT_VER)"
-        echo "תיקון חדש: $REMOTE_NOTE"
-        echo "משהו לא עובד? פשוט לעשות Reload."
-        echo ""
-        cp "$TMP" "${BASH_SOURCE[0]}"
-        rm -f "$TMP"
-        exec bash "${BASH_SOURCE[0]}" "$@"
-      fi
-    fi
-    rm -f "$TMP"
-  fi
 fi
 
 FOUND=false
@@ -604,3 +573,34 @@ if (!permAlready) {
 
 fs.writeFileSync(p, JSON.stringify(s, null, 2), 'utf8');
 " 2>/dev/null || echo "Note: could not register hooks (node not found)"
+
+# ── Auto-update (once per 24h) ────────────────────────────────────────────
+# Runs at the END of the script so the Hebrew notification is the LAST thing
+# printed — Claude Code's SessionStart renderer only shows the last few lines,
+# so placing the update message last guarantees users see it.
+# Fetches remote script, compares VERSION. If newer and .sh syntax-valid,
+# replaces self on disk for the next session. No exec — today's session
+# already ran the old injection; new code takes effect on next Reload Window.
+# Fails open on any error.
+if [ "$AUTO_UPDATE" = "true" ]; then
+  STATE_FILE="$SCRIPT_DIR/.ui-extras-last-update-check"
+  NOW=$(date +%s)
+  LAST=0
+  [ -f "$STATE_FILE" ] && LAST=$(cat "$STATE_FILE" 2>/dev/null || echo 0)
+  if [ $((NOW - LAST)) -gt 86400 ]; then
+    echo "$NOW" > "$STATE_FILE"
+    TMP="$(mktemp 2>/dev/null || echo "/tmp/inject-ui-$$.sh")"
+    if curl -fsSL --connect-timeout 3 --max-time 8 -o "$TMP" "$REMOTE_URL" 2>/dev/null; then
+      REMOTE_VER="$(grep -m1 '^VERSION=' "$TMP" | sed 's/^VERSION="\(.*\)".*/\1/')"
+      REMOTE_NOTE="$(grep -m1 '^UPDATE_NOTE=' "$TMP" | sed 's/^UPDATE_NOTE="\(.*\)".*/\1/')"
+      REMOTE_EXT_VER="$(grep -m1 '^COMPATIBLE_EXT_VERSION=' "$TMP" | sed 's/^COMPATIBLE_EXT_VERSION="\(.*\)".*/\1/')"
+      if [ -n "$REMOTE_VER" ] && [ "$REMOTE_VER" != "$VERSION" ] && bash -n "$TMP" 2>/dev/null; then
+        cp "$TMP" "${BASH_SOURCE[0]}"
+        echo "💡 חבילת שיפורי ממשק לקלוד קוד (נבדק מול הגרסה: $REMOTE_EXT_VER)"
+        echo "תיקון חדש: $REMOTE_NOTE"
+        echo "משהו לא עובד? פשוט לעשות Reload."
+      fi
+    fi
+    rm -f "$TMP"
+  fi
+fi
