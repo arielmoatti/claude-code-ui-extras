@@ -15,7 +15,20 @@
 
 ## פיצ'רים
 
-### ‏🆕 חיווי Context Window
+### ‏🆕 תיקון קריסת חלון הצ'אט ("Unhandled case")
+
+<p dir="rtl">בגרסאות האחרונות של תוסף Claude Code ל-VSCode, חלון הצ'אט קורס מדי פעם עם באנר כתום שכתוב בו <code dir="ltr">Unhandled case: [object Object]</code> והשיחה קופאת — בזמן ש<b>קלוד עצמו ממשיך לעבוד ברקע</b>. הפיצ'ר הזה מתקן את זה.</p>
+
+<ul dir="rtl">
+<li><b>הסיבה:</b> הפרסר של ה-stream ב-webview זורק שגיאה כשמגיע אירוע שהוא לא מזהה — stall ברשת, chunk קטוע, או סוג אירוע חדש מהשרת. זריקה אחת כזו מפילה את כל הרינדור.</li>
+<li><b>התיקון:</b> מנטרל את הזריקה. במקום לקרוס, ה-webview רושם warning וממשיך — מדלג על האירוע הבודד הלא-מוכר.</li>
+<li>העבודה אף פעם לא אובדת — גם לפני התיקון קלוד המשיך לעבוד ברקע, רק התצוגה קרסה. עכשיו גם התצוגה שורדת, ולא צריך Reload כדי להתאושש.</li>
+<li>הבאג עצמו דווח לאנתרופיק (<a href="https://github.com/anthropics/claude-code/issues/59013">issue #59013</a>). התיקון כאן הוא עקיפה מקומית עד שיצא בילד מתוקן.</li>
+</ul>
+
+<p align="right"><img src="screenshots/unhandled-case.jpg" alt="Unhandled case error banner" height="70"/></p>
+
+### חיווי Context Window
 
 <p dir="rtl">‏Badge קטן בפינה הימנית של אזור הקלט שמציג <b>כמה מחלון הקונטקסט של השיחה הנוכחית נצרך כרגע</b>. לכל חלון VSCode חיווי משלו, בהתאם לשיחה שלו.</p>
 
@@ -211,7 +224,18 @@ show_context_window=true
 
 Ordered newest-first — when you come back after a while, the top of the list shows what's new.
 
-### 🆕 Context Window indicator
+### 🆕 "Unhandled case: [object Object]" crash fix
+
+In recent versions of the Claude Code VSCode extension, the chat panel intermittently crashes with an orange `Unhandled case: [object Object]` banner and the conversation freezes — while **Claude itself keeps working in the background**. This feature fixes that.
+
+- **Cause:** the webview's stream parser throws on any event it doesn't recognize — a network stall, a truncated chunk, or a new server-side event type. A single such throw takes down the entire render.
+- **The fix:** neutralizes the throw. Instead of crashing, the webview logs a warning and continues, skipping the single unrecognized event.
+- Your work is never lost — even before the fix, Claude kept working; only the view crashed. Now the view survives too, with no Reload needed to recover.
+- The underlying bug is reported to Anthropic ([issue #59013](https://github.com/anthropics/claude-code/issues/59013)). This fix is a local workaround until a corrected build ships.
+
+<p><img src="screenshots/unhandled-case.jpg" alt="Unhandled case error banner" height="70"/></p>
+
+### Context Window indicator
 
 A small badge in the right corner of the input area showing **how much of the current conversation's context window is in use**. Each VSCode window has its own badge, reflecting its own session.
 

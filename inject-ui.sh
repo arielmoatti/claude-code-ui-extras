@@ -11,9 +11,9 @@ export PATH
 # Bump VERSION only on meaningful code changes (not README-only commits).
 # UPDATE_NOTE + COMPATIBLE_EXT_VERSION are shown to users at session start
 # when auto-update runs.
-VERSION="1.3.3"
-COMPATIBLE_EXT_VERSION="2.1.119"
-UPDATE_NOTE="שיפור זיהוי מצב חריגה (extra) כשמודל Sonnet רץ עם חלון מורחב"
+VERSION="1.4.0"
+COMPATIBLE_EXT_VERSION="2.1.141"
+UPDATE_NOTE="תיקון קריסת חלון הצ'אט - הבאנר הכתום Unhandled case לא מפיל יותר את הסשן"
 REMOTE_URL="https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/inject-ui.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -485,6 +485,24 @@ JSEND
     sed -i "s|__BORDER_COLOR__|$BORDER_COLOR|g" "$js"
     sed -i "s|__SHOW_CONTEXT_WINDOW__|$SHOW_CONTEXT_WINDOW|g" "$js"
     sed -i "s|__RATE_LIMIT_DIAG__|$RATE_LIMIT_DIAG|g" "$js"
+
+    # ── Fix: webview "Unhandled case: [object Object]" crash ────────────
+    # The bundled stream parser's QB1() helper THROWS on any unrecognized
+    # stream event (network stall, truncated chunk, new server event type).
+    # One such throw crashes the entire webview render — while the CLI
+    # backend keeps working. Neutralize the throw: log and continue, so the
+    # UI skips the unknown event instead of dying.
+    # Idempotent — acts only if the throwing version is present (the
+    # extension bundle resets it on every update; the SessionStart hook
+    # re-applies this each session). No marker needed: the match string IS
+    # the marker. Fails open if node is missing.
+    JS_PATH="$js" node -e '
+var fs=require("fs"),f=process.env.JS_PATH,s=fs.readFileSync(f,"utf8");
+var o="function QB1($,Z){throw Error(Z??`Unhandled case: ${$}`)}";
+var n="function QB1($,Z){console.warn(\"[Claude UI Extras] skipped unhandled stream case:\",Z??$);return}";
+if(s.indexOf(o)!==-1){fs.writeFileSync(f,s.split(o).join(n));console.log("CLAUDE_UI_QB1_PATCHED: "+f);}
+' 2>/dev/null || true
+
     CHANGED=true
   fi
 
