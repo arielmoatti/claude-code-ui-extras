@@ -7,13 +7,39 @@ for d in "/c/Program Files/Git/usr/bin" "/c/Program Files/Git/mingw64/bin" "/c/P
 done
 export PATH
 
-# ── Package version ───────────────────────────────────────────────────────
-# Bump VERSION only on meaningful code changes (not README-only commits).
-# UPDATE_NOTE + COMPATIBLE_EXT_VERSION are shown to users at session start
-# when auto-update runs.
-VERSION="1.6.0"
+# ── Changelog (most recent first) ─────────────────────────────────────────
+# Single source of truth for version + notes. To release: prepend ONE entry to
+# all three arrays. VERSION/UPDATE_NOTE derive from the newest entry, and every
+# bump triggers auto-update. The in-webview banner shows only the last 3 entries
+# flagged MAJOR=1 (substantial, user-facing fixes); cosmetic/meta tweaks
+# (MAJOR=0) still bump the version but stay OUT of the banner. Keep notes free of
+# " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
+# the JS strings.
 COMPATIBLE_EXT_VERSION="2.1.159"
-UPDATE_NOTE="ה-hook כמעט מיידי כשאין מה לעדכן (דילוג בחתימה במקום בנייה מחדש של הקובץ). מקטין תקיעות ואת ה-timeout של 60 שניות באתחול אחרי שינה."
+CHANGELOG_VERS=(  "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "0"      "0"     "0"     "0"     "1"     "1"     )
+CHANGELOG_NOTES=(
+  "הבאנר מציג רק שיפורים מהותיים, לא שינויים קוסמטיים."
+  "הבאנר מציג מספר גרסאות אחורה (changelog), לא רק את הנוכחית."
+  "קליק ימני על מד הקונטקסט (או על חצי הניווט) מציג את מספר הגרסה הרצה."
+  "הודעות עדכון מופיעות כבאנר בתוך הצ'אט במקום בפלט נסתר."
+  "אתחול הצ'אט כבר לא נתקע: ה-hook כמעט מיידי, במקום תקיעה של עד 60 שניות אחרי שינה."
+  "ההזרקה נטענת מיד ואמינה אחרי שינה/פתיחה מחדש, בלי לדרוש כמה reload-ים."
+)
+VERSION="${CHANGELOG_VERS[0]}"
+UPDATE_NOTE="${CHANGELOG_NOTES[0]}"
+
+# Build a JS array literal of the last 3 MAJOR entries for the banner.
+# Apostrophes -> U+2019 so the single-quoted JS strings can't break; notes hold
+# no  " \ | &  so this is safe as a sed replacement string.
+CHANGELOG_JS="["; _sep=""; _shown=0
+for _i in "${!CHANGELOG_VERS[@]}"; do
+  [ "$_shown" -ge 3 ] && break
+  [ "${CHANGELOG_MAJOR[$_i]}" = "1" ] || continue
+  _v="${CHANGELOG_VERS[$_i]}"; _n="${CHANGELOG_NOTES[$_i]//\'/’}"
+  CHANGELOG_JS="$CHANGELOG_JS$_sep{v:'$_v',n:'$_n'}"; _sep=","; _shown=$((_shown+1))
+done
+CHANGELOG_JS="$CHANGELOG_JS]"
 REMOTE_URL="https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/inject-ui.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -140,6 +166,7 @@ CSSPATCH
   var BORDER_COLOR='__BORDER_COLOR__';
   var BORDER_KEY='claude-ui-extras-border';
   var navIdx=-1;
+  var UI_VERSION='__UI_VERSION__';
 
   /* Billing badge + cost display.
      Source: get_claude_state_response (once on load) → account type
@@ -302,6 +329,37 @@ CSSPATCH
     t.addEventListener('animationend',function(){t.classList.remove('claude-ui-highlight');},{once:true});
   }
 
+  /* Shared "UI Extras vX.Y.Z" line. withSep adds a top separator (used when it
+     sits under the border toggle); standalone in the context-badge popup. */
+  function versionLineEl(withSep){
+    var v=document.createElement('div');
+    v.textContent='UI Extras v'+UI_VERSION;
+    v.style.cssText=(withSep?'border-top:1px solid var(--vscode-menu-separatorBackground,#454545);padding-top:6px;':'')+'opacity:0.6;font-size:11px;white-space:nowrap;cursor:default;';
+    return v;
+  }
+
+  /* Right-click on the context badge -> popup showing just the running version. */
+  function showVersionPopup(e){
+    e.preventDefault(); e.stopPropagation();
+    var ex=document.querySelector('.claude-ui-version-popup');
+    if(ex){ex.remove();return;}
+    var p=document.createElement('div');
+    p.className='claude-ui-version-popup';
+    var a=document.getElementById('claude-ui-context-badge');
+    var r=a?a.getBoundingClientRect():{top:60,left:window.innerWidth-80};
+    p.style.cssText='position:fixed;bottom:'+(window.innerHeight-r.top+6)+'px;left:'+r.left+'px;background:var(--vscode-menu-background,#2d2d2d);border:1px solid var(--vscode-menu-border,#454545);border-radius:6px;padding:6px 10px;z-index:9999;color:var(--vscode-foreground,#ccc);';
+    p.appendChild(versionLineEl(false));
+    document.body.appendChild(p);
+    var rr=p.getBoundingClientRect();
+    if(rr.right>window.innerWidth-4)p.style.left=(window.innerWidth-rr.width-4)+'px';
+    if(rr.left<4)p.style.left='4px';
+    setTimeout(function(){
+      document.addEventListener('mousedown',function fn(ev){
+        if(!p.contains(ev.target)){p.remove();document.removeEventListener('mousedown',fn,true);}
+      },true);
+    },0);
+  }
+
   function showToggle(e){
     e.preventDefault(); e.stopPropagation();
     var ex=document.querySelector('.claude-ui-border-popup');
@@ -310,8 +368,10 @@ CSSPATCH
     p.className='claude-ui-border-popup';
     var nav=document.getElementById('claude-ui-nav');
     var navRect=nav?nav.getBoundingClientRect():{bottom:60,left:window.innerWidth-80};
-    p.style.cssText='position:fixed;bottom:'+(window.innerHeight-navRect.top+6)+'px;left:'+navRect.left+'px;background:var(--vscode-menu-background,#2d2d2d);border:1px solid var(--vscode-menu-border,#454545);border-radius:6px;padding:6px 10px;display:flex;align-items:center;gap:8px;z-index:9999;cursor:pointer;font-size:12px;color:var(--vscode-foreground,#ccc);white-space:nowrap;';
+    p.style.cssText='position:fixed;bottom:'+(window.innerHeight-navRect.top+6)+'px;left:'+navRect.left+'px;background:var(--vscode-menu-background,#2d2d2d);border:1px solid var(--vscode-menu-border,#454545);border-radius:6px;padding:6px 10px;display:flex;flex-direction:column;gap:6px;z-index:9999;font-size:12px;color:var(--vscode-foreground,#ccc);white-space:nowrap;';
     var on=getBorder();
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px;cursor:pointer;';
     var sw=document.createElement('span');
     sw.style.cssText='position:relative;display:inline-block;width:28px;height:16px;flex-shrink:0;';
     var track=document.createElement('span');
@@ -320,9 +380,11 @@ CSSPATCH
     thumb.style.cssText='position:absolute;top:2px;left:'+(on?'14px':'2px')+';width:12px;height:12px;border-radius:50%;background:#fff;transition:left 0.2s;';
     sw.appendChild(track); sw.appendChild(thumb);
     var lbl=document.createElement('span'); lbl.textContent='User message border';
-    p.appendChild(sw); p.appendChild(lbl);
+    row.appendChild(sw); row.appendChild(lbl);
+    p.appendChild(row);
+    p.appendChild(versionLineEl(true));
     document.body.appendChild(p);
-    p.addEventListener('click',function(ev){
+    row.addEventListener('click',function(ev){
       ev.preventDefault(); ev.stopPropagation();
       var v=!getBorder(); setBorder(v);
       track.style.background=v?BORDER_COLOR:'#555';
@@ -403,8 +465,9 @@ CSSPATCH
       var ctx=document.createElement('span');
       ctx.id='claude-ui-context-badge';
       ctx.textContent='…';
-      ctx.title='Context window usage (per-chat)';
-      ctx.style.cssText='font-size:10px;font-weight:700;padding:2px 5px;border:1px solid #3dc9b0;border-radius:3px;line-height:1;cursor:default;margin-left:4px;align-self:center;color:#3dc9b0;display:inline-flex;';
+      ctx.title='Context window usage (per-chat) - right-click: version';
+      ctx.style.cssText='font-size:10px;font-weight:700;padding:2px 5px;border:1px solid #3dc9b0;border-radius:3px;line-height:1;cursor:context-menu;margin-left:4px;align-self:center;color:#3dc9b0;display:inline-flex;';
+      ctx.addEventListener('contextmenu',showVersionPopup);
       nav.appendChild(ctx);
     }
 
@@ -521,6 +584,47 @@ CSSPATCH
     e.preventDefault();
   },true);
 })();
+
+/* ── Update notification banner (in-webview, once per version) ──
+   The SessionStart hook's stdout is NOT shown to the user in the VSCode
+   extension, so the old "echo the update note" approach was invisible.
+   This shows the note in OUR injected DOM instead: a dismissible top
+   banner, gated by localStorage so it appears once per new version. */
+;(function(){
+  var VER='__UI_VERSION__';
+  var KEY='claude-ui-extras-seen-version';
+  if(!VER||VER.charAt(0)==='_')return;                 /* placeholder not substituted */
+  try{ if(localStorage.getItem(KEY)===VER)return; }catch(e){}
+  var LOG; try{ LOG=__UI_CHANGELOG__; }catch(e){ LOG=null; }   /* last 3 versions */
+  if(!LOG||!LOG.length)LOG=[{v:VER,n:''}];
+  var ID='claude-ui-update-banner';
+  function mount(){
+    if(document.getElementById(ID)||!document.body)return;
+    var bar=document.createElement('div');
+    bar.id=ID;
+    bar.dir='rtl';
+    bar.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;direction:rtl;text-align:right;display:flex;align-items:flex-start;gap:8px;padding:8px 12px;background:var(--vscode-editorWidget-background,#252526);border-bottom:1px solid var(--vscode-editorWidget-border,#454545);color:var(--vscode-foreground,#ccc);font-size:12px;line-height:1.45;box-shadow:0 2px 6px rgba(0,0,0,0.35);';
+    var icon=document.createElement('span');icon.textContent='💡';icon.style.cssText='flex-shrink:0;';
+    var txt=document.createElement('div');txt.style.cssText='flex:1;min-width:0;';
+    var t1=document.createElement('div');t1.textContent='UI Extras עודכן ל-'+VER;t1.style.cssText='font-weight:700;margin-bottom:3px;';
+    txt.appendChild(t1);
+    LOG.forEach(function(it){
+      var li=document.createElement('div');
+      li.textContent='• '+it.v+(it.n?' - '+it.n:'');
+      li.style.cssText='opacity:0.85;font-size:11px;margin-top:1px;';
+      txt.appendChild(li);
+    });
+    var x=document.createElement('button');x.textContent='✕';x.title='סגור';
+    x.style.cssText='flex-shrink:0;background:none;border:none;color:inherit;cursor:pointer;opacity:0.6;font-size:13px;padding:2px 6px;line-height:1;';
+    x.addEventListener('mouseenter',function(){x.style.opacity='1';});
+    x.addEventListener('mouseleave',function(){x.style.opacity='0.6';});
+    x.addEventListener('click',function(){try{localStorage.setItem(KEY,VER);}catch(e){}bar.remove();});
+    bar.appendChild(icon);bar.appendChild(txt);bar.appendChild(x);
+    document.body.appendChild(bar);
+  }
+  mount();
+  var n=0,iv=setInterval(function(){mount();if(++n>50||document.getElementById(ID))clearInterval(iv);},200);
+})();
 JSPATCH
 
     cat >> "$jstmp" << 'JSEND'
@@ -532,6 +636,10 @@ JSEND
     sed -i "s|__SHOW_CONTEXT_WINDOW__|$SHOW_CONTEXT_WINDOW|g" "$jstmp"
     sed -i "s|__RATE_LIMIT_DIAG__|$RATE_LIMIT_DIAG|g" "$jstmp"
     sed -i "s|__UI_SIG__|$UI_MARKER|g" "$jstmp"
+    sed -i "s|__UI_VERSION__|$VERSION|g" "$jstmp"
+    # The changelog JS array (built up top; apostrophes already U+2019-swapped,
+    # no  " \ | &  in notes, so it's safe as a sed replacement string).
+    sed -i "s|__UI_CHANGELOG__|$CHANGELOG_JS|g" "$jstmp"
 
     # NOTE: the v1.4.0 "Unhandled case: [object Object]" / QB1 throw patch was
     # removed in v1.5.0. Anthropic refactored that assert-never throw out of the
