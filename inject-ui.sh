@@ -11,9 +11,9 @@ export PATH
 # Bump VERSION only on meaningful code changes (not README-only commits).
 # UPDATE_NOTE + COMPATIBLE_EXT_VERSION are shown to users at session start
 # when auto-update runs.
-VERSION="1.4.0"
-COMPATIBLE_EXT_VERSION="2.1.141"
-UPDATE_NOTE="תיקון קריסת חלון הצ'אט - הבאנר הכתום Unhandled case לא מפיל יותר את הסשן"
+VERSION="1.6.0"
+COMPATIBLE_EXT_VERSION="2.1.159"
+UPDATE_NOTE="ה-hook כמעט מיידי כשאין מה לעדכן (דילוג בחתימה במקום בנייה מחדש של הקובץ). מקטין תקיעות ואת ה-timeout של 60 שניות באתחול אחרי שינה."
 REMOTE_URL="https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/inject-ui.sh"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -51,23 +51,63 @@ if [ -f "$CONF_FILE" ]; then
   [ -n "$val" ] && AUTO_UPDATE="$val"
 fi
 
+# ── Signature for the fast path ───────────────────────────────────────
+# Short hash of THIS script + the ui.conf values that affect output. It is
+# written as a marker line into each patched file; if the marker is already
+# present, the per-extension loop skips the whole rebuild (see "Fast path").
+# Any edit to the script or the config changes the hash, which invalidates
+# the marker and forces a one-time re-patch. Falls back to "always rebuild"
+# if md5sum is unavailable.
+UI_SIG=""
+if command -v md5sum >/dev/null 2>&1; then
+  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" | md5sum 2>/dev/null | cut -c1-6)"
+fi
+UI_MARKER="Claude UI Extras sig:$UI_SIG"
+
 FOUND=false
 for dir in "$HOME/.vscode/extensions"/anthropic.claude-code-*/webview; do
   css="$dir/index.css"
   js="$dir/index.js"
   [ -f "$css" ] || continue
   FOUND=true
+
+  # ── Fast path ────────────────────────────────────────────────────────
+  # If both files already carry the current signature marker, there is
+  # nothing to do. Skip WITHOUT building the 4.8MB temp + ~5 sed passes
+  # (~6s of wall-clock per session, far worse cold after sleep). A blocking
+  # SessionStart hook is the #1 cause of the extension's "Subprocess
+  # initialization did not complete within 60000ms" timeout, so a
+  # near-instant no-op here matters: two greps (~0.05s) replace the whole
+  # rebuild.
+  if [ -n "$UI_SIG" ] && grep -qF "$UI_MARKER" "$css" 2>/dev/null \
+       && { [ ! -f "$js" ] || grep -qF "$UI_MARKER" "$js" 2>/dev/null; }; then
+    echo "CLAUDE_UI_OK (already current): $dir"
+    continue
+  fi
+
   CHANGED=false
 
 
   # ── CSS ──────────────────────────────────────────────────────────────
-  if grep -qF "$CSS_START" "$css"; then
-    sed -i '/\/\* Claude UI Extras Patch Start \*\//,/\/\* Claude UI Extras Patch End \*\//d' "$css"
-  fi
+  # Build the desired file in a SAME-DIR temp, then atomically swap it in
+  # ONLY if it differs from what's already on disk. Two reasons:
+  #   (a) no "unpatched window" — the old code did `strip in place` then
+  #       `append`, leaving a brief moment where the file had no patch. If
+  #       the webview read during that gap it loaded raw, unstyled UI.
+  #   (b) a no-op resume is now truly no-op — when the file is already
+  #       current we DON'T rewrite it at all. So a Reload after sleep loads
+  #       the already-patched file instead of racing this hook's rewrite.
+  csstmp="$css.uiextras.tmp.$$"
+  sed '/\/\* Claude UI Extras Patch Start \*\//,/\/\* Claude UI Extras Patch End \*\//d' "$css" > "$csstmp"
+  # Trim trailing blank lines so the rebuild is byte-deterministic. Without
+  # this, the heredoc's leading blank line stacks one extra newline per run,
+  # and the cmp-skip below would never converge (file grows 1 byte/run).
+  sed -i -e :a -e '/^[[:space:]]*$/{$d;N;ba}' "$csstmp"
 
-  cat >> "$css" << CSSPATCH
+  cat >> "$csstmp" << CSSPATCH
 
 $CSS_START
+/* $UI_MARKER */
 [class*="userMessage_"]{border:2px solid $BORDER_COLOR !important;}
 .interactive-request .chat-markdown-part{border:2px solid $BORDER_COLOR !important;border-radius:4px;padding:4px 8px;}
 [class*="sessionItem_"]{height:auto !important;min-height:28px !important;align-items:flex-start !important;padding-top:4px !important;padding-bottom:4px !important;}
@@ -78,18 +118,24 @@ $CSS_START
 [class*="sessionsButton_"]{max-width:unset !important;}
 $CSS_END
 CSSPATCH
-  CHANGED=true
+  if cmp -s "$csstmp" "$css"; then
+    rm -f "$csstmp"
+  else
+    mv -f "$csstmp" "$css"
+    CHANGED=true
+  fi
 
   # ── JS ───────────────────────────────────────────────────────────────
   if [ -f "$js" ]; then
-    if grep -qF "$JS_START" "$js"; then
-      sed -i '/\/\* Claude UI Extras JS Start \*\//,/\/\* Claude UI Extras JS End \*\//d' "$js"
-    fi
+    jstmp="$js.uiextras.tmp.$$"
+    sed '/\/\* Claude UI Extras JS Start \*\//,/\/\* Claude UI Extras JS End \*\//d' "$js" > "$jstmp"
+    # Trim trailing blank lines (see CSS note above) for a deterministic rebuild.
+    sed -i -e :a -e '/^[[:space:]]*$/{$d;N;ba}' "$jstmp"
 
-
-    cat >> "$js" << 'JSPATCH'
+    cat >> "$jstmp" << 'JSPATCH'
 
 /* Claude UI Extras JS Start */
+/* __UI_SIG__ */
 ;(function(){
   var BORDER_COLOR='__BORDER_COLOR__';
   var BORDER_KEY='claude-ui-extras-border';
@@ -477,37 +523,35 @@ CSSPATCH
 })();
 JSPATCH
 
-    cat >> "$js" << 'JSEND'
+    cat >> "$jstmp" << 'JSEND'
 /* Claude UI Extras JS End */
 JSEND
 
     # Substitute border color placeholder
-    sed -i "s|__BORDER_COLOR__|$BORDER_COLOR|g" "$js"
-    sed -i "s|__SHOW_CONTEXT_WINDOW__|$SHOW_CONTEXT_WINDOW|g" "$js"
-    sed -i "s|__RATE_LIMIT_DIAG__|$RATE_LIMIT_DIAG|g" "$js"
+    sed -i "s|__BORDER_COLOR__|$BORDER_COLOR|g" "$jstmp"
+    sed -i "s|__SHOW_CONTEXT_WINDOW__|$SHOW_CONTEXT_WINDOW|g" "$jstmp"
+    sed -i "s|__RATE_LIMIT_DIAG__|$RATE_LIMIT_DIAG|g" "$jstmp"
+    sed -i "s|__UI_SIG__|$UI_MARKER|g" "$jstmp"
 
-    # ── Fix: webview "Unhandled case: [object Object]" crash ────────────
-    # The bundled stream parser's QB1() helper THROWS on any unrecognized
-    # stream event (network stall, truncated chunk, new server event type).
-    # One such throw crashes the entire webview render — while the CLI
-    # backend keeps working. Neutralize the throw: log and continue, so the
-    # UI skips the unknown event instead of dying.
-    # Idempotent — acts only if the throwing version is present (the
-    # extension bundle resets it on every update; the SessionStart hook
-    # re-applies this each session). No marker needed: the match string IS
-    # the marker. Fails open if node is missing.
-    JS_PATH="$js" node -e '
-var fs=require("fs"),f=process.env.JS_PATH,s=fs.readFileSync(f,"utf8");
-var o="function QB1($,Z){throw Error(Z??`Unhandled case: ${$}`)}";
-var n="function QB1($,Z){console.warn(\"[Claude UI Extras] skipped unhandled stream case:\",Z??$);return}";
-if(s.indexOf(o)!==-1){fs.writeFileSync(f,s.split(o).join(n));console.log("CLAUDE_UI_QB1_PATCHED: "+f);}
-' 2>/dev/null || true
-
-    CHANGED=true
+    # NOTE: the v1.4.0 "Unhandled case: [object Object]" / QB1 throw patch was
+    # removed in v1.5.0. Anthropic refactored that assert-never throw out of the
+    # webview bundle somewhere between 2.1.141 and 2.1.158 (issue #58897, closed)
+    # - the literal "Unhandled case" string no longer exists in the bundle, so
+    # the patch had become a dead no-op. Full patch is preserved in git history
+    # (tag v1.4.0) and in PROJECTS.md, to re-apply if the crash class returns
+    # under a new helper name.
+    if cmp -s "$jstmp" "$js"; then
+      rm -f "$jstmp"
+    else
+      mv -f "$jstmp" "$js"
+      CHANGED=true
+    fi
   fi
 
   if [ "$CHANGED" = true ]; then
     echo "CLAUDE_UI_PATCHED: $dir"
+  else
+    echo "CLAUDE_UI_OK (already current): $dir"
   fi
 done
 
