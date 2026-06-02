@@ -205,10 +205,15 @@ show_context_window=true
 
 ## הסרה
 
-מחק את הבלוק המוזרק מתוך `webview/index.js` ו-`webview/index.css`
-(חפש `/* Claude UI Extras Patch Start */`), ולאחר מכן הסר את הרשומה מ-`SessionStart` hook ב-`~/.claude/settings.json`.
+**הסרה אוטומטית (מומלץ).** הרצה אחת ב-PowerShell מסירה הכל בצורה חלקה - כל הבלוקים המוזרקים מכל גרסאות ה-webview, הסקריפטים שהותקנו, וה-hooks מ-`settings.json` - עם גיבוי לכל קובץ שנערך:
 
-להסרת ה-bypass hook: מחק את `~/.claude/scripts/bypass-claude-dir.js` והסר את הרשומה מ-`PermissionRequest` hook ב-`~/.claude/settings.json`.
+```powershell
+irm https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/uninstall.ps1 | iex
+```
+
+ואז Reload Window. הסקריפט גנרי (מסיר כל בלוק `Claude UI Extras ... Start/End`, אז הוא תקף גם לגרסאות עתידיות) ולא נוגע בחבילת ה-RTL הנפרדת. רוצה לבדוק לפני הרצה? פתח את [`uninstall.ps1`](uninstall.ps1).
+
+**הסרה ידנית (אם מעדיפים).** מחק את הבלוק המוזרק מתוך `webview/index.js` ו-`webview/index.css` (חפש `/* Claude UI Extras Patch Start */`), והסר את הרשומה מ-`SessionStart` hook ב-`~/.claude/settings.json`. ל-bypass hook: מחק את `~/.claude/scripts/bypass-claude-dir.js` והסר את הרשומה מ-`PermissionRequest` hook.
 
 </div>
 
@@ -374,9 +379,14 @@ Then re-run `bash scripts/inject-ui.sh` and reload VSCode.
 
 ## Uninstall
 
-Delete the injected block from Claude Code's `webview/index.js` and `webview/index.css`
-(look for `/* Claude UI Extras Patch Start */`), then remove the `SessionStart` hook from `~/.claude/settings.json`.
+**Automatic (recommended).** One PowerShell run removes everything cleanly - every injected block from all webview bundles, the installed scripts, and the hooks from `settings.json` - backing up every file it edits:
 
-To remove the bypass hook: delete `~/.claude/scripts/bypass-claude-dir.js` and remove the `PermissionRequest` hook entry from `~/.claude/settings.json`.
+```powershell
+irm https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/uninstall.ps1 | iex
+```
+
+Then Reload Window. The script is generic (it strips any `Claude UI Extras ... Start/End` block, so it stays valid for future versions) and never touches the separate RTL pack. Want to inspect it first? See [`uninstall.ps1`](uninstall.ps1).
+
+**Manual (if you prefer).** Delete the injected block from `webview/index.js` and `webview/index.css` (look for `/* Claude UI Extras Patch Start */`), then remove the `SessionStart` hook from `~/.claude/settings.json`. For the bypass hook: delete `~/.claude/scripts/bypass-claude-dir.js` and remove the `PermissionRequest` hook entry.
 
 </details>
