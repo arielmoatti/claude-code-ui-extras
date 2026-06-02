@@ -15,7 +15,20 @@ $ErrorActionPreference = 'Stop'
 $stamp = Get-Date -Format 'yyyyMMddHHmmss'
 $home_ = $env:USERPROFILE
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+$settings = "$home_\.claude\settings.json"
 Write-Host "== Claude Code UI Extras - uninstaller =="
+
+# 0. Capture where inject-ui.sh actually lives, straight from the SessionStart hook
+#    command - BEFORE we strip the hook. The README install drops it in the project's
+#    scripts/ folder (NOT ~/.claude/scripts/), so read the real path instead of guessing.
+#    Also normalize a Git-bash path (/c/Users/...) to a Windows path (C:/Users/...),
+#    otherwise Test-Path/Remove-Item can't resolve it.
+$injectPath = $null
+if (Test-Path -LiteralPath $settings) {
+  $rawSettings = [System.IO.File]::ReadAllText($settings)
+  $m = [regex]::Match($rawSettings, '"command"\s*:\s*"bash\s+([^"]*inject-ui\.sh)"')
+  if ($m.Success) { $injectPath = [regex]::Replace($m.Groups[1].Value, '^/([a-zA-Z])/', '$1:/') }
+}
 
 # 1. Strip ALL "Claude UI Extras <name> Start/End" blocks from every webview bundle.
 #    Generic by design: one regex covers Patch (CSS), JS, Shim, and anything added
@@ -40,21 +53,27 @@ foreach ($w in $webviews) {
   Strip-AllBlocks "$($w.FullName)\index.css" "CSS"
 }
 
-# 2. Remove the deployed runtime files this pack drops into ~/.claude/scripts/.
-$deployed = @(
-  "$home_\.claude\scripts\inject-ui.sh",
-  "$home_\.claude\scripts\ui.conf",
-  "$home_\.claude\scripts\bypass-claude-dir.js",
-  "$home_\.claude\scripts\.ui-extras-last-update-check"
-)
-foreach ($f in $deployed) {
+# 2. Remove the deployed runtime files: the real inject-ui.sh + its siblings (ui.conf,
+#    state) from wherever the hook pointed, PLUS the canonical ~/.claude/scripts/ copies,
+#    deduped. bypass-claude-dir.js always lives in ~/.claude/scripts/ (installer hardcodes it).
+$targets = [System.Collections.Generic.List[string]]::new()
+"$home_\.claude\scripts\bypass-claude-dir.js",
+"$home_\.claude\scripts\inject-ui.sh",
+"$home_\.claude\scripts\ui.conf",
+"$home_\.claude\scripts\.ui-extras-last-update-check" | ForEach-Object { $targets.Add($_) }
+if ($injectPath) {
+  $dir = Split-Path -Parent $injectPath
+  $targets.Add($injectPath)
+  $targets.Add((Join-Path $dir 'ui.conf'))
+  $targets.Add((Join-Path $dir '.ui-extras-last-update-check'))
+}
+foreach ($f in ($targets | Select-Object -Unique)) {
   if (Test-Path -LiteralPath $f) { Remove-Item -LiteralPath $f -Force; Write-Host "  deleted   ->  $f" }
 }
 
 # 3. Remove the two hooks from settings.json. Done via Node for reliable JSON
 #    (Claude Code already ships/uses Node). Only entries whose command references
 #    inject-ui.sh / bypass-claude-dir.js are touched; everything else is preserved.
-$settings = "$home_\.claude\settings.json"
 if (Test-Path -LiteralPath $settings) {
   Copy-Item -LiteralPath $settings "$settings.bak.$stamp"
   $njs = @'
@@ -79,5 +98,5 @@ console.log('  settings.json cleaned (backup saved alongside)');
 }
 
 Write-Host ""
-Write-Host "Done. Reload VSCode (Ctrl+Shift+P -> Developer: Reload Window) to drop the in-memory UI."
-Write-Host "Every edited file was backed up alongside as .bak.$stamp"
+Write-Host "Done. Reload VSCode (Ctrl+Shift+P -> Developer: Reload Window), or fully restart it if anything looks off."
+Write-Host "Every edited file was backed up alongside as .bak.$stamp - safe to delete once you've confirmed the uninstall."
