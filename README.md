@@ -15,7 +15,20 @@
 
 ## פיצ'רים
 
-### ‏🆕 חיווי Context Window
+### ‏🆕 פירוט חלון הקונטקסט (קליק ימני)
+
+<p dir="rtl">קליק ימני על ה-badge של הקונטקסט פותח <b>פירוט מלא של מה שצורך את חלון ההקשר</b>, לפי קטגוריה - בדיוק כמו <code dir="ltr">/context</code> הנייטיב, אבל ישירות מה-badge בלי לפתוח פאנל.</p>
+
+<ul dir="rtl">
+<li>פירוק לכל קטגוריה (System prompt, System tools, MCP/System tools deferred, Custom agents, Memory files, Skills, Messages, Autocompact buffer, ו-Free space) עם טוקנים ואחוז לכל אחת, ופס ניצול צבעוני.</li>
+<li>רשימת קבצי ה-Memory (<code dir="ltr">/memory</code>) וה-Custom agents (<code dir="ltr">/agents</code>) עם צריכת הטוקנים של כל אחד.</li>
+<li>שם המודל מוצג מרונדר (<code dir="ltr">Opus 4.8 (1M context)</code>), עם ה-id הגולמי ב-tooltip.</li>
+<li>האחוזים בפירוק מחושבים מול חלון ה-autocompact (נקודת הדחיסה), בעוד ה-badge עצמו מודד מול תקרת המודל המלאה - לכן ייתכן הבדל בין השניים.</li>
+</ul>
+
+<p align="right"><img src="screenshots/context-breakdown.jpg" alt="context window breakdown popup" height="320"/></p>
+
+### חיווי Context Window
 
 <p dir="rtl">‏Badge קטן בפינה הימנית של אזור הקלט שמציג <b>כמה מחלון הקונטקסט של השיחה הנוכחית נצרך כרגע</b>. לכל חלון VSCode חיווי משלו, בהתאם לשיחה שלו.</p>
 
@@ -211,7 +224,18 @@ show_context_window=true
 
 Ordered newest-first — when you come back after a while, the top of the list shows what's new.
 
-### 🆕 Context Window indicator
+### 🆕 Context window breakdown (right-click)
+
+Right-click the context badge to open a **full breakdown of what's filling the context window**, by category - the same data as the native `/context`, but inline on the badge without opening a panel.
+
+- Per-category split (System prompt, System tools, MCP/System tools deferred, Custom agents, Memory files, Skills, Messages, Autocompact buffer, and Free space) with tokens and percentage, plus a colored usage bar.
+- Lists your Memory files (`/memory`) and Custom agents (`/agents`) with each one's token cost.
+- Model name is rendered friendly (`Opus 4.8 (1M context)`), with the raw id on hover.
+- Breakdown percentages are measured against the auto-compact window (the compaction point), while the badge itself measures against the model's full cap - so the two can differ.
+
+<p><img src="screenshots/context-breakdown.jpg" alt="context window breakdown popup" height="300"/></p>
+
+### Context Window indicator
 
 A small badge in the right corner of the input area showing **how much of the current conversation's context window is in use**. Each VSCode window has its own badge, reflecting its own session.
 

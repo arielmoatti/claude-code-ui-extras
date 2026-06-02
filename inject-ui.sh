@@ -16,9 +16,10 @@ export PATH
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
 COMPATIBLE_EXT_VERSION="2.1.159"
-CHANGELOG_VERS=(  "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "0"      "0"     "0"     "0"     "1"     "1"     )
+CHANGELOG_VERS=(  "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "קליק ימני על מד הקונטקסט מציג פירוט מלא של ניצול חלון ההקשר לפי קטגוריות."
   "הבאנר מציג רק שיפורים מהותיים, לא שינויים קוסמטיים."
   "הבאנר מציג מספר גרסאות אחורה (changelog), לא רק את הנוכחית."
   "קליק ימני על מד הקונטקסט (או על חצי הניווט) מציג את מספר הגרסה הרצה."
@@ -154,7 +155,8 @@ CSSPATCH
   # ── JS ───────────────────────────────────────────────────────────────
   if [ -f "$js" ]; then
     jstmp="$js.uiextras.tmp.$$"
-    sed '/\/\* Claude UI Extras JS Start \*\//,/\/\* Claude UI Extras JS End \*\//d' "$js" > "$jstmp"
+    sed -e '/\/\* Claude UI Extras Shim Start \*\//,/\/\* Claude UI Extras Shim End \*\//d' \
+        -e '/\/\* Claude UI Extras JS Start \*\//,/\/\* Claude UI Extras JS End \*\//d' "$js" > "$jstmp"
     # Trim trailing blank lines (see CSS note above) for a deterministic rebuild.
     sed -i -e :a -e '/^[[:space:]]*$/{$d;N;ba}' "$jstmp"
 
@@ -338,7 +340,109 @@ CSSPATCH
     return v;
   }
 
-  /* Right-click on the context badge -> popup showing just the running version. */
+  /* ── Context-usage breakdown (right-click the context badge) ──
+     Fires the same get_context_usage RPC the native /context panel uses, through
+     the vscode-api handle + channelId captured by the top-of-bundle shim. Degrades
+     gracefully to just the version line (with a reason) if the data isn't reachable. */
+  var CTX_PALETTE=['#e8a84f','#4f9cf2','#4fc97a','#e8d24f','#b07ff2','#f2674f','#4fd2e8','#e85fb0','#9ad14f','#b58a6a'];
+
+  /* Render a raw model id (claude-opus-4-8[1m]) into a friendly name (Opus 4.8 (1M context)).
+     The picker's marketing labels live in the CLI, not the webview, so we format the id
+     ourselves - version-resilient, with graceful fallback to the raw id on no match. */
+  function prettyModel(id){
+    if(!id)return '';
+    var s=String(id), is1m=/\[1m\]/i.test(s), base=s.replace(/\[1m\]/i,'');
+    var m=base.match(/(opus|sonnet|haiku)-(\d+)-(\d+)/i), name;
+    if(m){var fam=m[1].charAt(0).toUpperCase()+m[1].slice(1).toLowerCase();name=fam+' '+m[2]+'.'+m[3];}
+    else{name=base.replace(/^claude-/,'');}
+    return name+(is1m?' (1M context)':'');
+  }
+
+  function fetchContextUsage(cb){
+    var api=window.__ccVscodeApi, ch=window.__ccChannelId;
+    if(!api){cb(null,'no-api');return;}
+    if(ch==null){cb(null,'no-channel');return;}
+    var id=Math.random().toString(36).slice(2), done=false;
+    function onMsg(e){
+      var d=e.data, m=(d&&d.type==='from-extension')?d.message:d;
+      if(!m||m.requestId!==id)return;
+      done=true; window.removeEventListener('message',onMsg);
+      window.__ccDbgResp=m; /* for console inspection while developing */
+      var rsp=m.response;
+      if(rsp&&rsp.type==='error'){cb(null,'error');return;}
+      cb(rsp&&rsp.usage?rsp.usage:null, (rsp&&rsp.error)?'error':null);
+    }
+    window.addEventListener('message',onMsg);
+    setTimeout(function(){if(!done){window.removeEventListener('message',onMsg);cb(null,'timeout');}},5000);
+    try{api.postMessage({type:'request',channelId:ch,requestId:id,request:{type:'get_context_usage'}});}
+    catch(err){window.removeEventListener('message',onMsg);cb(null,'post-failed');}
+  }
+
+  function ctxRow(dotColor,name,tokensTxt,pctTxt){
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px;padding:1px 0;';
+    var dot=document.createElement('span');
+    dot.style.cssText='width:9px;height:9px;border-radius:2px;flex-shrink:0;'+(dotColor?('background:'+dotColor+';'):'background:transparent;border:1px solid #777;');
+    var nm=document.createElement('span'); nm.textContent=name;
+    nm.style.cssText='flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+    var tk=document.createElement('span'); tk.textContent=tokensTxt;
+    tk.style.cssText='min-width:48px;text-align:right;opacity:0.9;';
+    var pc=document.createElement('span'); pc.textContent=pctTxt||'';
+    pc.style.cssText='min-width:50px;text-align:right;opacity:0.6;';
+    row.appendChild(dot);row.appendChild(nm);row.appendChild(tk);row.appendChild(pc);
+    return row;
+  }
+
+  function ctxSection(c,title,hint,items){
+    if(!items||!items.length)return;
+    var h=document.createElement('div');
+    h.style.cssText='margin-top:8px;padding-top:6px;border-top:1px solid var(--vscode-menu-separatorBackground,#454545);font-size:10px;letter-spacing:0.04em;opacity:0.55;';
+    h.textContent=title+(hint?('   '+hint):'');
+    c.appendChild(h);
+    items.forEach(function(it){ c.appendChild(ctxRow(null,it.name,fmtTokens(it.tokens),'')); });
+  }
+
+  function renderCtxBreakdown(c,u){
+    c.textContent=''; c.style.opacity='1';
+    var max=u.rawMaxTokens||1;
+    var h1=document.createElement('div'); h1.textContent=prettyModel(u.model);
+    h1.title=u.model||''; /* raw id on hover */
+    h1.style.cssText='font-weight:700;margin-bottom:8px;';
+    c.appendChild(h1);
+    var cats=(u.categories||[]).filter(function(x){return x.tokens>0;});
+    var nonFree=cats.filter(function(x){return x.name!=='Free space';});
+    var bar=document.createElement('div');
+    bar.style.cssText='display:flex;height:6px;border-radius:3px;overflow:hidden;margin-bottom:8px;background:#3a3a3a;';
+    nonFree.forEach(function(x,i){
+      var seg=document.createElement('div');
+      seg.style.cssText='height:100%;width:'+(x.tokens/max*100)+'%;background:'+CTX_PALETTE[i%CTX_PALETTE.length]+';';
+      seg.title=x.name+': '+fmtTokens(x.tokens);
+      bar.appendChild(seg);
+    });
+    c.appendChild(bar);
+    cats.forEach(function(x){
+      var free=x.name==='Free space';
+      var idx=nonFree.indexOf(x);
+      var p=x.tokens*100/max;
+      var ptxt=(p<0.1?'<0.1':p.toFixed(1))+'%';
+      var nm=free?'Free space (until auto-compact)':x.name;
+      c.appendChild(ctxRow(free?null:CTX_PALETTE[idx%CTX_PALETTE.length], nm, fmtTokens(x.tokens), ptxt));
+    });
+    var byTok=function(a,b){return (b.tokens||0)-(a.tokens||0);};
+    if(u.memoryFiles&&u.memoryFiles.length){
+      ctxSection(c,'MEMORY FILES','/memory', u.memoryFiles.slice().sort(byTok).slice(0,5).map(function(m){
+        var pth=m.path||''; var base=pth.split(/[\\\/]/).pop()||pth;
+        return {name:base, tokens:m.tokens};
+      }));
+    }
+    if(u.agents&&u.agents.length){
+      ctxSection(c,'CUSTOM AGENTS','/agents', u.agents.slice().sort(byTok).slice(0,5).map(function(a){
+        return {name:a.name||a.id||a.path||'agent', tokens:a.tokens};
+      }));
+    }
+  }
+
+  /* Right-click on the context badge -> full context-usage breakdown (+ version). */
   function showVersionPopup(e){
     e.preventDefault(); e.stopPropagation();
     var ex=document.querySelector('.claude-ui-version-popup');
@@ -347,17 +451,36 @@ CSSPATCH
     p.className='claude-ui-version-popup';
     var a=document.getElementById('claude-ui-context-badge');
     var r=a?a.getBoundingClientRect():{top:60,left:window.innerWidth-80};
-    p.style.cssText='position:fixed;bottom:'+(window.innerHeight-r.top+6)+'px;left:'+r.left+'px;background:var(--vscode-menu-background,#2d2d2d);border:1px solid var(--vscode-menu-border,#454545);border-radius:6px;padding:6px 10px;z-index:9999;color:var(--vscode-foreground,#ccc);';
-    p.appendChild(versionLineEl(false));
+    p.style.cssText='position:fixed;bottom:'+(window.innerHeight-r.top+6)+'px;left:'+r.left+'px;width:320px;max-height:72vh;overflow-y:auto;background:var(--vscode-menu-background,#2d2d2d);border:1px solid var(--vscode-menu-border,#454545);border-radius:8px;padding:10px 12px;z-index:9999;color:var(--vscode-foreground,#ccc);font-size:12px;box-shadow:0 6px 20px rgba(0,0,0,0.45);';
+    var body=document.createElement('div');
+    body.textContent='Loading context usage…';
+    body.style.cssText='opacity:0.65;';
+    p.appendChild(body);
+    p.appendChild(versionLineEl(true));
     document.body.appendChild(p);
-    var rr=p.getBoundingClientRect();
-    if(rr.right>window.innerWidth-4)p.style.left=(window.innerWidth-rr.width-4)+'px';
-    if(rr.left<4)p.style.left='4px';
+    function reposition(){
+      var rr=p.getBoundingClientRect();
+      if(rr.right>window.innerWidth-4)p.style.left=(window.innerWidth-rr.width-4)+'px';
+      if(rr.left<4)p.style.left='4px';
+    }
+    reposition();
     setTimeout(function(){
       document.addEventListener('mousedown',function fn(ev){
         if(!p.contains(ev.target)){p.remove();document.removeEventListener('mousedown',fn,true);}
       },true);
     },0);
+    fetchContextUsage(function(u,err){
+      if(!document.body.contains(p))return;
+      if(!u){
+        body.style.opacity='0.65';
+        body.textContent = err==='no-channel'
+          ? 'Context breakdown unavailable - send a message first (no active request seen yet).'
+          : 'Context breakdown unavailable ('+(err||'no data')+').';
+        reposition(); return;
+      }
+      renderCtxBreakdown(body,u);
+      reposition();
+    });
   }
 
   function showToggle(e){
@@ -465,7 +588,7 @@ CSSPATCH
       var ctx=document.createElement('span');
       ctx.id='claude-ui-context-badge';
       ctx.textContent='…';
-      ctx.title='Context window usage (per-chat) - right-click: version';
+      ctx.title='Context window usage (per-chat) - right-click: full breakdown';
       ctx.style.cssText='font-size:10px;font-weight:700;padding:2px 5px;border:1px solid #3dc9b0;border-radius:3px;line-height:1;cursor:context-menu;margin-left:4px;align-self:center;color:#3dc9b0;display:inline-flex;';
       ctx.addEventListener('contextmenu',showVersionPopup);
       nav.appendChild(ctx);
@@ -640,6 +763,20 @@ JSEND
     # The changelog JS array (built up top; apostrophes already U+2019-swapped,
     # no  " \ | &  in notes, so it's safe as a sed replacement string).
     sed -i "s|__UI_CHANGELOG__|$CHANGELOG_JS|g" "$jstmp"
+
+    # Prepend the vscode-api capture shim to the very TOP of the bundle so it runs
+    # before the app's one-shot acquireVsCodeApi() call. It wraps that call to stash
+    # the api handle (window.__ccVscodeApi) and sniffs the live channelId off outgoing
+    # requests (window.__ccChannelId) - both needed to fire get_context_usage from the
+    # injected code (context-breakdown popup). No placeholders, so no sed pass needed.
+    shimtmp="$js.uiextras.shim.$$"
+    cat > "$shimtmp" << 'JSSHIM'
+/* Claude UI Extras Shim Start */
+;(function(){try{if(window.__ccShimInstalled)return;window.__ccShimInstalled=true;var orig=window.acquireVsCodeApi;if(typeof orig==='function'){window.acquireVsCodeApi=function(){var api=orig.apply(this,arguments);try{window.__ccVscodeApi=api;}catch(_){}return api;};}window.addEventListener('message',function(e){try{var d=e.data;if(!d)return;var m=(d.type==='from-extension')?d.message:d;if(m&&m.type==='io_message'&&m.channelId!=null)window.__ccChannelId=m.channelId;}catch(_){}},false);}catch(_){}})();
+/* Claude UI Extras Shim End */
+JSSHIM
+    cat "$jstmp" >> "$shimtmp"
+    mv -f "$shimtmp" "$jstmp"
 
     # NOTE: the v1.4.0 "Unhandled case: [object Object]" / QB1 throw patch was
     # removed in v1.5.0. Anthropic refactored that assert-never throw out of the
