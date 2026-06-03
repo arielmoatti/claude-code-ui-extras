@@ -36,7 +36,7 @@
 <li>הרוחב נקבע ע"י <code dir="ltr">code_block_max_width</code> ב-<code>ui.conf</code> (כל ערך CSS: <code dir="ltr">50%</code>, <code dir="ltr">65%</code>, <code dir="ltr">720px</code>; או <code dir="ltr">100%</code> / <code dir="ltr">none</code> לביטול). ברירת מחדל: <code dir="ltr">50%</code>.</li>
 <li>כפתור ההעתקה עוקב אחרי הקצה הימני של הבלוק (לא נדבק לקצה החלון), עם מסגרת בעובי ובצבע של מסגרת הודעות היוזר.</li>
 <li>ה-hover שחושף את הכפתור פעיל על כל רוחב השורה, גם מעל האזור הריק מימין לבלוק.</li>
-<li>לקבלת copy נקי גם בתוכן (בלי שבירות שורה מלאכותיות) - ראו את הפרומפט המומלץ למטה, תחת ההגדרות.</li>
+<li>לקבלת copy נקי גם בתוכן (בלי שבירות שורה מלאכותיות) - <a href="#טיפ-גם-copy-נקי-לא-רק-תצוגה-נקייה">ראו את הפרומפט המומלץ למטה, תחת ההגדרות</a>.</li>
 </ul>
 
 ### חיווי Context Window
@@ -274,7 +274,7 @@ Code blocks (and copy blocks) are capped to a configurable width - default 50% o
 - Width is set by `code_block_max_width` in `ui.conf` (any CSS width: `50%`, `65%`, `720px`; or `100%` / `none` to disable). Default: `50%`.
 - The copy button tracks the block's right edge (instead of sticking to the window edge), with a border matching the user-message border (thickness and color).
 - The hover that reveals the button spans the full row, including the empty area to the right of the block.
-- For clean copied content too (no artificial line breaks), see the recommended prompt below, under Configuration.
+- For clean copied content too (no artificial line breaks), [see the recommended prompt below, under Configuration](#tip-clean-copy-paste-not-just-clean-display).
 
 ### Context Window indicator
 
