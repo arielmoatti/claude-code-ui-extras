@@ -16,9 +16,10 @@ export PATH
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
 COMPATIBLE_EXT_VERSION="2.1.159"
-CHANGELOG_VERS=(  "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+CHANGELOG_VERS=(  "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "בלוקי קוד מופיעים עכשיו ב-50% מהמסך וללא גלילה אופקית (ניתן לכוונון בקובץ ההגדרות)."
   "קליק ימני על מד הקונטקסט מציג פירוט מלא של ניצול חלון ההקשר לפי קטגוריות."
   "הבאנר מציג רק שיפורים מהותיים, לא שינויים קוסמטיים."
   "הבאנר מציג מספר גרסאות אחורה (changelog), לא רק את הנוכחית."
@@ -78,6 +79,16 @@ if [ -f "$CONF_FILE" ]; then
   [ -n "$val" ] && AUTO_UPDATE="$val"
 fi
 
+# Read code-block max width (default: 50%). Caps the width of code/copy blocks
+# so they soft-wrap instead of stretching across the full chat and showing a
+# horizontal scrollbar. Any CSS width value (50%, 65%, 720px); set to 100% or
+# none to disable the cap (full width).
+CODE_BLOCK_MAX_WIDTH="50%"
+if [ -f "$CONF_FILE" ]; then
+  val="$(grep '^code_block_max_width=' "$CONF_FILE" | cut -d= -f2-)"
+  [ -n "$val" ] && CODE_BLOCK_MAX_WIDTH="$val"
+fi
+
 # ── Signature for the fast path ───────────────────────────────────────
 # Short hash of THIS script + the ui.conf values that affect output. It is
 # written as a marker line into each patched file; if the marker is already
@@ -87,7 +98,7 @@ fi
 # if md5sum is unavailable.
 UI_SIG=""
 if command -v md5sum >/dev/null 2>&1; then
-  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" | md5sum 2>/dev/null | cut -c1-6)"
+  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" | md5sum 2>/dev/null | cut -c1-6)"
 fi
 UI_MARKER="Claude UI Extras sig:$UI_SIG"
 
@@ -143,6 +154,10 @@ $CSS_START
 [class*="sessionsButtonText_"]{white-space:normal !important;display:-webkit-box !important;-webkit-line-clamp:3 !important;-webkit-box-orient:vertical !important;overflow:hidden !important;}
 [class*="sessionsButtonContent_"]{max-width:unset !important;}
 [class*="sessionsButton_"]{max-width:unset !important;}
+/* Cap code/copy blocks to a configurable width (default 50%) + soft-wrap: visual wrap only (copy stays one logical line per paragraph), no horizontal scroll, box doesn't span the full chat. Cap the <pre> but keep the WRAPPER full width, so hovering anywhere across the full row still reveals the copy button (the hover lives on the wrapper). Position the button at the block's right edge via calc(100% - width) so it tracks the cap instead of sitting at the window edge. padding-top reserves a strip so the button doesn't cover the first line. Border matches the user-message border ($BORDER_COLOR). Wrapper/button classes are hashed per build, so match by prefix. */
+[class*="codeBlockWrapper_"] pre,.chat-markdown-part pre{white-space:pre-wrap !important;overflow-wrap:anywhere !important;overflow-x:visible !important;padding-top:36px !important;max-width:$CODE_BLOCK_MAX_WIDTH !important;}
+[class*="codeBlockWrapper_"] code{white-space:pre-wrap !important;overflow-wrap:anywhere !important;}
+[class*="codeBlockWrapper_"] [class*="copyButton_"]{right:calc(100% - $CODE_BLOCK_MAX_WIDTH + 20px) !important;border:2px solid $BORDER_COLOR !important;}
 $CSS_END
 CSSPATCH
   if cmp -s "$csstmp" "$css"; then

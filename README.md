@@ -28,6 +28,17 @@
 
 <p align="right"><img src="screenshots/context-breakdown.jpg" alt="context window breakdown popup" height="320"/></p>
 
+### רוחב מותאם לבלוקי קוד + שבירה לשורות
+
+<p dir="rtl">בלוקי קוד (ובלוקים להעתקה) מוגבלים לרוחב שניתן לכוונן - ברירת מחדל 50% מרוחב הצ'אט - ונשברים לשורות במקום גלילה אופקית מעצבנת. השבירה ויזואלית בלבד: הטקסט שמועתק נשאר שורה לוגית אחת לפסקה.</p>
+
+<ul dir="rtl">
+<li>הרוחב נקבע ע"י <code dir="ltr">code_block_max_width</code> ב-<code>ui.conf</code> (כל ערך CSS: <code dir="ltr">50%</code>, <code dir="ltr">65%</code>, <code dir="ltr">720px</code>; או <code dir="ltr">100%</code> / <code dir="ltr">none</code> לביטול). ברירת מחדל: <code dir="ltr">50%</code>.</li>
+<li>כפתור ההעתקה עוקב אחרי הקצה הימני של הבלוק (לא נדבק לקצה החלון), עם מסגרת בעובי ובצבע של מסגרת הודעות היוזר.</li>
+<li>ה-hover שחושף את הכפתור פעיל על כל רוחב השורה, גם מעל האזור הריק מימין לבלוק.</li>
+<li>לקבלת copy נקי גם בתוכן (בלי שבירות שורה מלאכותיות) - ראו את הפרומפט המומלץ למטה, תחת ההגדרות.</li>
+</ul>
+
 ### חיווי Context Window
 
 <p dir="rtl">‏Badge קטן בפינה הימנית של אזור הקלט שמציג <b>כמה מחלון הקונטקסט של השיחה הנוכחית נצרך כרגע</b>. לכל חלון VSCode חיווי משלו, בהתאם לשיחה שלו.</p>
@@ -185,7 +196,7 @@ Step 5 — After the reload, remind me to press Shift+Tab once to enter bypassPe
 
 ## הגדרות
 
-ערוך את `scripts/ui.conf` — שני פרמטרים נתמכים:
+ערוך את `scripts/ui.conf` - הפרמטרים הנתמכים כוללים:
 
 </div>
 
@@ -195,11 +206,27 @@ border_color=rgba(249,131,131,0.5)
 
 # הצגת badge של Context Window (true / false)
 show_context_window=true
+
+# רוחב מרבי לבלוקי קוד - הקופסה נשברת לשורות במקום גלילה אופקית
+# (כל ערך CSS: 50%, 65%, 720px; או 100% / none לביטול). ברירת מחדל: 50%
+code_block_max_width=50%
 ```
 
 <div dir="rtl">
 
 לאחר מכן הרץ מחדש את `bash scripts/inject-ui.sh` וטען מחדש את VSCode.
+
+### טיפ: גם copy נקי, לא רק תצוגה נקייה
+
+ה-CSS מתקן את ה**תצוגה** לכולם - שבירה לשורות במקום גלילה אופקית. אבל אם הטקסט שמועתק מהבלוק נושא שבירות שורה מלאכותיות, הן נדבקות יחד איתו. כדי שגם ה**העתקה** תהיה נקייה, בקש מ-Claude לא לשבור פסקאות פרוזה בתוך בלוקים. הוסף את הפרומפט הבא ל-`~/.claude/CLAUDE.md` (תופס בכל סשן), או הדבק אותו בתחילת שיחה:
+
+</div>
+
+````
+Inside fenced ``` blocks that hold prose/text for copy-paste (messages, emails, posts), do not hard-wrap: one paragraph per line, rely on soft-wrap, blank line between paragraphs. In blocks holding real code, JSON, tables, or lists, keep newlines exactly as written.
+````
+
+<div dir="rtl">
 
 ---
 
@@ -239,6 +266,15 @@ Right-click the context badge to open a **full breakdown of what's filling the c
 - Breakdown percentages are measured against the auto-compact window (the compaction point), while the badge itself measures against the model's full cap - so the two can differ.
 
 <p><img src="screenshots/context-breakdown.jpg" alt="context window breakdown popup" height="300"/></p>
+
+### Configurable code-block width + soft-wrap
+
+Code blocks (and copy blocks) are capped to a configurable width - default 50% of the chat - and soft-wrap instead of scrolling sideways. Wrapping is visual only: copied text stays one logical line per paragraph.
+
+- Width is set by `code_block_max_width` in `ui.conf` (any CSS width: `50%`, `65%`, `720px`; or `100%` / `none` to disable). Default: `50%`.
+- The copy button tracks the block's right edge (instead of sticking to the window edge), with a border matching the user-message border (thickness and color).
+- The hover that reveals the button spans the full row, including the empty area to the right of the block.
+- For clean copied content too (no artificial line breaks), see the recommended prompt below, under Configuration.
 
 ### Context Window indicator
 
@@ -363,7 +399,7 @@ The script will:
 
 ## Configuration
 
-Edit `scripts/ui.conf` — two supported parameters:
+Edit `scripts/ui.conf` - supported parameters include:
 
 ```
 # User message border color (any valid CSS color)
@@ -371,9 +407,21 @@ border_color=rgba(249,131,131,0.5)
 
 # Show Context Window badge (true / false)
 show_context_window=true
+
+# Max width of code blocks - the box soft-wraps instead of scrolling sideways
+# (any CSS width: 50%, 65%, 720px; or 100% / none to disable). Default: 50%
+code_block_max_width=50%
 ```
 
 Then re-run `bash scripts/inject-ui.sh` and reload VSCode.
+
+### Tip: clean copy-paste, not just clean display
+
+The CSS fixes the **display** for everyone (wrapping instead of a horizontal scrollbar). But if the text you copy from a block carries artificial line breaks, those come along with it. To get clean **copied** text too, ask Claude to stop hard-wrapping prose inside blocks. Add this prompt to `~/.claude/CLAUDE.md` (applies every session), or paste it at the start of a chat:
+
+````
+Inside fenced ``` blocks that hold prose/text for copy-paste (messages, emails, posts), do not hard-wrap: one paragraph per line, rely on soft-wrap, blank line between paragraphs. In blocks holding real code, JSON, tables, or lists, keep newlines exactly as written.
+````
 
 ---
 
