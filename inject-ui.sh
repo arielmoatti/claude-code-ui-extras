@@ -16,9 +16,10 @@ export PATH
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
 COMPATIBLE_EXT_VERSION="2.1.162"
-CHANGELOG_VERS=(  "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+CHANGELOG_VERS=(  "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "הבאנר קופץ עכשיו רק כשיש שיפור מהותי חדש מאז הפעם האחרונה, ולא בכל בליטת גרסה."
   "הוסר הטלאי שעקף את חלוניות ההרשאה של .claude - אנתרופיק תיקנו את הבאג, הוא כבר לא נחוץ."
   "בלוקי קוד מופיעים עכשיו ב-50% מהמסך וללא גלילה אופקית (ניתן לכוונון בקובץ ההגדרות)."
   "קליק ימני על מד הקונטקסט מציג פירוט מלא של ניצול חלון ההקשר לפי קטגוריות."
@@ -733,9 +734,13 @@ CSSPATCH
   var VER='__UI_VERSION__';
   var KEY='claude-ui-extras-seen-version';
   if(!VER||VER.charAt(0)==='_')return;                 /* placeholder not substituted */
-  try{ if(localStorage.getItem(KEY)===VER)return; }catch(e){}
-  var LOG; try{ LOG=__UI_CHANGELOG__; }catch(e){ LOG=null; }   /* last 3 versions */
+  var LOG; try{ LOG=__UI_CHANGELOG__; }catch(e){ LOG=null; }   /* last 3 MAJOR versions */
   if(!LOG||!LOG.length)LOG=[{v:VER,n:''}];
+  /* Pop only when there is a NEW MAJOR entry since the user last dismissed.
+     LOG[0].v is the latest MAJOR version; a MAJOR=0 bump (maintenance/cosmetic)
+     leaves LOG[0] unchanged, so the banner stays silent on those releases. */
+  var TOP=LOG[0].v;
+  try{ if(localStorage.getItem(KEY)===TOP)return; }catch(e){}
   var ID='claude-ui-update-banner';
   function mount(){
     if(document.getElementById(ID)||!document.body)return;
@@ -757,7 +762,7 @@ CSSPATCH
     x.style.cssText='flex-shrink:0;background:none;border:none;color:inherit;cursor:pointer;opacity:0.6;font-size:13px;padding:2px 6px;line-height:1;';
     x.addEventListener('mouseenter',function(){x.style.opacity='1';});
     x.addEventListener('mouseleave',function(){x.style.opacity='0.6';});
-    x.addEventListener('click',function(){try{localStorage.setItem(KEY,VER);}catch(e){}bar.remove();});
+    x.addEventListener('click',function(){try{localStorage.setItem(KEY,TOP);}catch(e){}bar.remove();});
     bar.appendChild(icon);bar.appendChild(txt);bar.appendChild(x);
     document.body.appendChild(bar);
   }
