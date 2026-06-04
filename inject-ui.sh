@@ -15,10 +15,11 @@ export PATH
 # (MAJOR=0) still bump the version but stay OUT of the banner. Keep notes free of
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
-COMPATIBLE_EXT_VERSION="2.1.159"
-CHANGELOG_VERS=(  "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+COMPATIBLE_EXT_VERSION="2.1.162"
+CHANGELOG_VERS=(  "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "הוסר הטלאי שעקף את חלוניות ההרשאה של .claude - אנתרופיק תיקנו את הבאג, הוא כבר לא נחוץ."
   "בלוקי קוד מופיעים עכשיו ב-50% מהמסך וללא גלילה אופקית (ניתן לכוונון בקובץ ההגדרות)."
   "קליק ימני על מד הקונטקסט מציג פירוט מלא של ניצול חלון ההקשר לפי קטגוריות."
   "הבאנר מציג רק שיפורים מהותיים, לא שינויים קוסמטיים."
@@ -820,56 +821,27 @@ if [ "$FOUND" = false ]; then
   exit 1
 fi
 
-# ── Install bypass-claude-dir.js hook script ──────────────────────────────
+# ── Remove obsolete bypass-claude-dir.js hook (retired v1.13.0) ───────────
+# The .claude/ permission-prompt bug this worked around (anthropics/claude-code#39523)
+# was fixed upstream. Verified 2026-06-04 against extension 2.1.162: with the hook
+# fully disabled and the session in bypassPermissions mode, a write into
+# .claude/commands/ produced no prompt. The hardcoded guard was narrowed to just
+# .claude/commands + .claude/agents (+ .git/hooks/config) and no longer prompts in
+# bypass mode, so the hook is dead weight. Delete the stale deployed copy if present.
 BYPASS_HOOK_PATH="$HOME/.claude/scripts/bypass-claude-dir.js"
-mkdir -p "$(dirname "$BYPASS_HOOK_PATH")"
-cat > "$BYPASS_HOOK_PATH" << 'BYPASSHOOK'
-/*
- * bypass-claude-dir.js — PermissionRequest hook
- * Auto-approves Edit/Write/Bash on .claude/ paths, but only when session
- * is already in bypassPermissions mode. Respects plan/ask/acceptEdits.
- * Works around anthropics/claude-code#39523.
- */
-let d = '';
-process.stdin.on('data', c => d += c);
-process.stdin.on('end', () => {
-  try {
-    const input = JSON.parse(d);
-    const tool = input.tool_name || '';
-    const ti = input.tool_input || {};
-    const filePath = ti.file_path || '';
-    const command = ti.command || '';
-    const isEditLike = /^(Edit|Write|MultiEdit|NotebookEdit)$/.test(tool);
-    const isBash = tool === 'Bash';
-    const shouldAllow = (isEditLike && filePath.includes('.claude'))
-                     || (isBash && command.includes('.claude'));
-    const inBypass = input.permission_mode === 'bypassPermissions';
-    if (shouldAllow && inBypass) {
-      process.stdout.write(JSON.stringify({
-        hookSpecificOutput: {
-          hookEventName: 'PermissionRequest',
-          decision: { behavior: 'allow' }
-        }
-      }));
-    }
-  } catch (e) {}
-});
-BYPASSHOOK
-echo "BYPASS_HOOK_WRITTEN: $BYPASS_HOOK_PATH"
+rm -f "$BYPASS_HOOK_PATH" 2>/dev/null
 
 # ── Register hooks in ~/.claude/settings.json ────────────────────────────
 SETTINGS="$HOME/.claude/settings.json"
 HOOK_CMD="bash $SCRIPT_DIR/inject-ui.sh"
 SCRIPT_ID="inject-ui.sh"
-BYPASS_CMD="node $BYPASS_HOOK_PATH"
 
-SETTINGS_PATH="$SETTINGS" HOOK_CMD="$HOOK_CMD" SCRIPT_ID="$SCRIPT_ID" BYPASS_CMD="$BYPASS_CMD" \
+SETTINGS_PATH="$SETTINGS" HOOK_CMD="$HOOK_CMD" SCRIPT_ID="$SCRIPT_ID" \
 node -e "
 var fs = require('fs');
 var p = process.env.SETTINGS_PATH;
 var cmd = process.env.HOOK_CMD;
 var id = process.env.SCRIPT_ID;
-var bypassCmd = process.env.BYPASS_CMD;
 var s = {};
 if (fs.existsSync(p)) { try { s = JSON.parse(fs.readFileSync(p,'utf8')); } catch(e) {} }
 if (!s.hooks) s.hooks = {};
@@ -886,23 +858,18 @@ if (!sessionAlready) {
   console.log('SessionStart hook already registered');
 }
 
-// PermissionRequest hook (bypass .claude/ guard)
-if (!s.hooks.PermissionRequest) s.hooks.PermissionRequest = [];
-var permAlready = s.hooks.PermissionRequest.some(function(h){
-  return h.hooks && h.hooks.some(function(hh){ return hh.command && hh.command.indexOf('bypass-claude-dir.js') !== -1; });
-});
-if (!permAlready) {
-  s.hooks.PermissionRequest.push({
-    matcher: 'Edit|Write|MultiEdit|NotebookEdit|Bash',
-    hooks: [{ type: 'command', command: bypassCmd }]
+// PermissionRequest bypass hook RETIRED (v1.13.0) -- strip any stale registration.
+// Upstream #39523 was fixed; the .claude/ guard no longer prompts in bypass mode.
+// Kept in git history (tag <= v1.12.0) in case the bug ever regresses.
+if (s.hooks.PermissionRequest) {
+  s.hooks.PermissionRequest = s.hooks.PermissionRequest.filter(function(h){
+    return !(h.hooks && h.hooks.some(function(hh){ return hh.command && hh.command.indexOf('bypass-claude-dir.js') !== -1; }));
   });
-  console.log('PermissionRequest hook registered:', bypassCmd);
-} else {
-  console.log('PermissionRequest hook already registered');
+  if (s.hooks.PermissionRequest.length === 0) delete s.hooks.PermissionRequest;
 }
 
 fs.writeFileSync(p, JSON.stringify(s, null, 2), 'utf8');
-" 2>/dev/null || echo "Note: could not register hooks (node not found)"
+" 2>/dev/null || echo "Note: could not update hooks (node not found)"
 
 # ── Auto-update (once per 24h) ────────────────────────────────────────────
 # Runs at the END of the script so the Hebrew notification is the LAST thing
