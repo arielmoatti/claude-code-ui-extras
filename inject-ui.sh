@@ -15,10 +15,11 @@ export PATH
 # (MAJOR=0) still bump the version but stay OUT of the banner. Keep notes free of
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
-COMPATIBLE_EXT_VERSION="2.1.162"
-CHANGELOG_VERS=(  "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+COMPATIBLE_EXT_VERSION="2.1.167"
+CHANGELOG_VERS=(  "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "כפתור מזעור ליד כפתור הסגירה בתיבת השאלה - מקפל אותה לשורה אחת כדי לקרוא את התשובה שמאחוריה, ולחיצה נוספת פותחת מחדש."
   "הבאנר קופץ עכשיו רק כשיש שיפור מהותי חדש מאז הפעם האחרונה, ולא בכל בליטת גרסה."
   "הוסר הטלאי שעקף את חלוניות ההרשאה של .claude - אנתרופיק תיקנו את הבאג, הוא כבר לא נחוץ."
   "בלוקי קוד מופיעים עכשיו ב-50% מהמסך וללא גלילה אופקית (ניתן לכוונון בקובץ ההגדרות)."
@@ -91,6 +92,15 @@ if [ -f "$CONF_FILE" ]; then
   [ -n "$val" ] && CODE_BLOCK_MAX_WIDTH="$val"
 fi
 
+# Read question-minimize flag (default: true). Adds a − button next to the ✕ in
+# the AskUserQuestion panel that collapses it to its one-line header, so the
+# answer floating behind the panel becomes readable; click again (⬜) to restore.
+QUESTION_MINIMIZE="true"
+if [ -f "$CONF_FILE" ]; then
+  val="$(grep '^question_minimize=' "$CONF_FILE" | cut -d= -f2-)"
+  [ -n "$val" ] && QUESTION_MINIMIZE="$val"
+fi
+
 # ── Signature for the fast path ───────────────────────────────────────
 # Short hash of THIS script + the ui.conf values that affect output. It is
 # written as a marker line into each patched file; if the marker is already
@@ -100,7 +110,7 @@ fi
 # if md5sum is unavailable.
 UI_SIG=""
 if command -v md5sum >/dev/null 2>&1; then
-  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" | md5sum 2>/dev/null | cut -c1-6)"
+  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" "$QUESTION_MINIMIZE" | md5sum 2>/dev/null | cut -c1-6)"
 fi
 UI_MARKER="Claude UI Extras sig:$UI_SIG"
 
@@ -160,6 +170,8 @@ $CSS_START
 [class*="codeBlockWrapper_"] pre,.chat-markdown-part pre{white-space:pre-wrap !important;overflow-wrap:anywhere !important;overflow-x:visible !important;padding-top:36px !important;max-width:$CODE_BLOCK_MAX_WIDTH !important;}
 [class*="codeBlockWrapper_"] code{white-space:pre-wrap !important;overflow-wrap:anywhere !important;}
 [class*="codeBlockWrapper_"] [class*="copyButton_"]{right:calc(100% - $CODE_BLOCK_MAX_WIDTH + 20px) !important;border:2px solid $BORDER_COLOR !important;}
+/* Question-panel minimize: when the AskUserQuestion panel (the in-flow .permissionRequestContainer, keyed by its stable data-focused-index attr) carries the cc-q-min class, hide the question body / answer buttons / Esc hint, leaving only the one-line header (title + ✕ + our − button). Collapsing it also lets the extension's ResizeObserver shrink the transcript spacer, so the answer floating behind becomes readable. Sub-parts are hashed per build, matched by class prefix. */
+[data-focused-index].cc-q-min [class*="questionsContainer_"],[data-focused-index].cc-q-min [class*="buttonContainer_"],[data-focused-index].cc-q-min [class*="keyboardHints_"]{display:none !important;}
 $CSS_END
 CSSPATCH
   if cmp -s "$csstmp" "$css"; then
@@ -725,6 +737,72 @@ CSSPATCH
   },true);
 })();
 
+/* ── Minimize button for the AskUserQuestion panel ──
+   Anthropic floats the question panel over the transcript (z-index 20, 680px
+   centered, up to 70vh tall), so when Claude answers AND asks in the same turn
+   the panel covers the answer, and the only escape today is Esc (which discards
+   the question). This injects a − button next to the panel's ✕ that collapses it
+   to its one-line header (which, since the input area is a bottom-anchored flex
+   column, parks on top of the prompt box); the glyph flips to ⬜ to restore.
+   Scoped strictly to the AskUserQuestion panel via the presence of radio/checkbox
+   options + the stable data-focused-index attr + the aria-label="Close" anchor. */
+;(function(){
+  if('__QUESTION_MINIMIZE__'!=='true')return;
+  var MIN='cc-q-min';
+  /* Swap the cloned button's icon to a minus (collapse) or square (restore),
+     matching the ✕ in size AND weight. The native ✕ is a fill-based Heroicons
+     glyph (viewBox 0 0 20 20): its strokes span ~5.2→14.8 (≈9.6 wide, centered)
+     at ~1.5 thickness. We derive our shapes from that geometry, scaled to the
+     cloned <svg>'s actual viewBox so it stays right if the icon size changes.
+     fill/stroke are set EXPLICITLY (an inherited <line> would be invisible and an
+     inherited <rect> solid, since the source icon is fill-based). Falls back to a
+     text glyph if there's no svg to clone. */
+  function setIcon(btn,restore){
+    var svg=btn.querySelector('svg');
+    if(svg){
+      var vb=(svg.getAttribute('viewBox')||'0 0 20 20').split(/\s+/);
+      var S=parseFloat(vb[2])||20, c=S/2, w=S*0.075, e=S*0.24;      /* center, stroke weight, half-extent */
+      var n=function(x){return Math.round(x*100)/100;};
+      svg.innerHTML=restore
+        ? '<rect x="'+n(c-e)+'" y="'+n(c-e)+'" width="'+n(2*e)+'" height="'+n(2*e)+'" rx="'+n(w)+'" fill="none" stroke="currentColor" stroke-width="'+n(w)+'"/>'  /* □ restore */
+        : '<rect x="'+n(c-e)+'" y="'+n(c-w/2)+'" width="'+n(2*e)+'" height="'+n(w)+'" rx="'+n(w/2)+'" fill="currentColor" stroke="none"/>';                          /* − minimize */
+    } else {
+      btn.textContent=restore?'□':'−';
+    }
+  }
+  /* Clone the native ✕ button so we inherit its exact iconButton classes and
+     icon sizing, then replace only the glyph + wire our own toggle. cloneNode
+     does NOT copy React's (delegated) onClick, so the clone won't also close. */
+  function makeBtn(panel,closeBtn){
+    var b=closeBtn.cloneNode(true);
+    b.classList.add('cc-q-minbtn');          /* marker for dedupe; carries no style */
+    setIcon(b,false);
+    b.setAttribute('aria-label','Minimize');
+    b.setAttribute('title','Minimize - read the answer behind this box');
+    b.addEventListener('mousedown',function(e){e.preventDefault();});  /* don't steal focus */
+    b.addEventListener('click',function(e){
+      e.preventDefault(); e.stopPropagation();
+      var min=panel.classList.toggle(MIN);
+      setIcon(b,min);
+      b.setAttribute('aria-label',min?'Restore':'Minimize');
+      b.setAttribute('title',min?'Restore the question':'Minimize - read the answer behind this box');
+    });
+    return b;
+  }
+  function scan(){
+    var panels=document.querySelectorAll('[data-focused-index]');
+    for(var i=0;i<panels.length;i++){
+      var p=panels[i];
+      if(p.querySelector('.cc-q-minbtn'))continue;
+      if(!p.querySelector('[role="radio"],[role="checkbox"]'))continue; /* AskUserQuestion only */
+      var x=p.querySelector('[aria-label="Close"]');
+      if(!x||!x.parentNode)continue;
+      x.parentNode.insertBefore(makeBtn(p,x),x);
+    }
+  }
+  setInterval(scan,300);
+})();
+
 /* ── Update notification banner (in-webview, once per version) ──
    The SessionStart hook's stdout is NOT shown to the user in the VSCode
    extension, so the old "echo the update note" approach was invisible.
@@ -779,6 +857,7 @@ JSEND
     sed -i "s|__BORDER_COLOR__|$BORDER_COLOR|g" "$jstmp"
     sed -i "s|__SHOW_CONTEXT_WINDOW__|$SHOW_CONTEXT_WINDOW|g" "$jstmp"
     sed -i "s|__RATE_LIMIT_DIAG__|$RATE_LIMIT_DIAG|g" "$jstmp"
+    sed -i "s|__QUESTION_MINIMIZE__|$QUESTION_MINIMIZE|g" "$jstmp"
     sed -i "s|__UI_SIG__|$UI_MARKER|g" "$jstmp"
     sed -i "s|__UI_VERSION__|$VERSION|g" "$jstmp"
     # The changelog JS array (built up top; apostrophes already U+2019-swapped,
