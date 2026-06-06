@@ -22,7 +22,6 @@
 <ul dir="rtl">
 <li>לחיצה על <code>−</code> מקפלת את התיבה לשורה אחת שנדבקת לראש תיבת הפרומפט - והתשובה שמאחוריה נחשפת ונקראת במלואה.</li>
 <li>הכפתור מתחלף ל-<code>□</code> (מסגרת) להחזרת התיבה למצב מלא. השאלה לא מבוטלת - היא ממתינה כל הזמן.</li>
-<li>הכפתור תואם בדיוק בגודל ובעובי ל-<code dir="ltr">✕</code> הנייטיב (נגזר מהגיאומטריה שלו), ומופיע רק על תיבת השאלות.</li>
 <li>ניתן לכבות עם דגל <code>question_minimize</code> ב-<code>ui.conf</code> (ברירת מחדל: דולק).</li>
 </ul>
 
@@ -255,7 +254,6 @@ When Claude asks a question (`AskUserQuestion`), it opens a floating box that co
 
 - Clicking `−` collapses the box to a single line parked on top of the prompt box - and the answer behind it is revealed and fully readable.
 - The glyph flips to `□` (outline) to restore the box. The question is never discarded - it stays pending the whole time.
-- The button matches the native `✕` exactly in size and weight (derived from its geometry), and is scoped strictly to the question panel.
 - Toggle via `question_minimize` flag in `ui.conf` (default: on).
 
 <p><img src="screenshots/minimize-question.jpg" alt="minimize button on the question box" width="100%"/></p>
