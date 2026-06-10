@@ -15,7 +15,22 @@
 
 ## פיצ'רים
 
-### ‏🆕 מזעור תיבת השאלות (AskUserQuestion)
+### &rlm;🆕 קיפול כל הפרומפטים לשורה אחת (Minimize all)
+
+<p dir="rtl">ריחוף על הודעת משתמש מציג כפתור <b>Minimize all</b> - לחיצה אחת מקפלת את <b>כל</b> ההודעות שלך בשיחה לשורה אחת, והשיחה הופכת לרשימה קומפקטית שקל לסרוק, עם כל שטח המסך פנוי לתשובות. ריחוף על הודעה מקופלת מציג <b>Expand all</b> שמחזיר את הכל.</p>
+
+<ul dir="rtl">
+<li>מצב הקיפול יציב לאורך השיחה - שורד רענוני תוכן ומעבר בין סשנים באותו חלון - עד שמרחיבים או עושים Reload.</li>
+<li>הכפתור יושב בדיוק לצד ה-Show more / Show less הנייטיביים, על אותו קו.</li>
+<li>פרומפט של שורה אחת לא מקבל כפתור - אין מה לקפל.</li>
+<li>אגב, תוקן גם באג נייטיבי: בהודעות בעברית כפתור Show less היה קופץ לפינה השמאלית (ההפוכה) - עכשיו הוא נשאר בפינה הימנית, כמו Show more.</li>
+<li>כיבוי: דגל <code dir="ltr">user_msg_minimize</code> ב-<code>ui.conf</code> (ברירת מחדל: דולק).</li>
+</ul>
+
+<p align="right"><img src="screenshots/minimize-all.jpg" alt="Minimize all button on hover" height="240"/></p>
+<p align="right"><img src="screenshots/expand-all.jpg" alt="folded prompt with Expand all" height="115"/></p>
+
+### מזעור תיבת השאלות (AskUserQuestion)
 
 <p dir="rtl">כשקלוד שואל שאלה (<code dir="ltr">AskUserQuestion</code>) נפתחת תיבה צפה שמכסה את התשובה שמתחתיה, והדרך היחידה לקרוא את מה שמאחוריה הייתה ללחוץ <code dir="ltr">Esc</code> - מה שמבטל את השאלה. הפיצ'ר מוסיף כפתור <b>מזעור</b> (<code>−</code>) ליד ה-<code dir="ltr">✕</code>.</p>
 
@@ -114,8 +129,8 @@
 
 <p align="right"><img src="screenshots/border.jpg" alt="border around user message" height="300"/></p>
 
-### הרחבת הודעות משתמש
-קלוד קוד מכווץ הודעות ארוכות לכ-3 שורות עם כפתור "הצג עוד". הפיצ'ר הזה מגדיל את המגבלה לכ-7 שורות, כך שהודעות בינוניות נראות במלואן בלי שום לחיצה.
+### הרחבת הודעות משתמש (עודכן)
+קלוד קוד מכווץ הודעות ארוכות לכ-3 שורות עם כפתור "הצג עוד". הפיצ'ר הזה מגדיל את הסף לכ-8 שורות (ניתן לכוונון עם <code dir="ltr">user_msg_max_height</code> ב-<code>ui.conf</code>), כך שהודעות בינוניות נראות במלואן בלי שום לחיצה. בנוסף, ההצללה וכפתור Show more מופיעים רק כשההודעה באמת נחתכת - ולא על הודעות שכבר מוצגות במלואן.
 
 ### היסטוריית שיחות (רב-שורתי)
 קלוד קוד רגיל חותך את שמות השיחות בסיידבר לשורה אחת. הפיצ'ר הזה מאפשר לכל פריט להציג עד 3 שורות, כדי שתוכל לקרוא על מה דובר בשיחה.
@@ -202,6 +217,12 @@ code_block_max_width=50%
 
 # כפתור מזעור על תיבת השאלות (true / false) - ברירת מחדל: דולק
 question_minimize=true
+
+# כפתור Minimize all על הודעות משתמש (true / false) - ברירת מחדל: דולק
+user_msg_minimize=true
+
+# גובה הכיווץ של הודעות משתמש ארוכות, בפיקסלים (ברירת מחדל: 175, בערך 8 שורות)
+user_msg_max_height=175
 ```
 
 <div dir="rtl">
@@ -248,7 +269,20 @@ irm https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/uni
 
 Ordered newest-first — when you come back after a while, the top of the list shows what's new.
 
-### 🆕 Minimize the question box (AskUserQuestion)
+### 🆕 Minimize all prompts to one line
+
+Hovering any user message reveals a **Minimize all** button - one click folds ALL your prompts in the chat to a single line each, turning the conversation into a compact, scannable list with the whole screen left for Claude's answers. Hovering a folded message shows **Expand all** to restore everything.
+
+- The folded state is stable throughout the session - it survives content re-renders and session switches in the same window - until you expand or reload.
+- The button sits right next to the native Show more / Show less, on the same baseline.
+- Single-line prompts don't get the button (nothing to fold).
+- Also fixes a native quirk: in RTL (Hebrew) messages the Show less button used to jump to the opposite (left) corner - it now stays in the right corner like Show more.
+- Toggle via `user_msg_minimize` in `ui.conf` (default: on).
+
+<p><img src="screenshots/minimize-all.jpg" alt="Minimize all button on hover" height="240"/></p>
+<p><img src="screenshots/expand-all.jpg" alt="folded prompt with Expand all" height="115"/></p>
+
+### Minimize the question box (AskUserQuestion)
 
 When Claude asks a question (`AskUserQuestion`), it opens a floating box that covers the answer underneath it - and the only way to read what's behind it was to press `Esc`, which discards the question. This adds a **minimize** button (`−`) next to the `✕`.
 
@@ -325,8 +359,8 @@ Default color is configurable in `ui.conf`.
 
 <p><img src="screenshots/border.jpg" alt="border around user message" height="300"/></p>
 
-### User Message Expand
-Claude Code collapses long user messages to ~3 lines with a "show more" button. This fix raises the limit to ~7 lines, so short-to-medium messages are fully visible without any interaction.
+### User Message Expand (updated)
+Claude Code collapses long user messages to ~3 lines with a "Show more" button. This fix raises the threshold to ~8 lines (tunable via `user_msg_max_height` in `ui.conf`), so short-to-medium messages are fully visible without any interaction. The fade and Show more button now also appear only when content is actually cut off - never on messages that are already fully visible.
 
 ### Session History (multi-line)
 The Claude Code sidebar normally truncates session names to a single line. This fix expands each entry to up to 3 lines, so you can actually read what a session was about.
@@ -393,6 +427,12 @@ code_block_max_width=50%
 
 # Minimize button on the question box (true / false) - default: on
 question_minimize=true
+
+# "Minimize all" button on user messages (true / false) - default: on
+user_msg_minimize=true
+
+# Collapse height of long user messages, in px (default: 175, ~8 lines)
+user_msg_max_height=175
 ```
 
 Then re-run `bash scripts/inject-ui.sh` and reload VSCode.

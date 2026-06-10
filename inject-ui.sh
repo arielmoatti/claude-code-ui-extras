@@ -15,10 +15,11 @@ export PATH
 # (MAJOR=0) still bump the version but stay OUT of the banner. Keep notes free of
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
-COMPATIBLE_EXT_VERSION="2.1.169"
-CHANGELOG_VERS=(  "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+COMPATIBLE_EXT_VERSION="2.1.170"
+CHANGELOG_VERS=(  "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "ריחוף על הודעת משתמש מציג כפתור Minimize all שמקפל את כל ההודעות לשורה אחת (Expand all מחזיר). ההצללה וכפתור Show more מופיעים רק כשבאמת נחתך תוכן, ו-Show less כבר לא בורח לפינה השמאלית בהודעות בעברית."
   "באנר העדכון שקט עכשיו גם כשהגרסה שנראתה חדשה מהאחרונה בלוג (השוואת גרסאות אמיתית במקום השוואה מדויקת)."
   "מד הקונטקסט מזהה עכשיו את מודל Fable 5 החדש: חלון 1M מזוהה נכון גם מתחת ל-200K, והשם מוצג יפה בפירוט."
   "עודכנה גרסת התאימות שנבדקה ל-Claude Code 2.1.169."
@@ -104,6 +105,25 @@ if [ -f "$CONF_FILE" ]; then
   [ -n "$val" ] && QUESTION_MINIMIZE="$val"
 fi
 
+# Read user-message collapse height in px (default: 175, ~8 lines; native is 60).
+# Used BOTH as the displayed max-height (CSS) and as the overflow-decision
+# threshold (bundle patch below) - keeping the two aligned is what prevents the
+# "fade + Show more on a fully-visible message" glitch.
+USER_MSG_MAX_H="175"
+if [ -f "$CONF_FILE" ]; then
+  val="$(grep '^user_msg_max_height=' "$CONF_FILE" | cut -d= -f2- | tr -cd '0-9')"
+  [ -n "$val" ] && USER_MSG_MAX_H="$val"
+fi
+
+# Read user-message minimize flag (default: true). Adds a hover "minimize"
+# button on every user message that folds it to a single line; hovering the
+# folded line shows "expand" to restore.
+USER_MSG_MINIMIZE="true"
+if [ -f "$CONF_FILE" ]; then
+  val="$(grep '^user_msg_minimize=' "$CONF_FILE" | cut -d= -f2-)"
+  [ -n "$val" ] && USER_MSG_MINIMIZE="$val"
+fi
+
 # ── Signature for the fast path ───────────────────────────────────────
 # Short hash of THIS script + the ui.conf values that affect output. It is
 # written as a marker line into each patched file; if the marker is already
@@ -113,7 +133,7 @@ fi
 # if md5sum is unavailable.
 UI_SIG=""
 if command -v md5sum >/dev/null 2>&1; then
-  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" "$QUESTION_MINIMIZE" | md5sum 2>/dev/null | cut -c1-6)"
+  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" "$QUESTION_MINIMIZE" "$USER_MSG_MAX_H" "$USER_MSG_MINIMIZE" | md5sum 2>/dev/null | cut -c1-6)"
 fi
 UI_MARKER="Claude UI Extras sig:$UI_SIG"
 
@@ -165,7 +185,7 @@ $CSS_START
 .interactive-request .chat-markdown-part{border:2px solid $BORDER_COLOR !important;border-radius:4px;padding:4px 8px;}
 [class*="sessionItem_"]{height:auto !important;min-height:28px !important;align-items:flex-start !important;padding-top:4px !important;padding-bottom:4px !important;}
 [class*="sessionName_"]{white-space:normal !important;display:-webkit-box !important;-webkit-line-clamp:3 !important;-webkit-box-orient:vertical !important;overflow:hidden !important;}
-[class*="userMessage_"] [class*="content_"][class*="collapsed_"]{max-height:175px !important;}
+[class*="userMessage_"] [class*="content_"][class*="collapsed_"]{max-height:${USER_MSG_MAX_H}px !important;}
 [class*="sessionsButtonText_"]{white-space:normal !important;display:-webkit-box !important;-webkit-line-clamp:3 !important;-webkit-box-orient:vertical !important;overflow:hidden !important;}
 [class*="sessionsButtonContent_"]{max-width:unset !important;}
 [class*="sessionsButton_"]{max-width:unset !important;}
@@ -175,6 +195,17 @@ $CSS_START
 [class*="codeBlockWrapper_"] [class*="copyButton_"]{right:calc(100% - $CODE_BLOCK_MAX_WIDTH + 20px) !important;border:2px solid $BORDER_COLOR !important;}
 /* Question-panel minimize: when the AskUserQuestion panel (the in-flow .permissionRequestContainer, keyed by its stable data-focused-index attr) carries the cc-q-min class, hide the question body / answer buttons / Esc hint, leaving only the one-line header (title + ✕ + our − button). Collapsing it also lets the extension's ResizeObserver shrink the transcript spacer, so the answer floating behind becomes readable. Sub-parts are hashed per build, matched by class prefix. */
 [data-focused-index].cc-q-min [class*="questionsContainer_"],[data-focused-index].cc-q-min [class*="buttonContainer_"],[data-focused-index].cc-q-min [class*="keyboardHints_"]{display:none !important;}
+/* User-message "Minimize all": hovering any multi-line user message reveals a "Minimize all" button (styled and anchored like the native Show more - the button lives INSIDE the position:relative expandableContainer so both share the same bottom anchor). Click folds ALL user messages to a single clipped line via the cc-msg-all class on <body> - body is outside React's tree, so the folded state survives re-renders; hovering any folded message shows "Expand all". While folded we hide the native gradient + Show more/less + attachments and disable the wrapper's click-to-expand. The fold rule doubles an attribute selector to reach specificity (0,4,0): with a single one it ties/loses to our own 175px collapsed rule above (0,3,0) - both !important - and collapsed messages then refuse to fold (the v1.18.0-dev bug). When the native Show more (collapsed) or Show less (expanded) occupies the corner, our button shifts left of it via :has(); otherwise it takes the corner. Sub-part classes are hashed per build, matched by prefix. */
+.cc-msg-minbtn{display:none;position:absolute;bottom:0;right:0;margin:4px;padding:8px;border:none;border-radius:4px;cursor:pointer;font-size:.85em;align-items:center;color:var(--app-menu-background);background-color:var(--app-menu-foreground);opacity:.9;z-index:5;white-space:nowrap;}
+.cc-msg-minbtn:hover{opacity:1;transform:scale(1.05);}
+[class*="userMessage_"]:hover .cc-msg-minbtn{display:flex;}
+[class*="userMessage_"]:has([class*="content_"][class*="collapsed_"]) .cc-msg-minbtn,[class*="userMessage_"]:has([class*="collapseButton_"]) .cc-msg-minbtn{right:88px;}
+body.cc-msg-all .cc-msg-minbtn{right:0 !important;padding:2px 8px;margin:1px 4px;}  /* folded box is one line (~20px); slim the button so it fits inside instead of bleeding over the border */
+body.cc-msg-all [class*="userMessage_"] [class*="content_"][class*="content_"]{max-height:1.5em !important;overflow:hidden !important;}
+body.cc-msg-all [class*="userMessage_"] [class*="truncationGradient_"],body.cc-msg-all [class*="userMessage_"] [class*="buttonContainer_"],body.cc-msg-all [class*="userMessageAttachments_"]{display:none !important;}
+body.cc-msg-all [class*="userMessage_"] [class*="contentWrapper_"]{pointer-events:none !important;}
+/* Native RTL quirk fix: Show less is an in-flow flex child (justify-content:flex-end), so in RTL prose flex-end resolves to the LEFT corner while the absolute Show more sits right - the two buttons end up at opposite corners. Forcing LTR on the button row pins both to the right. */
+[class*="userMessage_"] [class*="buttonContainer_"]{direction:ltr !important;}
 $CSS_END
 CSSPATCH
   if cmp -s "$csstmp" "$css"; then
@@ -191,6 +222,20 @@ CSSPATCH
         -e '/\/\* Claude UI Extras JS Start \*\//,/\/\* Claude UI Extras JS End \*\//d' "$js" > "$jstmp"
     # Trim trailing blank lines (see CSS note above) for a deterministic rebuild.
     sed -i -e :a -e '/^[[:space:]]*$/{$d;N;ba}' "$jstmp"
+
+    # ── Align the collapse DECISION with the displayed height ──────────
+    # The user-message expandable component receives maxHeight:60 (px) and uses
+    # it BOTH as the inline display cap AND as the "is overflowing?" threshold
+    # (scrollHeight > maxHeight -> collapsed class + fade gradient + Show more).
+    # Our CSS only overrides the DISPLAY cap, so every message between 60px and
+    # the CSS cap rendered fully yet still wore a pointless fade + Show more.
+    # Patch the one call site (",maxHeight:60}" appears exactly once in the
+    # bundle) to read our runtime global, with the conf value baked in as the
+    # fallback for renders that happen before our appended block runs.
+    # Idempotent: the patched text no longer contains ",maxHeight:60}". If a
+    # future bundle changes the literal, the sed no-ops and behavior falls back
+    # to the old display-only override (CSS) - degraded but never broken.
+    sed -i 's@,maxHeight:60}@,maxHeight:window.__ccUserMsgMaxH||'"$USER_MSG_MAX_H"'}@' "$jstmp"
 
     cat >> "$jstmp" << 'JSPATCH'
 
@@ -806,6 +851,64 @@ CSSPATCH
   setInterval(scan,300);
 })();
 
+/* ── "Minimize all" button on user messages ──
+   Hovering any multi-line user message reveals a "Minimize all" button at its
+   bottom-right (sliding left of the native Show more / Show less when one is
+   there). Click folds ALL user messages to one line by toggling the cc-msg-all
+   class on <body> (all visuals in the CSS patch); hovering a folded message
+   shows "Expand all". Because body sits outside React's tree, the folded state
+   survives message re-renders; our buttons are re-injected by the scan. The
+   button is skipped on single-line prompts (nothing to fold), measured against
+   the content's computed line-height.
+   Also publishes the conf'd collapse threshold for the bundle-body maxHeight
+   patch (window.__ccUserMsgMaxH) - keep this OUTSIDE the flag gate so disabling
+   the button never un-fixes the collapse-decision alignment. */
+;(function(){
+  window.__ccUserMsgMaxH=parseInt('__USER_MSG_MAX_H__',10)||175;
+  if('__USER_MSG_MINIMIZE__'!=='true')return;
+  var ALL='cc-msg-all';
+  function refreshLabels(){
+    var on=document.body.classList.contains(ALL);
+    var bs=document.querySelectorAll('.cc-msg-minbtn');
+    for(var i=0;i<bs.length;i++){
+      bs[i].textContent=on?'Expand all':'Minimize all';
+      bs[i].title=on?'Expand all prompts back':'Fold all prompts to one line';
+    }
+  }
+  function makeBtn(){
+    var b=document.createElement('button');
+    b.className='cc-msg-minbtn';
+    b.type='button';
+    b.addEventListener('mousedown',function(e){e.preventDefault();});  /* don't steal focus */
+    b.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
+      document.body.classList.toggle(ALL);
+      refreshLabels();
+    });
+    return b;
+  }
+  function isOneLine(c){
+    var lh=parseFloat(getComputedStyle(c).lineHeight);
+    if(!lh||isNaN(lh))lh=20;
+    return c.scrollHeight<lh*1.6;   /* scrollHeight ignores max-height clipping, so this stays correct while folded */
+  }
+  function scan(){
+    var boxes=document.querySelectorAll('[class*="userMessage_"]');
+    for(var i=0;i<boxes.length;i++){
+      var box=boxes[i];
+      var cont=box.querySelector('[class*="expandableContainer_"]');
+      var c=box.querySelector('[class*="content_"]');
+      if(!cont||!c)continue;
+      var have=box.querySelector('.cc-msg-minbtn');
+      if(isOneLine(c)){if(have)have.remove();continue;}
+      if(have)continue;
+      cont.appendChild(makeBtn());
+    }
+    refreshLabels();
+  }
+  setInterval(scan,300);
+})();
+
 /* ── Update notification banner (in-webview, once per version) ──
    The SessionStart hook's stdout is NOT shown to the user in the VSCode
    extension, so the old "echo the update note" approach was invisible.
@@ -865,6 +968,8 @@ JSEND
     sed -i "s|__SHOW_CONTEXT_WINDOW__|$SHOW_CONTEXT_WINDOW|g" "$jstmp"
     sed -i "s|__RATE_LIMIT_DIAG__|$RATE_LIMIT_DIAG|g" "$jstmp"
     sed -i "s|__QUESTION_MINIMIZE__|$QUESTION_MINIMIZE|g" "$jstmp"
+    sed -i "s|__USER_MSG_MAX_H__|$USER_MSG_MAX_H|g" "$jstmp"
+    sed -i "s|__USER_MSG_MINIMIZE__|$USER_MSG_MINIMIZE|g" "$jstmp"
     sed -i "s|__UI_SIG__|$UI_MARKER|g" "$jstmp"
     sed -i "s|__UI_VERSION__|$VERSION|g" "$jstmp"
     # The changelog JS array (built up top; apostrophes already U+2019-swapped,
