@@ -16,9 +16,10 @@ export PATH
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
 COMPATIBLE_EXT_VERSION="2.1.169"
-CHANGELOG_VERS=(  "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+CHANGELOG_VERS=(  "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "באנר העדכון שקט עכשיו גם כשהגרסה שנראתה חדשה מהאחרונה בלוג (השוואת גרסאות אמיתית במקום השוואה מדויקת)."
   "מד הקונטקסט מזהה עכשיו את מודל Fable 5 החדש: חלון 1M מזוהה נכון גם מתחת ל-200K, והשם מוצג יפה בפירוט."
   "עודכנה גרסת התאימות שנבדקה ל-Claude Code 2.1.169."
   "כפתור מזעור ליד כפתור הסגירה בתיבת השאלה - מקפל אותה לשורה אחת כדי לקרוא את התשובה שמאחוריה, ולחיצה נוספת פותחת מחדש."
@@ -820,7 +821,11 @@ CSSPATCH
      LOG[0].v is the latest MAJOR version; a MAJOR=0 bump (maintenance/cosmetic)
      leaves LOG[0] unchanged, so the banner stays silent on those releases. */
   var TOP=LOG[0].v;
-  try{ if(localStorage.getItem(KEY)===TOP)return; }catch(e){}
+  /* Gate on "seen >= TOP", not exact match - exact match re-pops when a
+     transiently-deployed higher version was dismissed and TOP then went
+     back down (seen=1.17.0 vs TOP=1.15.0, observed live 2026-06-10). */
+  function vge(a,b){a=String(a).split('.');b=String(b).split('.');for(var i=0;i<3;i++){var x=+a[i]||0,y=+b[i]||0;if(x!==y)return x>y;}return true;}
+  try{ var seen=localStorage.getItem(KEY); if(seen&&vge(seen,TOP))return; }catch(e){}
   var ID='claude-ui-update-banner';
   function mount(){
     if(document.getElementById(ID)||!document.body)return;
