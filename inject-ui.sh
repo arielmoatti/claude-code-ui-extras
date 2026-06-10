@@ -16,9 +16,10 @@ export PATH
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
 COMPATIBLE_EXT_VERSION="2.1.169"
-CHANGELOG_VERS=(  "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+CHANGELOG_VERS=(  "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "מד הקונטקסט מזהה עכשיו את מודל Fable 5 החדש: חלון 1M מזוהה נכון גם מתחת ל-200K, והשם מוצג יפה בפירוט."
   "עודכנה גרסת התאימות שנבדקה ל-Claude Code 2.1.169."
   "כפתור מזעור ליד כפתור הסגירה בתיבת השאלה - מקפל אותה לשורה אחת כדי לקרוא את התשובה שמאחוריה, ולחיצה נוספת פותחת מחדש."
   "הבאנר קופץ עכשיו רק כשיש שיפור מהותי חדש מאז הפעם האחרונה, ולא בכל בליטת גרסה."
@@ -322,8 +323,8 @@ CSSPATCH
       if(raw===0)return;
       if(raw===lastCtxRaw)return; /* dedupe identical streaming events */
       lastCtxRaw=raw;
-      /* 1M detection: Opus is always 1M; models with [1m] tag are 1M; usage >200K = 1M */
-      var is1M=/opus/i.test(currentModel)||/\[1m\]/i.test(currentModel)||raw>200000;
+      /* 1M detection: Opus/Fable are always 1M; models with [1m] tag are 1M; usage >200K = 1M */
+      var is1M=/opus|fable/i.test(currentModel)||/\[1m\]/i.test(currentModel)||raw>200000;
       var cap=is1M?1000000:200000;
       var pct=Math.round(raw*100/cap);
       var x=document.getElementById('claude-ui-context-badge');
@@ -382,8 +383,8 @@ CSSPATCH
   function prettyModel(id){
     if(!id)return '';
     var s=String(id), is1m=/\[1m\]/i.test(s), base=s.replace(/\[1m\]/i,'');
-    var m=base.match(/(opus|sonnet|haiku)-(\d+)-(\d+)/i), name;
-    if(m){var fam=m[1].charAt(0).toUpperCase()+m[1].slice(1).toLowerCase();name=fam+' '+m[2]+'.'+m[3];}
+    var m=base.match(/(opus|sonnet|haiku|fable)-(\d+)(?:-(\d+))?/i), name;
+    if(m){var fam=m[1].charAt(0).toUpperCase()+m[1].slice(1).toLowerCase();name=fam+' '+m[2]+(m[3]?'.'+m[3]:'');}
     else{name=base.replace(/^claude-/,'');}
     return name+(is1m?' (1M context)':'');
   }
@@ -973,8 +974,10 @@ if [ "$AUTO_UPDATE" = "true" ]; then
     echo "$NOW" > "$STATE_FILE"
     TMP="$(mktemp 2>/dev/null || echo "/tmp/inject-ui-$$.sh")"
     if curl -fsSL --connect-timeout 3 --max-time 8 -o "$TMP" "$REMOTE_URL" 2>/dev/null; then
-      REMOTE_VER="$(grep -m1 '^VERSION=' "$TMP" | sed 's/^VERSION="\(.*\)".*/\1/')"
-      REMOTE_NOTE="$(grep -m1 '^UPDATE_NOTE=' "$TMP" | sed 's/^UPDATE_NOTE="\(.*\)".*/\1/')"
+      # VERSION/UPDATE_NOTE in the file are array derefs ("${CHANGELOG_VERS[0]}"),
+      # so grep them from the changelog arrays themselves, not the assignment lines.
+      REMOTE_VER="$(grep -m1 '^CHANGELOG_VERS=' "$TMP" | sed 's/^CHANGELOG_VERS=( *"\([^"]*\)".*/\1/')"
+      REMOTE_NOTE="$(sed -n '/^CHANGELOG_NOTES=(/{n;s/^ *"\(.*\)" *$/\1/p;}' "$TMP")"
       REMOTE_EXT_VER="$(grep -m1 '^COMPATIBLE_EXT_VERSION=' "$TMP" | sed 's/^COMPATIBLE_EXT_VERSION="\(.*\)".*/\1/')"
       if [ -n "$REMOTE_VER" ] && [ "$REMOTE_VER" != "$VERSION" ] && bash -n "$TMP" 2>/dev/null; then
         cp "$TMP" "${BASH_SOURCE[0]}"
