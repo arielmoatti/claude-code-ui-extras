@@ -27,8 +27,10 @@
 <li>כיבוי: דגל <code dir="ltr">user_msg_minimize</code> ב-<code>ui.conf</code> (ברירת מחדל: דולק).</li>
 </ul>
 
-<p align="right"><img src="screenshots/minimize-all.jpg" alt="Minimize all button on hover" height="240"/></p>
-<p align="right"><img src="screenshots/expand-all.jpg" alt="folded prompt with Expand all" height="115"/></p>
+<table width="100%"><tr>
+<td width="50%" valign="top"><img src="screenshots/minimize-all.jpg" alt="Minimize all button on hover" width="100%"/></td>
+<td width="50%" valign="top"><img src="screenshots/expand-all.jpg" alt="folded prompt with Expand all" width="100%"/></td>
+</tr></table>
 
 ### מזעור תיבת השאלות (AskUserQuestion)
 
@@ -279,8 +281,10 @@ Hovering any user message reveals a **Minimize all** button - one click folds AL
 - Also fixes a native quirk: in RTL (Hebrew) messages the Show less button used to jump to the opposite (left) corner - it now stays in the right corner like Show more.
 - Toggle via `user_msg_minimize` in `ui.conf` (default: on).
 
-<p><img src="screenshots/minimize-all.jpg" alt="Minimize all button on hover" height="240"/></p>
-<p><img src="screenshots/expand-all.jpg" alt="folded prompt with Expand all" height="115"/></p>
+<table width="100%"><tr>
+<td width="50%" valign="top"><img src="screenshots/minimize-all.jpg" alt="Minimize all button on hover" width="100%"/></td>
+<td width="50%" valign="top"><img src="screenshots/expand-all.jpg" alt="folded prompt with Expand all" width="100%"/></td>
+</tr></table>
 
 ### Minimize the question box (AskUserQuestion)
 
