@@ -16,9 +16,10 @@ export PATH
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
 COMPATIBLE_EXT_VERSION="2.1.170"
-CHANGELOG_VERS=(  "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+CHANGELOG_VERS=(  "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "שורת הגרסה (קליק ימני על מד הקונטקסט או על חצי הניווט) מציגה עכשיו גם את גרסת חבילת העברית, כשהיא מותקנת."
   "ריחוף על הודעת משתמש מציג כפתור Minimize all שמקפל את כל ההודעות לשורה אחת (Expand all מחזיר). ההצללה וכפתור Show more מופיעים רק כשבאמת נחתך תוכן, ו-Show less כבר לא בורח לפינה השמאלית בהודעות בעברית."
   "באנר העדכון שקט עכשיו גם כשהגרסה שנראתה חדשה מהאחרונה בלוג (השוואת גרסאות אמיתית במקום השוואה מדויקת)."
   "מד הקונטקסט מזהה עכשיו את מודל Fable 5 החדש: חלון 1M מזוהה נכון גם מתחת ל-200K, והשם מוצג יפה בפירוט."
@@ -409,10 +410,15 @@ CSSPATCH
   }
 
   /* Shared "UI Extras vX.Y.Z" line. withSep adds a top separator (used when it
-     sits under the border toggle); standalone in the context-badge popup. */
+     sits under the border toggle); standalone in the context-badge popup.
+     If the Hebrew RTL pack is installed it publishes its version to a window
+     global (cross-pack handshake, read lazily here at click time) - append it
+     so one right-click answers "what is running" for both packs. */
   function versionLineEl(withSep){
     var v=document.createElement('div');
-    v.textContent='UI Extras v'+UI_VERSION;
+    var vt='UI Extras v'+UI_VERSION;
+    try{if(window.__ccRtlVersion)vt+=' | Hebrew RTL v'+window.__ccRtlVersion;}catch(e){}
+    v.textContent=vt;
     v.style.cssText=(withSep?'border-top:1px solid var(--vscode-menu-separatorBackground,#454545);padding-top:6px;':'')+'opacity:0.6;font-size:11px;white-space:nowrap;cursor:default;';
     return v;
   }
