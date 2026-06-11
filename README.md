@@ -29,10 +29,11 @@
 </ul>
 
 <table width="100%"><tr>
-<td width="25%" valign="top"><img src="screenshots/collapse-hover.jpg" alt="Collapse button on hover, next to native Show more" width="100%"/></td>
-<td width="25%" valign="top"><img src="screenshots/collapse-alt-all.jpg" alt="holding Alt switches the label to Collapse all" width="100%"/></td>
-<td width="25%" valign="top"><img src="screenshots/collapse-expanded.jpg" alt="expanded message with Show less pinned right" width="100%"/></td>
-<td width="25%" valign="top"><img src="screenshots/collapse-folded.jpg" alt="folded one-line prompt with Expand button" width="100%"/></td>
+<td width="50%" valign="top"><img src="screenshots/collapse-hover.jpg" alt="Collapse button on hover, next to native Show more" width="100%"/></td>
+<td width="50%" valign="top"><img src="screenshots/collapse-alt-all.jpg" alt="holding Alt switches the label to Collapse all" width="100%"/></td>
+</tr><tr>
+<td width="50%" valign="top"><img src="screenshots/collapse-expanded.jpg" alt="expanded message with Show less pinned right" width="100%"/></td>
+<td width="50%" valign="top"><img src="screenshots/collapse-folded.jpg" alt="folded one-line prompt with Expand button" width="100%"/></td>
 </tr></table>
 
 ### מזעור תיבת השאלות (AskUserQuestion)
@@ -286,10 +287,11 @@ Hovering any user message reveals a **Collapse** button - a click folds that mes
 - Toggle via `user_msg_minimize` in `ui.conf` (default: on).
 
 <table width="100%"><tr>
-<td width="25%" valign="top"><img src="screenshots/collapse-hover.jpg" alt="Collapse button on hover, next to native Show more" width="100%"/></td>
-<td width="25%" valign="top"><img src="screenshots/collapse-alt-all.jpg" alt="holding Alt switches the label to Collapse all" width="100%"/></td>
-<td width="25%" valign="top"><img src="screenshots/collapse-expanded.jpg" alt="expanded message with Show less pinned right" width="100%"/></td>
-<td width="25%" valign="top"><img src="screenshots/collapse-folded.jpg" alt="folded one-line prompt with Expand button" width="100%"/></td>
+<td width="50%" valign="top"><img src="screenshots/collapse-hover.jpg" alt="Collapse button on hover, next to native Show more" width="100%"/></td>
+<td width="50%" valign="top"><img src="screenshots/collapse-alt-all.jpg" alt="holding Alt switches the label to Collapse all" width="100%"/></td>
+</tr><tr>
+<td width="50%" valign="top"><img src="screenshots/collapse-expanded.jpg" alt="expanded message with Show less pinned right" width="100%"/></td>
+<td width="50%" valign="top"><img src="screenshots/collapse-folded.jpg" alt="folded one-line prompt with Expand button" width="100%"/></td>
 </tr></table>
 
 ### Minimize the question box (AskUserQuestion)
