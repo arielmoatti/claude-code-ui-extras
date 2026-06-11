@@ -60,12 +60,14 @@ $targets = [System.Collections.Generic.List[string]]::new()
 "$home_\.claude\scripts\bypass-claude-dir.js",
 "$home_\.claude\scripts\inject-ui.sh",
 "$home_\.claude\scripts\ui.conf",
-"$home_\.claude\scripts\.ui-extras-last-update-check" | ForEach-Object { $targets.Add($_) }
+"$home_\.claude\scripts\.ui-extras-last-update-check",
+"$home_\.claude\scripts\.ui-extras-update-pending" | ForEach-Object { $targets.Add($_) }
 if ($injectPath) {
   $dir = Split-Path -Parent $injectPath
   $targets.Add($injectPath)
   $targets.Add((Join-Path $dir 'ui.conf'))
   $targets.Add((Join-Path $dir '.ui-extras-last-update-check'))
+  $targets.Add((Join-Path $dir '.ui-extras-update-pending'))
 }
 foreach ($f in ($targets | Select-Object -Unique)) {
   if (Test-Path -LiteralPath $f) { Remove-Item -LiteralPath $f -Force; Write-Host "  deleted   ->  $f" }

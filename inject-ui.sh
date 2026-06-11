@@ -15,10 +15,11 @@ export PATH
 # (MAJOR=0) still bump the version but stay OUT of the banner. Keep notes free of
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
-COMPATIBLE_EXT_VERSION="2.1.170"
-CHANGELOG_VERS=(  "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+COMPATIBLE_EXT_VERSION="2.1.173"
+CHANGELOG_VERS=(  "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "עדכונים נפרסים עכשיו תוך דקות במקום עד יממה: בדיקת העדכון רצה ברקע בכל פתיחת צ'אט בלי להאט אותו, וכשעדכון ירד והותקן - קלוד מודיע בצ'אט שצריך Reload כדי להפעיל אותו."
   "שורת הגרסה (קליק ימני על מד הקונטקסט או על חצי הניווט) מציגה עכשיו גם את גרסת חבילת העברית, כשהיא מותקנת."
   "ריחוף על הודעת משתמש מציג כפתור Minimize all שמקפל את כל ההודעות לשורה אחת (Expand all מחזיר). ההצללה וכפתור Show more מופיעים רק כשבאמת נחתך תוכן, ו-Show less כבר לא בורח לפינה השמאלית בהודעות בעברית."
   "באנר העדכון שקט עכשיו גם כשהגרסה שנראתה חדשה מהאחרונה בלוג (השוואת גרסאות אמיתית במקום השוואה מדויקת)."
@@ -1073,35 +1074,62 @@ if (s.hooks.PermissionRequest) {
 fs.writeFileSync(p, JSON.stringify(s, null, 2), 'utf8');
 " 2>/dev/null || echo "Note: could not update hooks (node not found)"
 
-# ── Auto-update (once per 24h) ────────────────────────────────────────────
-# Runs at the END of the script so the Hebrew notification is the LAST thing
-# printed — Claude Code's SessionStart renderer only shows the last few lines,
-# so placing the update message last guarantees users see it.
-# Fetches remote script, compares VERSION. If newer and .sh syntax-valid,
-# replaces self on disk for the next session. No exec — today's session
-# already ran the old injection; new code takes effect on next Reload Window.
-# Fails open on any error.
+# ── Auto-update (background, every session) ───────────────────────────────
+# v1.20.0: the check no longer blocks session start and no longer waits 24h.
+#
+# Part 1 — version check, spawned as a DETACHED background job: session start
+# never waits on the network (the old synchronous check cost up to ~3s offline,
+# inside a BLOCKING SessionStart hook). Gated to once per 5 minutes only so
+# rapid-fire new chats don't hammer GitHub. When the remote VERSION differs and
+# the fetched script passes bash -n, the job swaps the script on disk (same-dir
+# temp + atomic mv — never truncate a possibly-running script in place) and
+# leaves a marker file. No exec — this session already ran the old injection.
+#
+# Part 2 — pending-update notice, on the FIRST session that runs the NEW
+# script: the bundle on disk is freshly patched (signature changed), but the
+# webview in memory may still run the old injection until the window reloads.
+# The hook's stdout is NOT rendered to the user — it lands in Claude's context
+# — so the notice is written as an instruction TO CLAUDE to tell the user to
+# reload. Printed once; after the reload the in-webview changelog banner takes
+# over. (The in-webview banner itself needs no reload line: by the time it
+# shows, the new code is already live.)
+#
+# Fails open on any error. auto_update=false in ui.conf disables the check
+# (a marker left by an earlier download is still announced — it already
+# happened).
+SELF="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
+NOTE_FILE="$SCRIPT_DIR/.ui-extras-update-pending"
 if [ "$AUTO_UPDATE" = "true" ]; then
   STATE_FILE="$SCRIPT_DIR/.ui-extras-last-update-check"
   NOW=$(date +%s)
   LAST=0
   [ -f "$STATE_FILE" ] && LAST=$(cat "$STATE_FILE" 2>/dev/null || echo 0)
-  if [ $((NOW - LAST)) -gt 86400 ]; then
+  if [ $((NOW - LAST)) -gt 300 ]; then
     echo "$NOW" > "$STATE_FILE"
-    TMP="$(mktemp 2>/dev/null || echo "/tmp/inject-ui-$$.sh")"
-    if curl -fsSL --connect-timeout 3 --max-time 8 -o "$TMP" "$REMOTE_URL" 2>/dev/null; then
-      # VERSION/UPDATE_NOTE in the file are array derefs ("${CHANGELOG_VERS[0]}"),
-      # so grep them from the changelog arrays themselves, not the assignment lines.
-      REMOTE_VER="$(grep -m1 '^CHANGELOG_VERS=' "$TMP" | sed 's/^CHANGELOG_VERS=( *"\([^"]*\)".*/\1/')"
-      REMOTE_NOTE="$(sed -n '/^CHANGELOG_NOTES=(/{n;s/^ *"\(.*\)" *$/\1/p;}' "$TMP")"
-      REMOTE_EXT_VER="$(grep -m1 '^COMPATIBLE_EXT_VERSION=' "$TMP" | sed 's/^COMPATIBLE_EXT_VERSION="\(.*\)".*/\1/')"
-      if [ -n "$REMOTE_VER" ] && [ "$REMOTE_VER" != "$VERSION" ] && bash -n "$TMP" 2>/dev/null; then
-        cp "$TMP" "${BASH_SOURCE[0]}"
-        echo "💡 חבילת שיפורי ממשק לקלוד קוד (נבדק מול הגרסה: $REMOTE_EXT_VER)"
-        echo "תיקון חדש: $REMOTE_NOTE"
-        echo "משהו לא עובד? פשוט לעשות Reload."
+    (
+      TMP="$(mktemp 2>/dev/null || echo "/tmp/inject-ui-$$.sh")"
+      if curl -fsSL --connect-timeout 5 --max-time 30 -o "$TMP" "$REMOTE_URL" 2>/dev/null; then
+        # VERSION in the file is an array deref ("${CHANGELOG_VERS[0]}"), so
+        # grep it from the changelog array itself, not the assignment line.
+        REMOTE_VER="$(grep -m1 '^CHANGELOG_VERS=' "$TMP" | sed 's/^CHANGELOG_VERS=( *"\([^"]*\)".*/\1/')"
+        if [ -n "$REMOTE_VER" ] && [ "$REMOTE_VER" != "$VERSION" ] && bash -n "$TMP" 2>/dev/null; then
+          cp "$TMP" "$SELF.new.$$" && mv -f "$SELF.new.$$" "$SELF" && echo "$REMOTE_VER" > "$NOTE_FILE"
+        fi
       fi
-    fi
-    rm -f "$TMP"
+      rm -f "$TMP" "$SELF.new.$$"
+    ) </dev/null >/dev/null 2>&1 &
+  fi
+fi
+if [ -f "$NOTE_FILE" ]; then
+  PENDING_VER="$(head -1 "$NOTE_FILE" 2>/dev/null | tr -d '[:space:]')"
+  rm -f "$NOTE_FILE"
+  # Announce only if this process is actually the downloaded version (the swap
+  # happened and the new script is the one running now); a stale/mismatched
+  # marker is silently dropped.
+  if [ "$PENDING_VER" = "$VERSION" ]; then
+    echo ""
+    echo "💡 חבילת שיפורי הממשק (UI Extras) עודכנה אוטומטית לגרסה $VERSION (נבדק מול הגרסה: $COMPATIBLE_EXT_VERSION)"
+    echo "חדש: $UPDATE_NOTE"
+    echo "IMPORTANT instruction to Claude: the Claude Code UI Extras pack was just auto-updated on disk, but the current window still runs the previous version. At the START of your reply, tell the user (in the conversation's language) that a UI Extras update to v$VERSION was installed, briefly what is new (translate the Hebrew note above if needed), and that to activate it they should reload the window: press Ctrl+Shift+P, then run the command: Developer: Reload Window."
   fi
 fi
