@@ -16,9 +16,10 @@ export PATH
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
 COMPATIBLE_EXT_VERSION="2.1.173"
-CHANGELOG_VERS=(  "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+CHANGELOG_VERS=(  "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "תיקון לתווית ה-Alt מ-1.21.0: היא מתעדכנת עכשיו אמינות גם אחרי שימוש ראשון (לחיצת Alt ב-Windows גנבה את פוקוס המקלדת לתפריט של VSCode, ומאז המקלדת לא הגיעה לצ׳אט; עכשיו המצב מסונכרן גם מתנועת העכבר)."
   "קיפול הודעות משתמש עובד עכשיו פר-הודעה (Collapse/Expand במקום Minimize all, עם Alt+קליק לקיפול הכל), הודעות מערכת אוטומטיות כבר לא מוצגות עם מסגרת כאילו הן פרומפט שלך, ובאנר העדכון לא חוזר לקפוץ אחרי שנסגר בפתיחת חלון חדש."
   "עדכונים נפרסים עכשיו תוך דקות במקום עד יממה: בדיקת העדכון רצה ברקע בכל פתיחת צ'אט בלי להאט אותו, וכשעדכון ירד והותקן - קלוד מודיע בצ'אט שצריך Reload כדי להפעיל אותו."
   "שורת הגרסה (קליק ימני על מד הקונטקסט או על חצי הניווט) מציגה עכשיו גם את גרסת חבילת העברית, כשהיא מותקנת."
@@ -901,9 +902,17 @@ CSSPATCH
       labelBtn(bs[i],!!(box&&box.classList.contains(MIN)));
     }
   }
-  window.addEventListener('keydown',function(e){if(e.key==='Alt'&&!altDown){altDown=true;refreshLabels();}});
-  window.addEventListener('keyup',function(e){if(e.key==='Alt'&&altDown){altDown=false;refreshLabels();}});
-  window.addEventListener('blur',function(){if(altDown){altDown=false;refreshLabels();}});
+  function syncAlt(a){if(a!==altDown){altDown=a;refreshLabels();}}
+  /* preventDefault on the bare Alt: on Windows VSCode moves keyboard focus to
+     the menu bar on an Alt press, after which keydown/keyup never reach this
+     webview again (the "Alt works only once" bug). */
+  window.addEventListener('keydown',function(e){if(e.key==='Alt'){e.preventDefault();syncAlt(true);}});
+  window.addEventListener('keyup',function(e){if(e.key==='Alt'){e.preventDefault();syncAlt(false);}});
+  window.addEventListener('blur',function(){syncAlt(false);});
+  /* Keyboard focus can still leave the webview - but mouse events keep flowing
+     regardless of keyboard focus and carry the live modifier state, and the
+     label only matters under hover anyway. Any mouse movement re-syncs. */
+  document.addEventListener('mousemove',function(e){syncAlt(e.altKey);},true);
   function contentOf(box){return box.querySelector('[class*="content_"]');}
   function keyOf(c){var s=c.textContent||'',h=5381,i=s.length;while(i)h=((h*33)^s.charCodeAt(--i))>>>0;return h+'_'+s.length;}
   function isOneLine(c){
