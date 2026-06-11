@@ -15,12 +15,13 @@
 
 ## פיצ'רים
 
-### &rlm;🆕 קיפול כל הפרומפטים לשורה אחת (Minimize all)
+### &rlm;🆕 קיפול פרומפטים לשורה אחת (Collapse / Expand)
 
-<p dir="rtl">ריחוף על הודעת משתמש מציג כפתור <b>Minimize all</b> - לחיצה אחת מקפלת את <b>כל</b> ההודעות שלך בשיחה לשורה אחת, והשיחה הופכת לרשימה קומפקטית שקל לסרוק, עם כל שטח המסך פנוי לתשובות. ריחוף על הודעה מקופלת מציג <b>Expand all</b> שמחזיר את הכל.</p>
+<p dir="rtl">ריחוף על הודעת משתמש מציג כפתור <b>Collapse</b> - לחיצה מקפלת את ההודעה לשורה אחת. ריחוף על הודעה מקופלת מציג <b>Expand</b> שפותח אותה חזרה. כל הודעה בנפרד, בדיוק כמו ה-Show more / Show less הנייטיביים - רק עד הסוף.</p>
 
 <ul dir="rtl">
-<li>מצב הקיפול יציב לאורך השיחה - שורד רענוני תוכן ומעבר בין סשנים באותו חלון - עד שמרחיבים או עושים Reload.</li>
+<li><b>החזקת Alt הופכת את הפעולה לכל השיחה:</b> התווית מתחלפת חיה ל-<b>Collapse all</b> / <b>Expand all</b>, ולחיצה מקפלת (או פותחת) את כל הפרומפטים במכה אחת - השיחה הופכת לרשימה קומפקטית שקל לסרוק, עם כל שטח המסך פנוי לתשובות.</li>
+<li>מצב הקיפול יציב לאורך השיחה - שורד רענוני תוכן ומעבר בין סשנים באותו חלון - עד שפותחים או עושים Reload.</li>
 <li>הכפתור יושב בדיוק לצד ה-Show more / Show less הנייטיביים, על אותו קו.</li>
 <li>פרומפט של שורה אחת לא מקבל כפתור - אין מה לקפל.</li>
 <li>אגב, תוקן גם באג נייטיבי: בהודעות בעברית כפתור Show less היה קופץ לפינה השמאלית (ההפוכה) - עכשיו הוא נשאר בפינה הימנית, כמו Show more.</li>
@@ -28,8 +29,9 @@
 </ul>
 
 <table width="100%"><tr>
-<td width="50%" valign="top"><img src="screenshots/minimize-all.jpg" alt="Minimize all button on hover" width="100%"/></td>
-<td width="50%" valign="top"><img src="screenshots/expand-all.jpg" alt="folded prompt with Expand all" width="100%"/></td>
+<td width="33%" valign="top"><img src="screenshots/collapse-hover.jpg" alt="Collapse button on hover, next to native Show more" width="100%"/></td>
+<td width="33%" valign="top"><img src="screenshots/collapse-expanded.jpg" alt="expanded message with Show less pinned right" width="100%"/></td>
+<td width="33%" valign="top"><img src="screenshots/collapse-folded.jpg" alt="folded one-line prompt with Expand button" width="100%"/></td>
 </tr></table>
 
 ### מזעור תיבת השאלות (AskUserQuestion)
@@ -220,7 +222,7 @@ code_block_max_width=50%
 # כפתור מזעור על תיבת השאלות (true / false) - ברירת מחדל: דולק
 question_minimize=true
 
-# כפתור Minimize all על הודעות משתמש (true / false) - ברירת מחדל: דולק
+# כפתור Collapse/Expand על הודעות משתמש (true / false) - ברירת מחדל: דולק
 user_msg_minimize=true
 
 # גובה הכיווץ של הודעות משתמש ארוכות, בפיקסלים (ברירת מחדל: 175, בערך 8 שורות)
@@ -271,10 +273,11 @@ irm https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/uni
 
 Ordered newest-first — when you come back after a while, the top of the list shows what's new.
 
-### 🆕 Minimize all prompts to one line
+### 🆕 Collapse / Expand prompts to one line
 
-Hovering any user message reveals a **Minimize all** button - one click folds ALL your prompts in the chat to a single line each, turning the conversation into a compact, scannable list with the whole screen left for Claude's answers. Hovering a folded message shows **Expand all** to restore everything.
+Hovering any user message reveals a **Collapse** button - a click folds that message to a single line. Hovering a folded message shows **Expand** to restore it. Per-message, just like the native Show more / Show less - only all the way.
 
+- **Hold Alt to act on the whole chat:** the label switches live to **Collapse all** / **Expand all**, and one click folds (or expands) every prompt at once - turning the conversation into a compact, scannable list with the whole screen left for Claude's answers.
 - The folded state is stable throughout the session - it survives content re-renders and session switches in the same window - until you expand or reload.
 - The button sits right next to the native Show more / Show less, on the same baseline.
 - Single-line prompts don't get the button (nothing to fold).
@@ -282,8 +285,9 @@ Hovering any user message reveals a **Minimize all** button - one click folds AL
 - Toggle via `user_msg_minimize` in `ui.conf` (default: on).
 
 <table width="100%"><tr>
-<td width="50%" valign="top"><img src="screenshots/minimize-all.jpg" alt="Minimize all button on hover" width="100%"/></td>
-<td width="50%" valign="top"><img src="screenshots/expand-all.jpg" alt="folded prompt with Expand all" width="100%"/></td>
+<td width="33%" valign="top"><img src="screenshots/collapse-hover.jpg" alt="Collapse button on hover, next to native Show more" width="100%"/></td>
+<td width="33%" valign="top"><img src="screenshots/collapse-expanded.jpg" alt="expanded message with Show less pinned right" width="100%"/></td>
+<td width="33%" valign="top"><img src="screenshots/collapse-folded.jpg" alt="folded one-line prompt with Expand button" width="100%"/></td>
 </tr></table>
 
 ### Minimize the question box (AskUserQuestion)
@@ -432,7 +436,7 @@ code_block_max_width=50%
 # Minimize button on the question box (true / false) - default: on
 question_minimize=true
 
-# "Minimize all" button on user messages (true / false) - default: on
+# Collapse/Expand button on user messages (true / false) - default: on
 user_msg_minimize=true
 
 # Collapse height of long user messages, in px (default: 175, ~8 lines)

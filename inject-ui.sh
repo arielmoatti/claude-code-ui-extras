@@ -16,9 +16,10 @@ export PATH
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
 COMPATIBLE_EXT_VERSION="2.1.173"
-CHANGELOG_VERS=(  "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+CHANGELOG_VERS=(  "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "קיפול הודעות משתמש עובד עכשיו פר-הודעה (Collapse/Expand במקום Minimize all, עם Alt+קליק לקיפול הכל), הודעות מערכת אוטומטיות כבר לא מוצגות עם מסגרת כאילו הן פרומפט שלך, ובאנר העדכון לא חוזר לקפוץ אחרי שנסגר בפתיחת חלון חדש."
   "עדכונים נפרסים עכשיו תוך דקות במקום עד יממה: בדיקת העדכון רצה ברקע בכל פתיחת צ'אט בלי להאט אותו, וכשעדכון ירד והותקן - קלוד מודיע בצ'אט שצריך Reload כדי להפעיל אותו."
   "שורת הגרסה (קליק ימני על מד הקונטקסט או על חצי הניווט) מציגה עכשיו גם את גרסת חבילת העברית, כשהיא מותקנת."
   "ריחוף על הודעת משתמש מציג כפתור Minimize all שמקפל את כל ההודעות לשורה אחת (Expand all מחזיר). ההצללה וכפתור Show more מופיעים רק כשבאמת נחתך תוכן, ו-Show less כבר לא בורח לפינה השמאלית בהודעות בעברית."
@@ -197,15 +198,17 @@ $CSS_START
 [class*="codeBlockWrapper_"] [class*="copyButton_"]{right:calc(100% - $CODE_BLOCK_MAX_WIDTH + 20px) !important;border:2px solid $BORDER_COLOR !important;}
 /* Question-panel minimize: when the AskUserQuestion panel (the in-flow .permissionRequestContainer, keyed by its stable data-focused-index attr) carries the cc-q-min class, hide the question body / answer buttons / Esc hint, leaving only the one-line header (title + ✕ + our − button). Collapsing it also lets the extension's ResizeObserver shrink the transcript spacer, so the answer floating behind becomes readable. Sub-parts are hashed per build, matched by class prefix. */
 [data-focused-index].cc-q-min [class*="questionsContainer_"],[data-focused-index].cc-q-min [class*="buttonContainer_"],[data-focused-index].cc-q-min [class*="keyboardHints_"]{display:none !important;}
-/* User-message "Minimize all": hovering any multi-line user message reveals a "Minimize all" button (styled and anchored like the native Show more - the button lives INSIDE the position:relative expandableContainer so both share the same bottom anchor). Click folds ALL user messages to a single clipped line via the cc-msg-all class on <body> - body is outside React's tree, so the folded state survives re-renders; hovering any folded message shows "Expand all". While folded we hide the native gradient + Show more/less + attachments and disable the wrapper's click-to-expand. The fold rule doubles an attribute selector to reach specificity (0,4,0): with a single one it ties/loses to our own 175px collapsed rule above (0,3,0) - both !important - and collapsed messages then refuse to fold (the v1.18.0-dev bug). When the native Show more (collapsed) or Show less (expanded) occupies the corner, our button shifts left of it via :has(); otherwise it takes the corner. Sub-part classes are hashed per build, matched by prefix. */
+/* User-message "Collapse": hovering any multi-line user message reveals a "Collapse" button (styled and anchored like the native Show more - the button lives INSIDE the position:relative expandableContainer so both share the same bottom anchor). Click folds THAT message to a single clipped line via the cc-msg-min class on its userMessage box - per-message, like the native Show more/less; Alt+click applies to ALL prompts at once. React re-renders wipe DOM classes, so the fold state lives in a JS-side set keyed by a hash of the message text and the 300ms scan re-applies the class (see the JS block). While folded we hide the native gradient + Show more/less + attachments and disable the wrapper's click-to-expand. The fold rule doubles an attribute selector to reach specificity (0,4,0): with a single one it ties/loses to our own 175px collapsed rule above (0,3,0) - both !important - and collapsed messages then refuse to fold (the v1.18.0-dev bug). When the native Show more (collapsed) or Show less (expanded) occupies the corner, our button shifts left of it via :has(); otherwise it takes the corner. Sub-part classes are hashed per build, matched by prefix. */
 .cc-msg-minbtn{display:none;position:absolute;bottom:0;right:0;margin:4px;padding:8px;border:none;border-radius:4px;cursor:pointer;font-size:.85em;align-items:center;color:var(--app-menu-background);background-color:var(--app-menu-foreground);opacity:.9;z-index:5;white-space:nowrap;}
 .cc-msg-minbtn:hover{opacity:1;transform:scale(1.05);}
 [class*="userMessage_"]:hover .cc-msg-minbtn{display:flex;}
 [class*="userMessage_"]:has([class*="content_"][class*="collapsed_"]) .cc-msg-minbtn,[class*="userMessage_"]:has([class*="collapseButton_"]) .cc-msg-minbtn{right:88px;}
-body.cc-msg-all .cc-msg-minbtn{right:0 !important;padding:2px 8px;margin:1px 4px;}  /* folded box is one line (~20px); slim the button so it fits inside instead of bleeding over the border */
-body.cc-msg-all [class*="userMessage_"] [class*="content_"][class*="content_"]{max-height:1.5em !important;overflow:hidden !important;}
-body.cc-msg-all [class*="userMessage_"] [class*="truncationGradient_"],body.cc-msg-all [class*="userMessage_"] [class*="buttonContainer_"],body.cc-msg-all [class*="userMessageAttachments_"]{display:none !important;}
-body.cc-msg-all [class*="userMessage_"] [class*="contentWrapper_"]{pointer-events:none !important;}
+[class*="userMessage_"].cc-msg-min .cc-msg-minbtn{right:0 !important;padding:2px 8px;margin:1px 4px;}  /* folded box is one line (~20px); slim the button so it fits inside instead of bleeding over the border */
+[class*="userMessage_"].cc-msg-min [class*="content_"][class*="content_"]{max-height:1.5em !important;overflow:hidden !important;}
+[class*="userMessage_"].cc-msg-min [class*="truncationGradient_"],[class*="userMessage_"].cc-msg-min [class*="buttonContainer_"],[class*="userMessage_"].cc-msg-min [class*="userMessageAttachments_"]{display:none !important;}
+[class*="userMessage_"].cc-msg-min [class*="contentWrapper_"]{pointer-events:none !important;}
+/* Harness-injected notifications (task-notification etc.) are sent INTO the conversation as user-role messages, so the webview renders them with the user-message component and they wear the prompt border as if the user typed them. The 300ms scan tags them cc-harness-msg by their leading XML tag; drop the border and dim them so they read as system output, not as your prompt. (0,2,0) outranks the base border rule (0,1,0), both !important. */
+[class*="userMessage_"].cc-harness-msg{border:none !important;opacity:0.75;}
 /* Native RTL quirk fix: Show less is an in-flow flex child (justify-content:flex-end), so in RTL prose flex-end resolves to the LEFT corner while the absolute Show more sits right - the two buttons end up at opposite corners. Forcing LTR on the button row pins both to the right. */
 [class*="userMessage_"] [class*="buttonContainer_"]{direction:ltr !important;}
 $CSS_END
@@ -398,7 +401,8 @@ CSSPATCH
   }
 
   function navigate(dir){
-    var msgs=Array.from(document.querySelectorAll('[class*="message_"][class*="userMessageContainer_"]'));
+    /* skip harness-injected notifications (cc-harness-msg, tagged by the collapse scan) - navigation is for the user's own prompts */
+    var msgs=Array.from(document.querySelectorAll('[class*="message_"][class*="userMessageContainer_"]')).filter(function(m){return !m.querySelector('.cc-harness-msg');});
     if(!msgs.length)return;
     if(navIdx<0||navIdx>=msgs.length) navIdx=dir===-1?msgs.length-1:0;
     else { navIdx+=dir; if(navIdx<0)navIdx=0; if(navIdx>=msgs.length)navIdx=msgs.length-1; }
@@ -644,7 +648,7 @@ CSSPATCH
       e.preventDefault(); e.stopPropagation();
       var scroller=document.querySelector('[class*="messagesContainer_"]');
       if(scroller&&scroller.lastElementChild){scroller.lastElementChild.scrollIntoView({behavior:'smooth',block:'end'});}
-      var msgs=document.querySelectorAll('[class*="message_"][class*="userMessageContainer_"]');
+      var msgs=Array.from(document.querySelectorAll('[class*="message_"][class*="userMessageContainer_"]')).filter(function(m){return !m.querySelector('.cc-harness-msg');});
       navIdx=msgs.length-1;
     });
     end.addEventListener('contextmenu',showToggle);
@@ -858,60 +862,91 @@ CSSPATCH
   setInterval(scan,300);
 })();
 
-/* ── "Minimize all" button on user messages ──
-   Hovering any multi-line user message reveals a "Minimize all" button at its
+/* ── "Collapse / Expand" button on user messages ──
+   Hovering any multi-line user message reveals a "Collapse" button at its
    bottom-right (sliding left of the native Show more / Show less when one is
-   there). Click folds ALL user messages to one line by toggling the cc-msg-all
-   class on <body> (all visuals in the CSS patch); hovering a folded message
-   shows "Expand all". Because body sits outside React's tree, the folded state
-   survives message re-renders; our buttons are re-injected by the scan. The
-   button is skipped on single-line prompts (nothing to fold), measured against
-   the content's computed line-height.
+   there). Click folds THAT message to one line via the cc-msg-min class on its
+   userMessage box - per-message, like the native Show more/less; Alt+click
+   applies to ALL prompts at once. React re-renders wipe DOM classes, so the
+   fold state lives in a JS-side set keyed by a hash of the message text, and
+   the 300ms scan re-applies it after every re-render (two identical prompts
+   share fate - acceptable). The button is skipped on single-line prompts
+   (nothing to fold), measured against the content's computed line-height.
+   The same scan also tags harness-injected notifications (task-notification
+   & co, sent into the conversation as user-role messages) with cc-harness-msg
+   so the CSS can un-border them - that tagging runs even when the collapse
+   button is conf'd off.
    Also publishes the conf'd collapse threshold for the bundle-body maxHeight
    patch (window.__ccUserMsgMaxH) - keep this OUTSIDE the flag gate so disabling
    the button never un-fixes the collapse-decision alignment. */
 ;(function(){
   window.__ccUserMsgMaxH=parseInt('__USER_MSG_MAX_H__',10)||175;
-  if('__USER_MSG_MINIMIZE__'!=='true')return;
-  var ALL='cc-msg-all';
+  var BTN_ON='__USER_MSG_MINIMIZE__'==='true';
+  var MIN='cc-msg-min';
+  var HARNESS=/^\s*<(task-notification|system-reminder|local-command-stdout|command-name|command-message)\b/;
+  var folded={};   /* text-hash -> true; survives re-renders, resets on reload */
+  /* Holding Alt switches the action to ALL prompts; the visible label says so
+     live ("Collapse" <-> "Collapse all") while the key is down. Window blur
+     (Alt+Tab) resets the flag, since the keyup never reaches us. */
+  var altDown=false;
+  function labelBtn(b,on){
+    b.textContent=(on?'Expand':'Collapse')+(altDown?' all':'');
+    b.title=altDown?(on?'Expand ALL prompts back':'Fold ALL prompts to one line')
+                   :(on?'Expand this prompt back (hold Alt: all)':'Fold this prompt to one line (hold Alt: all)');
+  }
   function refreshLabels(){
-    var on=document.body.classList.contains(ALL);
     var bs=document.querySelectorAll('.cc-msg-minbtn');
     for(var i=0;i<bs.length;i++){
-      bs[i].textContent=on?'Expand all':'Minimize all';
-      bs[i].title=on?'Expand all prompts back':'Fold all prompts to one line';
+      var box=bs[i].closest('[class*="userMessage_"]');
+      labelBtn(bs[i],!!(box&&box.classList.contains(MIN)));
     }
   }
-  function makeBtn(){
+  window.addEventListener('keydown',function(e){if(e.key==='Alt'&&!altDown){altDown=true;refreshLabels();}});
+  window.addEventListener('keyup',function(e){if(e.key==='Alt'&&altDown){altDown=false;refreshLabels();}});
+  window.addEventListener('blur',function(){if(altDown){altDown=false;refreshLabels();}});
+  function contentOf(box){return box.querySelector('[class*="content_"]');}
+  function keyOf(c){var s=c.textContent||'',h=5381,i=s.length;while(i)h=((h*33)^s.charCodeAt(--i))>>>0;return h+'_'+s.length;}
+  function isOneLine(c){
+    var lh=parseFloat(getComputedStyle(c).lineHeight);
+    if(!lh||isNaN(lh))lh=20;
+    return c.scrollHeight<lh*1.6;   /* scrollHeight ignores max-height clipping, so this stays correct while folded */
+  }
+  function setFold(k,on){ if(on)folded[k]=true; else delete folded[k]; }
+  function makeBtn(box){
     var b=document.createElement('button');
     b.className='cc-msg-minbtn';
     b.type='button';
     b.addEventListener('mousedown',function(e){e.preventDefault();});  /* don't steal focus */
     b.addEventListener('click',function(e){
       e.preventDefault();e.stopPropagation();
-      document.body.classList.toggle(ALL);
-      refreshLabels();
+      var c=contentOf(box); if(!c)return;
+      var on=!folded[keyOf(c)];
+      if(e.altKey){
+        var all=document.querySelectorAll('[class*="userMessage_"]');
+        for(var i=0;i<all.length;i++){var cc=contentOf(all[i]);if(cc&&!isOneLine(cc))setFold(keyOf(cc),on);}
+      } else {
+        setFold(keyOf(c),on);
+      }
+      scan();
     });
     return b;
-  }
-  function isOneLine(c){
-    var lh=parseFloat(getComputedStyle(c).lineHeight);
-    if(!lh||isNaN(lh))lh=20;
-    return c.scrollHeight<lh*1.6;   /* scrollHeight ignores max-height clipping, so this stays correct while folded */
   }
   function scan(){
     var boxes=document.querySelectorAll('[class*="userMessage_"]');
     for(var i=0;i<boxes.length;i++){
       var box=boxes[i];
       var cont=box.querySelector('[class*="expandableContainer_"]');
-      var c=box.querySelector('[class*="content_"]');
+      var c=contentOf(box);
       if(!cont||!c)continue;
+      box.classList.toggle('cc-harness-msg',HARNESS.test(c.textContent||''));
+      if(!BTN_ON)continue;
+      var on=!!folded[keyOf(c)];
+      box.classList.toggle(MIN,on);
       var have=box.querySelector('.cc-msg-minbtn');
-      if(isOneLine(c)){if(have)have.remove();continue;}
-      if(have)continue;
-      cont.appendChild(makeBtn());
+      if(!on&&isOneLine(c)){if(have)have.remove();continue;}
+      if(!have){have=makeBtn(box);cont.appendChild(have);}
+      labelBtn(have,on);
     }
-    refreshLabels();
   }
   setInterval(scan,300);
 })();
@@ -935,10 +970,23 @@ CSSPATCH
      transiently-deployed higher version was dismissed and TOP then went
      back down (seen=1.17.0 vs TOP=1.15.0, observed live 2026-06-10). */
   function vge(a,b){a=String(a).split('.');b=String(b).split('.');for(var i=0;i<3;i++){var x=+a[i]||0,y=+b[i]||0;if(x!==y)return x>y;}return true;}
-  try{ var seen=localStorage.getItem(KEY); if(seen&&vge(seen,TOP))return; }catch(e){}
+  function dismissed(){try{var s=localStorage.getItem(KEY);return !!(s&&vge(s,TOP));}catch(e){return false;}}
+  if(dismissed())return;
   var ID='claude-ui-update-banner';
+  var RTL_ID='claude-rtl-update-banner';   /* the Hebrew RTL pack's banner - anchor below it when both show */
+  /* Persist the dismissal with retries: localStorage writes are flushed to disk
+     asynchronously (Chromium batches ~5s), and VSCode recycles the webview
+     several times while a fresh window settles - a write made just before a
+     recycle is LOST, which is how a dismissed banner kept re-popping (observed
+     live 2026-06-11). Re-writing the same value every 3s for ~45s makes one of
+     the writes land after the churn. */
+  function persistSeen(){
+    try{localStorage.setItem(KEY,TOP);}catch(e){}
+    var k=0,t=setInterval(function(){try{localStorage.setItem(KEY,TOP);}catch(e){}if(++k>=15)clearInterval(t);},3000);
+  }
   function mount(){
     if(document.getElementById(ID)||!document.body)return;
+    if(dismissed())return 'stop';   /* re-read at mount time: a dismissal persisted by an earlier webview incarnation (or another window) wins */
     var bar=document.createElement('div');
     bar.id=ID;
     bar.dir='rtl';
@@ -957,12 +1005,32 @@ CSSPATCH
     x.style.cssText='flex-shrink:0;background:none;border:none;color:inherit;cursor:pointer;opacity:0.6;font-size:13px;padding:2px 6px;line-height:1;';
     x.addEventListener('mouseenter',function(){x.style.opacity='1';});
     x.addEventListener('mouseleave',function(){x.style.opacity='0.6';});
-    x.addEventListener('click',function(){try{localStorage.setItem(KEY,TOP);}catch(e){}bar.remove();});
+    x.addEventListener('click',function(){persistSeen();bar.remove();});
     bar.appendChild(icon);bar.appendChild(txt);bar.appendChild(x);
     document.body.appendChild(bar);
+    /* Keep anchored below the RTL pack's banner while both are visible (the RTL
+       one offsets below OURS only if it mounts later - cover both orders). */
+    var anchor=setInterval(function(){
+      if(!bar.isConnected){clearInterval(anchor);return;}
+      var r=document.getElementById(RTL_ID);
+      var h=r?r.getBoundingClientRect():null;
+      bar.style.top=(h&&h.height>0)?Math.round(h.bottom)+'px':'0px';
+    },800);
+    /* If this version is dismissed in another window/webview sharing the same
+       storage, hide here too instead of waiting for a reload. */
+    window.addEventListener('storage',function(ev){
+      if(ev.key===KEY&&dismissed()&&bar.isConnected)bar.remove();
+    });
   }
-  mount();
-  var n=0,iv=setInterval(function(){mount();if(++n>50||document.getElementById(ID))clearInterval(iv);},200);
+  /* Delay the first mount ~10s: while a fresh VSCode window settles, the
+     extension disposes and recreates the webview several times; banners shown
+     during that churn are the ones whose dismissal gets lost. Short-lived
+     incarnations now never show the banner at all, and the surviving one
+     re-reads the gate right before mounting. */
+  setTimeout(function(){
+    if(mount()==='stop')return;
+    var n=0,iv=setInterval(function(){if(mount()==='stop'||++n>50||document.getElementById(ID))clearInterval(iv);},200);
+  },10000);
 })();
 JSPATCH
 
