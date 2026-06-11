@@ -60,7 +60,7 @@
 <li>האחוזים בפירוק מחושבים מול חלון ה-autocompact (נקודת הדחיסה), בעוד ה-badge עצמו מודד מול תקרת המודל המלאה - לכן ייתכן הבדל בין השניים.</li>
 </ul>
 
-<p align="right"><img src="screenshots/context-breakdown.jpg" alt="context window breakdown popup" height="320"/></p>
+<p align="right"><img src="screenshots/context-breakdown.jpg" alt="context window breakdown popup" height="480"/></p>
 
 ### רוחב מותאם לבלוקי קוד + שבירה לשורות
 
@@ -314,7 +314,7 @@ Right-click the context badge to open a **full breakdown of what's filling the c
 - Model name is rendered friendly (`Opus 4.8 (1M context)`), with the raw id on hover.
 - Breakdown percentages are measured against the auto-compact window (the compaction point), while the badge itself measures against the model's full cap - so the two can differ.
 
-<p><img src="screenshots/context-breakdown.jpg" alt="context window breakdown popup" height="300"/></p>
+<p><img src="screenshots/context-breakdown.jpg" alt="context window breakdown popup" height="450"/></p>
 
 ### Configurable code-block width + soft-wrap
 
