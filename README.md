@@ -125,7 +125,7 @@
 הניווט עוצר בהודעה הראשונה / האחרונה — ללא לולאה.
 מדגיש את ההודעה שאליה קפצת עם אנימציית פולס קצרה.
 
-<p align="right"><img src="screenshots/navigation arrows.jpg" alt="navigation arrows" height="80"/></p>
+<p align="right"><img src="screenshots/navigation arrows.jpg" alt="navigation arrows" height="160"/></p>
 
 ### מסגרת להודעות משתמש
 
@@ -362,7 +362,7 @@ Three buttons injected into the input footer:
 - Navigation stops at the first / last message — no looping
 - Highlights the target message with a brief pulse animation
 
-<p><img src="screenshots/navigation arrows.jpg" alt="navigation arrows" height="80"/></p>
+<p><img src="screenshots/navigation arrows.jpg" alt="navigation arrows" height="160"/></p>
 
 ### User Message Border
 A subtle border around your messages, making it easy to visually separate your prompts from Claude's responses.
