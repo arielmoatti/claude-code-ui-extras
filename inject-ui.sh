@@ -15,10 +15,11 @@ export PATH
 # (MAJOR=0) still bump the version but stay OUT of the banner. Keep notes free of
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
-COMPATIBLE_EXT_VERSION="2.1.173"
-CHANGELOG_VERS=(  "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+COMPATIBLE_EXT_VERSION="2.1.175"
+CHANGELOG_VERS=(  "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "קליק ימני על קישור לקובץ ואז Copy Link מעתיק עכשיו את הנתיב המלא של הקובץ (כולל כונן), מוכן להדבקה בסייר הקבצים או בטרמינל - במקום הנתיב היחסי הגולמי שלא היה שמיש מחוץ ל-VSCode. קישורי אינטרנט נשארים כמו שהם."
   "תיקון לתווית ה-Alt מ-1.21.0: היא מתעדכנת עכשיו אמינות גם אחרי שימוש ראשון (לחיצת Alt ב-Windows גנבה את פוקוס המקלדת לתפריט של VSCode, ומאז המקלדת לא הגיעה לצ׳אט; עכשיו המצב מסונכרן גם מתנועת העכבר)."
   "קיפול הודעות משתמש עובד עכשיו פר-הודעה (Collapse/Expand במקום Minimize all, עם Alt+קליק לקיפול הכל), הודעות מערכת אוטומטיות כבר לא מוצגות עם מסגרת כאילו הן פרומפט שלך, ובאנר העדכון לא חוזר לקפוץ אחרי שנסגר בפתיחת חלון חדש."
   "עדכונים נפרסים עכשיו תוך דקות במקום עד יממה: בדיקת העדכון רצה ברקע בכל פתיחת צ'אט בלי להאט אותו, וכשעדכון ירד והותקן - קלוד מודיע בצ'אט שצריך Reload כדי להפעיל אותו."
@@ -242,6 +243,21 @@ CSSPATCH
     # future bundle changes the literal, the sed no-ops and behavior falls back
     # to the old display-only override (CSS) - degraded but never broken.
     sed -i 's@,maxHeight:60}@,maxHeight:window.__ccUserMsgMaxH||'"$USER_MSG_MAX_H"'}@' "$jstmp"
+
+    # ── Copy Link -> absolute path ──────────────────────────────────────
+    # The link context menu's "Copy Link" writes the RAW href to the clipboard.
+    # For relative file links (the only kind that both renders and opens) that
+    # is a workspace-relative path - useless outside VSCode (File Explorer,
+    # terminal). Patch the one handler (unique shape in the bundle: a no-arg
+    # function whose whole body is writeText(<id>),<id>() - verified single
+    # match on 2.1.175) to route through window.__ccResolveHref (defined in the
+    # appended block below), which expands relative hrefs against the session
+    # cwd into an absolute backslash path. Identifiers are matched generically
+    # so minifier renames don't break it; if the shape ever changes the sed
+    # no-ops and Copy Link falls back to native (degraded, never broken).
+    # Idempotent: the patched body starts writeText(window. which no longer
+    # matches the <id>),<id>() shape.
+    sed -i -E 's@function ([A-Za-z_$][A-Za-z0-9_$]*)\(\)\{navigator\.clipboard\.writeText\(([A-Za-z_$][A-Za-z0-9_$]*)\),([A-Za-z_$][A-Za-z0-9_$]*)\(\)\}@function \1(){navigator.clipboard.writeText(window.__ccResolveHref?window.__ccResolveHref(\2):\2),\3()}@' "$jstmp"
 
     cat >> "$jstmp" << 'JSPATCH'
 
@@ -797,6 +813,54 @@ CSSPATCH
   },true);
 })();
 
+/* \u2500\u2500 Copy Link as absolute path \u2500\u2500
+   The bundle's native link context menu copies the RAW href; a sed pass (see
+   "Copy Link -> absolute path" in the hook) reroutes it through this resolver.
+   Real URLs pass through untouched; file links are %-decoded, stripped of
+   #L42 / :42 line suffixes, and resolved against the session cwd into a
+   Windows backslash path ready for File Explorer / terminal pasting.
+   cwd sources: launch_claude messages sniffed by the top-of-bundle shim
+   (exact per-session cwd, covers worktrees), falling back to the workspace
+   defaultCwd from get_claude_state_response. */
+;(function(){
+  window.__ccResolveHref=function(h){
+    try{
+      if(!h)return h;
+      h=String(h);
+      if(/^[A-Za-z][A-Za-z0-9+.-]+:\/\//.test(h)||/^mailto:/i.test(h))return h;
+      var p=h.replace(/#.*$/,'');                  /* drop #L42 fragment */
+      try{p=decodeURIComponent(p);}catch(_){}
+      p=p.replace(/:L?\d+(-L?\d+)?$/,'');          /* drop :42 / :L42-L51 suffix */
+      if(/^[A-Za-z]:[\\/]/.test(p))return p.replace(/\//g,'\\');
+      var w=window.__ccCwd;
+      if(!w)return h;                              /* no cwd known yet - native behavior */
+      w=String(w).replace(/[\\/]+$/,'');
+      p=p.replace(/^\.[\\/]/,'');
+      while(/^\.\.[\\/]/.test(p)){w=w.replace(/[\\/][^\\/]*$/,'');p=p.slice(3);}
+      return (w+'\\'+p).replace(/\//g,'\\');
+    }catch(_){return h;}
+  };
+  /* fallback cwd: state.defaultCwd, which travels in exactly two messages
+     (verified against extension.js 2.1.175):
+       - init_response (response to the init request the webview sends on every
+         boot AND on every reconnect-after-reload - the launch_claude sniff
+         never fires on reconnects, so this is the reliable path)
+       - update_state (pushed BY the extension as an incoming request, repeatedly)
+     NOT in get_claude_state_response - that config only carries account info.
+     The shim's launch_claude sniff (exact per-session cwd, covers worktrees),
+     when it fires, takes precedence. */
+  window.addEventListener('message',function(e){
+    var d=e.data;
+    if(!d||d.type!=='from-extension')return;
+    var m=d.message;
+    if(!m)return;
+    var st=(m.response&&m.response.type==='init_response'&&m.response.state)||
+           (m.request&&m.request.type==='update_state'&&m.request.state);
+    var c=st&&st.defaultCwd;
+    if(c&&!window.__ccCwdFromLaunch)window.__ccCwd=c;
+  });
+})();
+
 /* ── Minimize button for the AskUserQuestion panel ──
    Anthropic floats the question panel over the transcript (z-index 20, 680px
    centered, up to 70vh tall), so when Claude answers AND asks in the same turn
@@ -1062,13 +1126,15 @@ JSEND
 
     # Prepend the vscode-api capture shim to the very TOP of the bundle so it runs
     # before the app's one-shot acquireVsCodeApi() call. It wraps that call to stash
-    # the api handle (window.__ccVscodeApi) and sniffs the live channelId off outgoing
-    # requests (window.__ccChannelId) - both needed to fire get_context_usage from the
-    # injected code (context-breakdown popup). No placeholders, so no sed pass needed.
+    # the api handle (window.__ccVscodeApi) and sniffs outgoing requests for the live
+    # channelId (window.__ccChannelId, needed to fire get_context_usage from the
+    # context-breakdown popup) and for the session cwd off launch_claude
+    # (window.__ccCwd, used by the Copy Link absolute-path resolver).
+    # No placeholders, so no sed pass needed.
     shimtmp="$js.uiextras.shim.$$"
     cat > "$shimtmp" << 'JSSHIM'
 /* Claude UI Extras Shim Start */
-;(function(){try{if(window.__ccShimInstalled)return;window.__ccShimInstalled=true;var orig=window.acquireVsCodeApi;if(typeof orig==='function'){window.acquireVsCodeApi=function(){var api=orig.apply(this,arguments);try{window.__ccVscodeApi=api;}catch(_){}return api;};}window.addEventListener('message',function(e){try{var d=e.data;if(!d)return;var m=(d.type==='from-extension')?d.message:d;if(m&&m.type==='io_message'&&m.channelId!=null)window.__ccChannelId=m.channelId;}catch(_){}},false);}catch(_){}})();
+;(function(){try{if(window.__ccShimInstalled)return;window.__ccShimInstalled=true;var orig=window.acquireVsCodeApi;if(typeof orig==='function'){window.acquireVsCodeApi=function(){var api=orig.apply(this,arguments);try{window.__ccVscodeApi=api;if(api&&api.postMessage&&!api.__ccPmWrapped){var op=api.postMessage.bind(api);api.postMessage=function(m){try{if(m&&m.type==='launch_claude'&&m.cwd){window.__ccCwd=m.cwd;window.__ccCwdFromLaunch=true;}}catch(_){}return op.apply(null,arguments);};api.__ccPmWrapped=true;}}catch(_){}return api;};}window.addEventListener('message',function(e){try{var d=e.data;if(!d)return;var m=(d.type==='from-extension')?d.message:d;if(m&&m.type==='io_message'&&m.channelId!=null)window.__ccChannelId=m.channelId;}catch(_){}},false);}catch(_){}})();
 /* Claude UI Extras Shim End */
 JSSHIM
     cat "$jstmp" >> "$shimtmp"

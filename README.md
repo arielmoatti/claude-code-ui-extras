@@ -15,7 +15,11 @@
 
 ## פיצ'רים
 
-### &rlm;🆕 קיפול פרומפטים לשורה אחת (Collapse / Expand)
+### &rlm;🆕 העתקת קישור לקובץ כנתיב מלא (Copy Link)
+
+<p dir="rtl">קליק ימני על קישור לקובץ בשיחה ואז <b>Copy Link</b> העתיק עד עכשיו את הקישור הגולמי - נתיב יחסי שאינו שמיש מחוץ ל-VSCode (אי אפשר להדביק אותו בסייר הקבצים). עכשיו מועתק <b>הנתיב המוחלט המלא</b> (כולל אות כונן), אחרי פענוח קידוד-URL והסרת סיומות שורה כמו <code dir="ltr">#L42</code> - מוכן להדבקה בסייר הקבצים, בטרמינל או בכל דיאלוג. קישורי אינטרנט מועתקים כרגיל, ולחיצה על הקישור ממשיכה לפתוח את הקובץ ב-VSCode כמו תמיד.</p>
+
+### קיפול פרומפטים לשורה אחת (Collapse / Expand)
 
 <p dir="rtl">ריחוף על הודעת משתמש מציג כפתור <b>Collapse</b> - לחיצה מקפלת את ההודעה לשורה אחת. ריחוף על הודעה מקופלת מציג <b>Expand</b> שפותח אותה חזרה. כל הודעה בנפרד, בדיוק כמו ה-Show more / Show less הנייטיביים - רק עד הסוף.</p>
 
@@ -275,7 +279,11 @@ irm https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/uni
 
 Ordered newest-first — when you come back after a while, the top of the list shows what's new.
 
-### 🆕 Collapse / Expand prompts to one line
+### 🆕 Copy Link as full path
+
+Right-clicking a file link in the conversation and choosing **Copy Link** used to copy the raw href - a workspace-relative path that's useless outside VSCode (you can't paste it into File Explorer). It now copies the **absolute path** (drive letter included), URL-decoded and stripped of `#L42` line suffixes - ready to paste into File Explorer, a terminal, or any dialog. Web links (`https://...`) are copied unchanged, and clicking the link still opens the file in VSCode as before.
+
+### Collapse / Expand prompts to one line
 
 Hovering any user message reveals a **Collapse** button - a click folds that message to a single line. Hovering a folded message shows **Expand** to restore it. Per-message, just like the native Show more / Show less - only all the way.
 
