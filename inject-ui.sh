@@ -15,10 +15,11 @@ export PATH
 # (MAJOR=0) still bump the version but stay OUT of the banner. Keep notes free of
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
-COMPATIBLE_EXT_VERSION="2.1.175"
-CHANGELOG_VERS=(  "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+COMPATIBLE_EXT_VERSION="2.1.185"
+CHANGELOG_VERS=(  "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "כל הודעה שלך מקבלת עכשיו חותמת שעה של רגע השליחה, ושעון חי סופר כמה זמן לוקח לקלוד לענות - מרגע השליחה ועד סוף התשובה - והזמן הסופי ננעץ ליד ההודעה. ניתן לכיבוי בקובץ ההגדרות (show_message_timing)."
   "קליק ימני על קישור לקובץ ואז Copy Link מעתיק עכשיו את הנתיב המלא של הקובץ (כולל כונן), מוכן להדבקה בסייר הקבצים או בטרמינל - במקום הנתיב היחסי הגולמי שלא היה שמיש מחוץ ל-VSCode. קישורי אינטרנט נשארים כמו שהם."
   "תיקון לתווית ה-Alt מ-1.21.0: היא מתעדכנת עכשיו אמינות גם אחרי שימוש ראשון (לחיצת Alt ב-Windows גנבה את פוקוס המקלדת לתפריט של VSCode, ומאז המקלדת לא הגיעה לצ׳אט; עכשיו המצב מסונכרן גם מתנועת העכבר)."
   "קיפול הודעות משתמש עובד עכשיו פר-הודעה (Collapse/Expand במקום Minimize all, עם Alt+קליק לקיפול הכל), הודעות מערכת אוטומטיות כבר לא מוצגות עם מסגרת כאילו הן פרומפט שלך, ובאנר העדכון לא חוזר לקפוץ אחרי שנסגר בפתיחת חלון חדש."
@@ -129,6 +130,15 @@ if [ -f "$CONF_FILE" ]; then
   [ -n "$val" ] && USER_MSG_MINIMIZE="$val"
 fi
 
+# Read message-timing flag (default: true). Stamps each user message with the
+# wall-clock time it was sent and shows a live stopwatch (until Claude finishes
+# the turn) whose final duration is then pinned next to that message.
+SHOW_MESSAGE_TIMING="true"
+if [ -f "$CONF_FILE" ]; then
+  val="$(grep '^show_message_timing=' "$CONF_FILE" | cut -d= -f2-)"
+  [ -n "$val" ] && SHOW_MESSAGE_TIMING="$val"
+fi
+
 # ── Signature for the fast path ───────────────────────────────────────
 # Short hash of THIS script + the ui.conf values that affect output. It is
 # written as a marker line into each patched file; if the marker is already
@@ -138,7 +148,7 @@ fi
 # if md5sum is unavailable.
 UI_SIG=""
 if command -v md5sum >/dev/null 2>&1; then
-  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" "$QUESTION_MINIMIZE" "$USER_MSG_MAX_H" "$USER_MSG_MINIMIZE" | md5sum 2>/dev/null | cut -c1-6)"
+  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s|%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" "$QUESTION_MINIMIZE" "$USER_MSG_MAX_H" "$USER_MSG_MINIMIZE" "$SHOW_MESSAGE_TIMING" | md5sum 2>/dev/null | cut -c1-6)"
 fi
 UI_MARKER="Claude UI Extras sig:$UI_SIG"
 
@@ -1105,6 +1115,147 @@ CSSPATCH
     var n=0,iv=setInterval(function(){if(mount()==='stop'||++n>50||document.getElementById(ID))clearInterval(iv);},200);
   },10000);
 })();
+
+/* ── Per-message timestamp + iteration stopwatch ──
+   Stamps each user message with the wall-clock time it was sent (🕐 HH:MM:SS)
+   and shows a live ⏱ stopwatch, from the moment you send until Claude finishes
+   the turn (the `result` io_message), whose final duration is then pinned next
+   to that message. Timings are keyed by a message-text fingerprint in
+   localStorage, so they survive Reloads. Gated by show_message_timing (ui.conf). */
+;(function(){
+  if('__SHOW_MESSAGE_TIMING__'!=='true')return;
+  try{
+    if(window.__ccTimerInstalled)return;
+    window.__ccTimerInstalled=true;
+
+    var META_KEY='cc-msg-timing-v1';
+    var meta={}; try{meta=JSON.parse(localStorage.getItem(META_KEY)||'{}');}catch(e){meta={};}
+    var saveT=null;
+    function saveMeta(){
+      if(saveT)return;
+      saveT=setTimeout(function(){saveT=null;try{localStorage.setItem(META_KEY,JSON.stringify(meta));}catch(e){}},600);
+    }
+
+    function pad(n){return n<10?'0'+n:''+n;}
+    function fmtClock(ms){var d=new Date(ms);return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());}
+    function fmtDur(ms){
+      var s=Math.floor(ms/1000),m=Math.floor(s/60);s=s%60;
+      if(m>=60){var h=Math.floor(m/60);m=m%60;return h+':'+pad(m)+':'+pad(s);}
+      return m+':'+pad(s);
+    }
+    /* Fingerprint a user message by its (whitespace-collapsed) text prefix, so
+       timestamps/durations survive Reloads via localStorage. Collisions between
+       identical messages are rare and non-critical (last write wins). */
+    function fpOf(el){
+      var clone=el.cloneNode(true);
+      var lab=clone.querySelector('.cc-msg-meta'); if(lab)lab.remove();
+      return (clone.textContent||'').replace(/\s+/g,' ').trim().slice(0,90);
+    }
+    function userMsgs(){return document.querySelectorAll('[class*="userMessageContainer_"]');}
+
+    /* Messages already on screen in the first ~1.5s are historical (chat reload),
+       not freshly sent — don't start a stopwatch for them. */
+    var initDone=false;
+    setTimeout(function(){initDone=true;},1500);
+
+    var active=null;   /* {el,start} of the in-flight iteration */
+    var liveIv=null;
+
+    /* Floating live stopwatch — visible only while Claude is working. */
+    var badge=null;
+    function ensureBadge(){
+      if(badge&&document.body.contains(badge))return badge;
+      badge=document.createElement('div');
+      badge.id='cc-timer-badge';
+      badge.title='Time since you sent the message';
+      badge.style.cssText='position:fixed;top:6px;left:8px;z-index:99998;display:none;align-items:center;gap:5px;padding:3px 9px;border-radius:12px;background:var(--vscode-editorWidget-background,#252526);border:1px solid var(--vscode-editorWidget-border,#454545);color:var(--vscode-foreground,#ccc);font-size:11px;font-weight:700;font-family:var(--vscode-font-family,sans-serif);box-shadow:0 2px 6px rgba(0,0,0,0.35);direction:ltr;';
+      document.body.appendChild(badge);
+      return badge;
+    }
+
+    function metaLine(el){
+      var line=el.querySelector('.cc-msg-meta');
+      if(line&&el.contains(line))return line;
+      line=document.createElement('div');
+      line.className='cc-msg-meta';
+      line.style.cssText='direction:ltr;text-align:left;font-size:10px;opacity:0.5;margin-top:3px;font-family:var(--vscode-font-family,sans-serif);user-select:none;letter-spacing:0.3px;white-space:nowrap;';
+      el.appendChild(line);
+      return line;
+    }
+    function renderMeta(el,rec,liveMs){
+      if(!rec)return;
+      var line=metaLine(el),parts=[];
+      if(rec.ts)parts.push('🕐 '+fmtClock(rec.ts));
+      if(liveMs!=null)parts.push('⏱ '+fmtDur(liveMs)+'…');
+      else if(rec.dur!=null)parts.push('⏱ '+fmtDur(rec.dur));
+      line.textContent=parts.join('   ·   ');
+    }
+
+    function startIteration(el){
+      if(active)endIteration();
+      active={el:el,start:Date.now()};
+      var fp=fpOf(el);
+      if(!meta[fp])meta[fp]={};
+      meta[fp].ts=active.start; meta[fp].dur=null;
+      saveMeta();
+      var b=ensureBadge();
+      b.style.display='inline-flex';
+      b.textContent='⏱ 0:00';
+      renderMeta(el,meta[fp],0);
+      if(liveIv)clearInterval(liveIv);
+      liveIv=setInterval(function(){
+        if(!active){clearInterval(liveIv);liveIv=null;return;}
+        var elapsed=Date.now()-active.start;
+        b.textContent='⏱ '+fmtDur(elapsed);
+        if(active.el&&document.body.contains(active.el))renderMeta(active.el,meta[fpOf(active.el)],elapsed);
+      },1000);
+    }
+
+    function endIteration(){
+      if(!active)return;
+      var el=active.el,fp=fpOf(el),dur=Date.now()-active.start;
+      if(!meta[fp])meta[fp]={};
+      meta[fp].dur=dur; saveMeta();
+      if(liveIv){clearInterval(liveIv);liveIv=null;}
+      if(el&&document.body.contains(el))renderMeta(el,meta[fp],null);
+      if(badge)badge.style.display='none';
+      active=null;
+    }
+
+    /* result io_message fires once at the end of every turn -> stop the clock. */
+    window.addEventListener('message',function(e){
+      var d=e.data;
+      if(!d||d.type!=='from-extension')return;
+      var msg=d.message;
+      if(!msg||msg.type!=='io_message')return;
+      var m=msg.message;
+      if(m&&m.type==='result')endIteration();
+    });
+
+    /* Reconcile loop: detect newly-sent user messages, restore historical
+       labels from storage, and re-attach labels React may have re-rendered away. */
+    var seen=new WeakSet();
+    function reconcile(){
+      var list=userMsgs();
+      for(var i=0;i<list.length;i++){
+        var el=list[i],fp=fpOf(el);
+        if(!seen.has(el)){
+          seen.add(el);
+          if(initDone&&i===list.length-1&&!meta[fp]){
+            startIteration(el);              /* freshly sent */
+          } else {
+            renderMeta(el,meta[fp],null);    /* historical / restored */
+          }
+        } else if(meta[fp]&&!el.querySelector('.cc-msg-meta')){
+          var isActive=active&&active.el===el;
+          renderMeta(el,meta[fp],isActive?(Date.now()-active.start):null);
+        }
+      }
+    }
+    setInterval(reconcile,300);
+    reconcile();
+  }catch(err){ /* never break the bundle */ }
+})();
 JSPATCH
 
     cat >> "$jstmp" << 'JSEND'
@@ -1118,6 +1269,7 @@ JSEND
     sed -i "s|__QUESTION_MINIMIZE__|$QUESTION_MINIMIZE|g" "$jstmp"
     sed -i "s|__USER_MSG_MAX_H__|$USER_MSG_MAX_H|g" "$jstmp"
     sed -i "s|__USER_MSG_MINIMIZE__|$USER_MSG_MINIMIZE|g" "$jstmp"
+    sed -i "s|__SHOW_MESSAGE_TIMING__|$SHOW_MESSAGE_TIMING|g" "$jstmp"
     sed -i "s|__UI_SIG__|$UI_MARKER|g" "$jstmp"
     sed -i "s|__UI_VERSION__|$VERSION|g" "$jstmp"
     # The changelog JS array (built up top; apostrophes already U+2019-swapped,
