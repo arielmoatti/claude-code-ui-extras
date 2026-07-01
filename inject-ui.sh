@@ -15,10 +15,11 @@ export PATH
 # (MAJOR=0) still bump the version but stay OUT of the banner. Keep notes free of
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
-COMPATIBLE_EXT_VERSION="2.1.175"
-CHANGELOG_VERS=(  "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+COMPATIBLE_EXT_VERSION="2.1.197"
+CHANGELOG_VERS=(  "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "הודעות המערכת האוטומטיות (task-notification וכו') כבר לא מתנהגות כמו פרומפט שכתבת: הוסרו מהן כפתור ה-Collapse שלנו, כפתור ה-Rewind הנייטיב וההיצמדות לראש המסך. הן נשארות פסיביות ומעומעמות."
   "קליק ימני על קישור לקובץ ואז Copy Link מעתיק עכשיו את הנתיב המלא של הקובץ (כולל כונן), מוכן להדבקה בסייר הקבצים או בטרמינל - במקום הנתיב היחסי הגולמי שלא היה שמיש מחוץ ל-VSCode. קישורי אינטרנט נשארים כמו שהם."
   "תיקון לתווית ה-Alt מ-1.21.0: היא מתעדכנת עכשיו אמינות גם אחרי שימוש ראשון (לחיצת Alt ב-Windows גנבה את פוקוס המקלדת לתפריט של VSCode, ומאז המקלדת לא הגיעה לצ׳אט; עכשיו המצב מסונכרן גם מתנועת העכבר)."
   "קיפול הודעות משתמש עובד עכשיו פר-הודעה (Collapse/Expand במקום Minimize all, עם Alt+קליק לקיפול הכל), הודעות מערכת אוטומטיות כבר לא מוצגות עם מסגרת כאילו הן פרומפט שלך, ובאנר העדכון לא חוזר לקפוץ אחרי שנסגר בפתיחת חלון חדש."
@@ -209,8 +210,12 @@ $CSS_START
 [class*="userMessage_"].cc-msg-min [class*="content_"][class*="content_"]{max-height:1.5em !important;overflow:hidden !important;}
 [class*="userMessage_"].cc-msg-min [class*="truncationGradient_"],[class*="userMessage_"].cc-msg-min [class*="buttonContainer_"],[class*="userMessage_"].cc-msg-min [class*="userMessageAttachments_"]{display:none !important;}
 [class*="userMessage_"].cc-msg-min [class*="contentWrapper_"]{pointer-events:none !important;}
-/* Harness-injected notifications (task-notification etc.) are sent INTO the conversation as user-role messages, so the webview renders them with the user-message component and they wear the prompt border as if the user typed them. The 300ms scan tags them cc-harness-msg by their leading XML tag; drop the border and dim them so they read as system output, not as your prompt. (0,2,0) outranks the base border rule (0,1,0), both !important. */
+/* Harness-injected notifications (task-notification etc.) are sent INTO the conversation as user-role messages, so the webview's user-message component (U8t) renders them with the FULL prompt chrome as if the user typed them: the border, the sticky-to-top header (stickyHeader is applied to any text message), and the Rewind/Fork action bar. The 300ms scan tags them cc-harness-msg by their leading XML tag; here we strip all that chrome so they read as passive system output, not as your prompt. (0,2,0) outranks the base border rule (0,1,0), both !important. */
 [class*="userMessage_"].cc-harness-msg{border:none !important;opacity:0.75;}
+/* Kill the sticky-to-top behaviour: stickyHeader lives on the ancestor message_ container, so reach it via :has() and pin it static. (0,3,0) + !important beats the native .message_.stickyHeader_ (0,2,0). */
+[class*="message_"][class*="stickyHeader_"]:has(.cc-harness-msg){position:static !important;}
+/* Hide the native Rewind/Fork action bar: inside the inner userMessageContainer_ it is the sibling rendered right before .userMessage_, so it is the only direct child that is NOT the userMessage box. (Attachments live INSIDE .userMessage_, so they are untouched.) */
+[class*="userMessageContainer_"]:has(> [class*="userMessage_"].cc-harness-msg) > :not([class*="userMessage_"]){display:none !important;}
 /* Native RTL quirk fix: Show less is an in-flow flex child (justify-content:flex-end), so in RTL prose flex-end resolves to the LEFT corner while the absolute Show more sits right - the two buttons end up at opposite corners. Forcing LTR on the button row pins both to the right. */
 [class*="userMessage_"] [class*="buttonContainer_"]{direction:ltr !important;}
 $CSS_END
@@ -1011,7 +1016,11 @@ CSSPATCH
       var cont=box.querySelector('[class*="expandableContainer_"]');
       var c=contentOf(box);
       if(!cont||!c)continue;
-      box.classList.toggle('cc-harness-msg',HARNESS.test(c.textContent||''));
+      var isHarness=HARNESS.test(c.textContent||'');
+      box.classList.toggle('cc-harness-msg',isHarness);
+      /* Never dress a harness notification with OUR collapse button - it is not
+         the user's prompt. Strip any leftover button/fold state and skip it. */
+      if(isHarness){var stale=box.querySelector('.cc-msg-minbtn');if(stale)stale.remove();box.classList.remove(MIN);continue;}
       if(!BTN_ON)continue;
       var on=!!folded[keyOf(c)];
       box.classList.toggle(MIN,on);
