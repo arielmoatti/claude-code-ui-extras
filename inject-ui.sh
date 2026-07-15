@@ -144,7 +144,12 @@ fi
 UI_MARKER="Claude UI Extras sig:$UI_SIG"
 
 FOUND=false
-for dir in "$HOME/.vscode/extensions"/anthropic.claude-code-*/webview; do
+# Patch the Claude Code extension wherever it lives. VS Code forks (Cursor,
+# Antigravity) keep their OWN extension copy under a sibling dir, so the same
+# webview must be patched in each — the .vscode-only glob left them unpatched.
+for dir in "$HOME/.vscode/extensions"/anthropic.claude-code-*/webview \
+           "$HOME/.cursor/extensions"/anthropic.claude-code-*/webview \
+           "$HOME/.antigravity/extensions"/anthropic.claude-code-*/webview; do
   css="$dir/index.css"
   js="$dir/index.js"
   [ -f "$css" ] || continue
