@@ -15,9 +15,13 @@
 
 ## פיצ'רים
 
-### &rlm;🆕 העתקת קישור לקובץ כנתיב מלא (Copy Link)
+### &rlm;🆕 קובץ PDF (וכל קובץ בינארי) נפתח בתוכנה הנכונה
 
-<p dir="rtl">קליק ימני על קישור לקובץ בשיחה ואז <b>Copy Link</b> העתיק עד עכשיו את הקישור הגולמי - נתיב יחסי שאינו שמיש מחוץ ל-VSCode (אי אפשר להדביק אותו בסייר הקבצים). עכשיו מועתק <b>הנתיב המוחלט המלא</b> (כולל אות כונן), אחרי פענוח קידוד-URL והסרת סיומות שורה כמו <code dir="ltr">#L42</code> - מוכן להדבקה בסייר הקבצים, בטרמינל או בכל דיאלוג. קישורי אינטרנט מועתקים כרגיל, ולחיצה על הקישור ממשיכה לפתוח את הקובץ ב-VSCode כמו תמיד.</p>
+<p dir="rtl">לחיצה על קישור לקובץ <b>PDF</b> בשיחה פתחה עד עכשיו ג'יבריש בעורך הטקסט של VSCode. הסיבה: הצ'אט שולח כל קישור לקובץ בבקשה שמכריחה עורך טקסט, וזו עוקפת כל תוסף שרשום לסיומת (כולל תוסף ה-PDF, גם כשהוא מותקן). עכשיו קובץ בינארי - PDF, תמונה, וורד, אקסל, זיפ, וידאו - נשלח בערוץ של קישורי אינטרנט, זה שמעביר לתוכנת ברירת המחדל של המערכת, ולכן PDF נפתח באקרובט, תמונה בצפיין התמונות וכן הלאה. קבצי טקסט וקוד ממשיכים להיפתח בעורך כרגיל.</p>
+
+### העתקת קישור לקובץ כנתיב מלא (Copy Link)
+
+<p dir="rtl">קליק ימני על קישור לקובץ בשיחה ואז <b>Copy Link</b> העתיק עד עכשיו את הקישור הגולמי - נתיב יחסי שאינו שמיש מחוץ ל-VSCode (אי אפשר להדביק אותו בסייר הקבצים). עכשיו מועתק <b>הנתיב המוחלט המלא</b> (כולל אות כונן), אחרי פענוח קידוד-URL והסרת סיומות שורה כמו <code dir="ltr">#L42</code> - מוכן להדבקה בסייר הקבצים, בטרמינל או בכל דיאלוג. קישורי אינטרנט מועתקים כרגיל.</p>
 
 ### קיפול פרומפטים לשורה אחת (Collapse / Expand)
 
@@ -279,9 +283,13 @@ irm https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/uni
 
 Ordered newest-first — when you come back after a while, the top of the list shows what's new.
 
-### 🆕 Copy Link as full path
+### 🆕 PDFs (and every binary file) open in the right app
 
-Right-clicking a file link in the conversation and choosing **Copy Link** used to copy the raw href - a workspace-relative path that's useless outside VSCode (you can't paste it into File Explorer). It now copies the **absolute path** (drive letter included), URL-decoded and stripped of `#L42` line suffixes - ready to paste into File Explorer, a terminal, or any dialog. Web links (`https://...`) are copied unchanged, and clicking the link still opens the file in VSCode as before.
+Clicking a **PDF** link in the conversation used to paint raw bytes into the VSCode text editor. The reason: the chat sends every file link through a request that *asks for the text editor*, which bypasses any custom editor registered for that extension - including an installed PDF viewer. Binary files - PDF, images, Word, Excel, zip, video - now travel the same channel as web links, the one that hands the target to the OS, so a PDF opens in your default PDF app, an image in your image viewer, and so on. Text and code files still open in the editor as before.
+
+### Copy Link as full path
+
+Right-clicking a file link in the conversation and choosing **Copy Link** used to copy the raw href - a workspace-relative path that's useless outside VSCode (you can't paste it into File Explorer). It now copies the **absolute path** (drive letter included), URL-decoded and stripped of `#L42` line suffixes - ready to paste into File Explorer, a terminal, or any dialog. Web links (`https://...`) are copied unchanged.
 
 ### Collapse / Expand prompts to one line
 

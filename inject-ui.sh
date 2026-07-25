@@ -16,9 +16,10 @@ export PATH
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
 COMPATIBLE_EXT_VERSION="2.1.210"
-CHANGELOG_VERS=(  "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+CHANGELOG_VERS=(  "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "קליק על קישור בצ'אט לקובץ PDF (וכן תמונה, וורד, אקסל, זיפ, וידאו) פותח אותו עכשיו בתוכנה שמוגדרת לו במערכת, למשל אקרובט, במקום להציג ג'יבריש בעורך הטקסט. הסיבה: הצ'אט שולח כל קובץ לפקודה שמכריחה עורך טקסט ועוקפת את התוסף הרשום לסיומת, ולכן קבצים בינאריים נשלחים עכשיו בערוץ של קישורי אינטרנט, זה שמעביר למערכת ההפעלה."
   "מד הקונטקסט משנה צבע עכשיו בארבע מדרגות במקום שלוש: תורקיז עד 30%, צהוב 30-40%, כתום 40-50%, אדום מעל 50% - התראה מוקדמת יותר על מילוי חלון ההקשר."
   "הודעות המערכת האוטומטיות (task-notification וכו') כבר לא מתנהגות כמו פרומפט שכתבת: הוסרו מהן כפתור ה-Collapse שלנו, כפתור ה-Rewind הנייטיב וההיצמדות לראש המסך. הן נשארות פסיביות ומעומעמות."
   "קליק ימני על קישור לקובץ ואז Copy Link מעתיק עכשיו את הנתיב המלא של הקובץ (כולל כונן), מוכן להדבקה בסייר הקבצים או בטרמינל - במקום הנתיב היחסי הגולמי שלא היה שמיש מחוץ ל-VSCode. קישורי אינטרנט נשארים כמו שהם."
@@ -865,6 +866,46 @@ CSSPATCH
     var c=st&&st.defaultCwd;
     if(c&&!window.__ccCwdFromLaunch)window.__ccCwd=c;
   });
+})();
+
+/* ── Binary file links open in the OS default app ──
+   Every in-chat file link is sent to the extension as an `open_file` request,
+   which it implements with window.showTextDocument - i.e. it ASKS for the text
+   editor. That bypasses any custom editor registered for the extension (the
+   installed PDF preview included), so a PDF/image/zip renders as raw bytes.
+   Web links travel a different request, `open_url`, which ends in
+   env.openExternal and hands the target to the OS.
+   So: catch clicks on links whose resolved target is a binary file and re-send
+   them as `open_url` with a file:/// URI. Capture phase + stopImmediatePropagation
+   so the app's own onClick never runs. Every guard falls through to native
+   behavior (no api / no channel / unresolvable path), so the worst case is
+   exactly today's behavior, never a dead link.
+   Reuses __ccResolveHref from the Copy Link block above (relative href +
+   session cwd -> absolute Windows path, #L42 / :42 suffixes stripped). */
+;(function(){
+  var BIN=/\.(pdf|docx?|xlsx?|pptx?|odt|ods|rtf|zip|rar|7z|tar|gz|png|jpe?g|gif|webp|bmp|tiff?|ico|psd|ai|mp[34]|m4a|wav|flac|mov|avi|mkv|webm|exe|msi)$/i;
+  document.addEventListener('click',function(e){
+    try{
+      if(e.button!==0||e.ctrlKey||e.metaKey||e.altKey||e.shiftKey)return;
+      var t=e.target;
+      var a=(t&&t.closest)?t.closest('a[href]'):null;
+      if(!a)return;
+      var h=a.getAttribute('href')||'';
+      if(!h)return;
+      /* real URLs (http, mailto, vscode, ...) keep native behavior */
+      if(/^[A-Za-z][A-Za-z0-9+.-]*:/.test(h)&&!/^file:/i.test(h))return;
+      var p=window.__ccResolveHref?window.__ccResolveHref(h):h;   /* -> C:\... */
+      if(!/^[A-Za-z]:[\\/]/.test(p))return;                       /* unresolved - let the app handle it */
+      if(!BIN.test(p))return;                                     /* text file - the editor is the right place */
+      var api=window.__ccVscodeApi, ch=window.__ccChannelId;
+      if(!api||ch==null)return;
+      var url='file:///'+encodeURI(p.replace(/\\/g,'/')).replace(/#/g,'%23').replace(/\?/g,'%3F');
+      e.preventDefault(); e.stopPropagation();
+      if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+      api.postMessage({type:'request',channelId:ch,requestId:Math.random().toString(36).slice(2),
+                       request:{type:'open_url',url:url}});
+    }catch(_){}
+  },true);
 })();
 
 /* ── Minimize button for the AskUserQuestion panel ──
