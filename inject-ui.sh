@@ -16,9 +16,10 @@ export PATH
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
 COMPATIBLE_EXT_VERSION="2.1.210"
-CHANGELOG_VERS=(  "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+CHANGELOG_VERS=(  "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "0"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "תיקון בטיחות ברישום העצמי: כשקובץ ההגדרות settings.json לא ניתן לקריאה לרגע (למשל כתיבה מקבילה של Claude Code), הרישום מדלג בשקט לסשן הזה במקום לכתוב את הקובץ מחדש מאפס. עד עכשיו מצב כזה מחק את כל שאר ה-hooks של המשתמש, את מודל ברירת המחדל ואת יתר ההגדרות."
   "קליק על קישור בצ'אט לקובץ PDF (וכן תמונה, וורד, אקסל, זיפ, וידאו) פותח אותו עכשיו בתוכנה שמוגדרת לו במערכת, למשל אקרובט, במקום להציג ג'יבריש בעורך הטקסט. הסיבה: הצ'אט שולח כל קובץ לפקודה שמכריחה עורך טקסט ועוקפת את התוסף הרשום לסיומת, ולכן קבצים בינאריים נשלחים עכשיו בערוץ של קישורי אינטרנט, זה שמעביר למערכת ההפעלה."
   "מד הקונטקסט משנה צבע עכשיו בארבע מדרגות במקום שלוש: תורקיז עד 30%, צהוב 30-40%, כתום 40-50%, אדום מעל 50% - התראה מוקדמת יותר על מילוי חלון ההקשר."
   "הודעות המערכת האוטומטיות (task-notification וכו') כבר לא מתנהגות כמו פרומפט שכתבת: הוסרו מהן כפתור ה-Collapse שלנו, כפתור ה-Rewind הנייטיב וההיצמדות לראש המסך. הן נשארות פסיביות ומעומעמות."
@@ -1240,7 +1241,15 @@ var p = process.env.SETTINGS_PATH;
 var cmd = process.env.HOOK_CMD;
 var id = process.env.SCRIPT_ID;
 var s = {};
-if (fs.existsSync(p)) { try { s = JSON.parse(fs.readFileSync(p,'utf8')); } catch(e) {} }
+// Fail-safe: if settings.json exists but cannot be read/parsed right now
+// (e.g. a concurrent non-atomic write by Claude Code itself), ABORT instead
+// of falling through to s={} — that rewrote the file from scratch and wiped
+// every other hook, the model default, and the rest of the user's settings.
+// Registration simply runs again on the next session start.
+if (fs.existsSync(p)) {
+  try { s = JSON.parse(fs.readFileSync(p,'utf8')); }
+  catch(e) { console.log('inject-ui: settings.json unreadable — skipping hook registration to avoid wiping it'); process.exit(0); }
+}
 if (!s.hooks) s.hooks = {};
 
 // SessionStart hook (UI injection)
