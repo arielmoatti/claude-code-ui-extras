@@ -15,7 +15,17 @@
 
 ## פיצ'רים
 
-### &rlm;🆕 קובץ PDF (וכל קובץ בינארי) נפתח בתוכנה הנכונה
+### &rlm;🆕 מתגי ההגדרות מראים סוף סוף אם הם דלוקים
+
+<p dir="rtl">המתגים בתפריט ההגדרות של התוסף (<b>Thinking</b>, <b>Switch models when a message is flagged</b>, <b>Remote control at startup</b>) נראו זהים לחלוטין בשני המצבים: מסילה אפורה עם עיגול. ההבדל היחיד היה מיקום העיגול, 14 פיקסלים, וזה כמעט לא נקרא. הסיבה: הצבע שהתוסף בוחר למצב דלוק נלקח מערכת הנושא, וערכות ברירת המחדל של VSCode משאירות אותו אפור כמעט שחור - כהה אפילו יותר מהמסילה הכבויה, כך שהמצב הדלוק נראה דווקא העמום מבין השניים.</p>
+
+<p dir="rtl">עכשיו מסילה דלוקה מקבלת את <b>צבע ההדגשה של הערכה שלכם</b>, והעיגול שעליה נצבע בצבע המנוגד לו. כלומר המתג מתלבש על הערכה שבחרתם במקום על גוון קבוע, וממשיך להיקרא גם בערכות בהירות.</p>
+
+<p align="right"><img src="screenshots/settings-toggle-color.jpg" alt="ON toggle painted in the theme accent colour, OFF toggle gray"/></p>
+
+<p dir="rtl"><sub>אובחן ונתרם על ידי <a href="https://github.com/amipir8">amipir8</a> (PR #3).</sub></p>
+
+### &rlm;קובץ PDF (וכל קובץ בינארי) נפתח בתוכנה הנכונה
 
 <p dir="rtl">לחיצה על קישור לקובץ <b>PDF</b> בשיחה פתחה עד עכשיו ג'יבריש בעורך הטקסט של VSCode. הסיבה: הצ'אט שולח כל קישור לקובץ בבקשה שמכריחה עורך טקסט, וזו עוקפת כל תוסף שרשום לסיומת (כולל תוסף ה-PDF, גם כשהוא מותקן). עכשיו קובץ בינארי - PDF, תמונה, וורד, אקסל, זיפ, וידאו - נשלח בערוץ של קישורי אינטרנט, זה שמעביר לתוכנת ברירת המחדל של המערכת, ולכן PDF נפתח באקרובט, תמונה בצפיין התמונות וכן הלאה. קבצי טקסט וקוד ממשיכים להיפתח בעורך כרגיל.</p>
 
@@ -283,7 +293,17 @@ irm https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/uni
 
 Ordered newest-first — when you come back after a while, the top of the list shows what's new.
 
-### 🆕 PDFs (and every binary file) open in the right app
+### 🆕 Settings toggles finally show whether they are ON
+
+The switches in the extension settings menu (**Thinking**, **Switch models when a message is flagged**, **Remote control at startup**) looked identical in both states: a gray track with a circle. The only difference was the 14px position of the thumb, which is barely readable. The reason: the colour the extension picks for the ON state comes from your theme, and the built-in VSCode themes leave it a near-black gray - darker than the OFF track, so the ON state actually read as the dimmer of the two.
+
+The ON track now takes **your theme accent colour**, with the thumb painted in the colour that theme pairs against it. The switch adapts to whatever theme you run instead of a fixed shade, and stays readable on light themes too.
+
+<p align="right"><img src="screenshots/settings-toggle-color.jpg" alt="ON toggle painted in the theme accent colour, OFF toggle gray"/></p>
+
+<sub>Diagnosed and contributed by <a href="https://github.com/amipir8">amipir8</a> (#3).</sub>
+
+### PDFs (and every binary file) open in the right app
 
 Clicking a **PDF** link in the conversation used to paint raw bytes into the VSCode text editor. The reason: the chat sends every file link through a request that *asks for the text editor*, which bypasses any custom editor registered for that extension - including an installed PDF viewer. Binary files - PDF, images, Word, Excel, zip, video - now travel the same channel as web links, the one that hands the target to the OS, so a PDF opens in your default PDF app, an image in your image viewer, and so on. Text and code files still open in the editor as before.
 

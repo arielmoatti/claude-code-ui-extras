@@ -15,11 +15,11 @@ export PATH
 # (MAJOR=0) still bump the version but stay OUT of the banner. Keep notes free of
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
-COMPATIBLE_EXT_VERSION="2.1.220"
+COMPATIBLE_EXT_VERSION="2.1.233"
 CHANGELOG_VERS=(  "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
 CHANGELOG_MAJOR=( "1"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
-  "מתגי ההפעלה בתפריט ההגדרות (Thinking, Switch models וכו') מקבלים עכשיו צבע ברור במצב דלוק - מסילה כחולה עם עיגול לבן. עד עכשיו דלוק וכבוי נראו זהים באפור, כי ערכות Modern של VSCode מגדירות את המשתנה inputOption.activeBorder כשקוף, וזה הצבע שהתוסף משתמש בו למצב דלוק."
+  "מתגי ההפעלה בתפריט ההגדרות של התוסף (Thinking, Switch models when a message is flagged, Remote control) מקבלים עכשיו צבע ברור במצב דלוק: מסילה בצבע ההדגשה של הערכה, עם עיגול בצבע המנוגד לה. עד עכשיו דלוק וכבוי נראו זהים באפור והרמז היחיד היה מיקום העיגול, כי ערכות VSCode מגדירות את הטוקן inputOption.activeBorder כאפור כמעט שחור, וזה הצבע שהתוסף מושך למצב דלוק."
   "קליק על קישור בצ'אט לקובץ PDF (וכן תמונה, וורד, אקסל, זיפ, וידאו) פותח אותו עכשיו בתוכנה שמוגדרת לו במערכת, למשל אקרובט, במקום להציג ג'יבריש בעורך הטקסט. הסיבה: הצ'אט שולח כל קובץ לפקודה שמכריחה עורך טקסט ועוקפת את התוסף הרשום לסיומת, ולכן קבצים בינאריים נשלחים עכשיו בערוץ של קישורי אינטרנט, זה שמעביר למערכת ההפעלה."
   "מד הקונטקסט משנה צבע עכשיו בארבע מדרגות במקום שלוש: תורקיז עד 30%, צהוב 30-40%, כתום 40-50%, אדום מעל 50% - התראה מוקדמת יותר על מילוי חלון ההקשר."
   "הודעות המערכת האוטומטיות (task-notification וכו') כבר לא מתנהגות כמו פרומפט שכתבת: הוסרו מהן כפתור ה-Collapse שלנו, כפתור ה-Rewind הנייטיב וההיצמדות לראש המסך. הן נשארות פסיביות ומעומעמות."
@@ -221,9 +221,9 @@ $CSS_START
 [class*="userMessageContainer_"]:has(> [class*="userMessage_"].cc-harness-msg) > :not([class*="userMessage_"]){display:none !important;}
 /* Native RTL quirk fix: Show less is an in-flow flex child (justify-content:flex-end), so in RTL prose flex-end resolves to the LEFT corner while the absolute Show more sits right - the two buttons end up at opposite corners. Forcing LTR on the button row pins both to the right. */
 [class*="userMessage_"] [class*="buttonContainer_"]{direction:ltr !important;}
-/* Settings-menu on/off switches (Thinking, Switch models on flag, Remote control...): the ON track gets background:var(--app-accent-color) which maps to --vscode-inputOption-activeBorder - and the Modern VSCode themes (Dark/Light Modern) define that token as TRANSPARENT, so ON and OFF both render the same gray track and the only tell is the 14px thumb position. Give the ON track the theme accent (button background, always a strong color) and force a solid white thumb on it for contrast. Track/thumb classes are hashed per build, matched by prefix; thumb is a child of the track so the second selector only hits switches that are ON. */
+/* Settings-menu on/off switches (Thinking, Switch models on flag, Remote control): the native ON track is background:var(--app-accent-color), which resolves to --vscode-inputOption-activeBorder, and the built-in themes leave that token a near-black gray (#2a2b2c on Dark Modern) - DARKER than the OFF track (--app-input-border, #333536) - so ON and OFF render identically and the only tell is the 14px thumb offset. Paint the ON track with the theme button accent, and the thumb with its PAIRED foreground rather than a hardcoded white: every theme defines button-foreground as contrasting with button-background, so this survives a light or white button colour, where a fixed white thumb would vanish - the same theme-token assumption that caused the original bug. Track/thumb classes are hashed per build, so match by prefix; the thumb is a child of the track, so the second rule only touches switches that are ON. */
 [class*="trackOn_"]{background:var(--vscode-button-background,#0078d4) !important;}
-[class*="trackOn_"] [class*="thumb_"]{background:#fff !important;}
+[class*="trackOn_"] [class*="thumb_"]{background:var(--vscode-button-foreground,#fff) !important;}
 $CSS_END
 CSSPATCH
   if cmp -s "$csstmp" "$css"; then
