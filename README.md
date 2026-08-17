@@ -15,7 +15,17 @@
 
 ## פיצ'רים
 
-### &rlm;🆕 מתגי ההגדרות מראים סוף סוף אם הם דלוקים
+### &rlm;🆕 שעה מתחת לכל הודעה
+
+<p dir="rtl">מתחת לכל בלוק בשיחה מופיעה עכשיו השעה: מתי שלחתם את הפרומפט, ומתי קלוד סיים לענות. מדויק עד השנייה, קטן ומעומעם בפינה, כמו בכל צ'אט אחר.</p>
+
+<p dir="rtl">זה עוזר בעיקר כשגוללים אחורה בשיחה ארוכה: רואים מיד מתי כל דבר קרה, וכמה זמן עבר בין הודעה להודעה.</p>
+
+<p dir="rtl">השעות נשמרות כל עוד החלון פתוח. אחרי Reload הודעות ישנות יופיעו בלי שעה, כי אין דרך לדעת בדיעבד מתי הן נשלחו. כיבוי: <code dir="ltr">show_message_time</code> ב-<code>ui.conf</code>.</p>
+
+<p align="right"><img src="screenshots/message-time.jpg" alt="the time under a prompt and under the answer that followed it" width="100%"/></p>
+
+### &rlm;מתגי ההגדרות מראים סוף סוף אם הם דלוקים
 
 <p dir="rtl">המתגים בתפריט ההגדרות (<b>Thinking</b>, <b>Switch models when a message is flagged</b>, <b>Remote control at startup</b>) נראו אותו דבר בין אם הם דלוקים ובין אם לא: אפור על אפור. הדרך היחידה לדעת הייתה להסתכל באיזה צד יושב העיגול הקטן, והבדל של 14 פיקסלים כמעט ולא נראה.</p>
 
@@ -295,7 +305,17 @@ irm https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/uni
 
 Ordered newest-first — when you come back after a while, the top of the list shows what's new.
 
-### 🆕 Settings toggles finally show whether they are ON
+### 🆕 A time stamp under every message
+
+Every block in the conversation now shows the time: when you sent your prompt, and when Claude finished answering. Down to the second, small and dim in the corner, like any other chat app.
+
+It helps most when you scroll back through a long conversation: you can see at a glance when things happened, and how much time passed between one message and the next.
+
+The times last as long as the window stays open. After a reload, older messages show no time - there is no way to know after the fact when they were sent. Turn it off with `show_message_time` in `ui.conf`.
+
+<p align="right"><img src="screenshots/message-time.jpg" alt="the time under a prompt and under the answer that followed it" width="100%"/></p>
+
+### Settings toggles finally show whether they are ON
 
 The switches in the settings menu (**Thinking**, **Switch models when a message is flagged**, **Remote control at startup**) looked the same whether they were on or off: gray on gray. The only way to tell was which side the little circle sat on, and 14 pixels is hard to see.
 
