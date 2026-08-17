@@ -17,13 +17,15 @@
 
 ### &rlm;🆕 מתגי ההגדרות מראים סוף סוף אם הם דלוקים
 
-<p dir="rtl">המתגים בתפריט ההגדרות של התוסף (<b>Thinking</b>, <b>Switch models when a message is flagged</b>, <b>Remote control at startup</b>) נראו זהים לחלוטין בשני המצבים: מסילה אפורה עם עיגול. ההבדל היחיד היה מיקום העיגול, 14 פיקסלים, וזה כמעט לא נקרא. הסיבה: הצבע שהתוסף בוחר למצב דלוק נלקח מערכת הנושא, וערכות ברירת המחדל של VSCode משאירות אותו אפור כמעט שחור - כהה אפילו יותר מהמסילה הכבויה, כך שהמצב הדלוק נראה דווקא העמום מבין השניים.</p>
+<p dir="rtl">המתגים בתפריט ההגדרות (<b>Thinking</b>, <b>Switch models when a message is flagged</b>, <b>Remote control at startup</b>) נראו אותו דבר בין אם הם דלוקים ובין אם לא: אפור על אפור. הדרך היחידה לדעת הייתה להסתכל באיזה צד יושב העיגול הקטן, והבדל של 14 פיקסלים כמעט ולא נראה.</p>
 
-<p dir="rtl">עכשיו מסילה דלוקה מקבלת את <b>צבע ההדגשה של הערכה שלכם</b>, והעיגול שעליה נצבע בצבע המנוגד לו. כלומר המתג מתלבש על הערכה שבחרתם במקום על גוון קבוע, וממשיך להיקרא גם בערכות בהירות.</p>
+<p dir="rtl">למה זה קרה: את הצבע של המצב הדלוק התוסף לוקח מערכת הנושא, וערכות ברירת המחדל של VSCode נותנות שם אפור כל כך כהה שהוא כמעט שחור. כך יצא שהמצב הדלוק נראה אפילו כהה יותר מהכבוי.</p>
+
+<p dir="rtl">עכשיו <b>מתג דלוק</b> מקבל את הצבע הבולט של ערכת הנושא שלכם, והעיגול שעליו נצבע בצבע שמנוגד לו. אפשר לראות במבט אחד מה דלוק ומה לא, בכל ערכה, כהה או בהירה.</p>
 
 <p align="right"><img src="screenshots/settings-toggle-color.jpg" alt="ON toggle painted in the theme accent colour, OFF toggle gray"/></p>
 
-<p dir="rtl"><sub>אובחן ונתרם על ידי <a href="https://github.com/amipir8">amipir8</a> (PR #3).</sub></p>
+<p dir="rtl"><b>תודה מנחם!</b> (<a href="https://github.com/amipir8">amipir8</a>)</p>
 
 ### &rlm;קובץ PDF (וכל קובץ בינארי) נפתח בתוכנה הנכונה
 
@@ -295,13 +297,15 @@ Ordered newest-first — when you come back after a while, the top of the list s
 
 ### 🆕 Settings toggles finally show whether they are ON
 
-The switches in the extension settings menu (**Thinking**, **Switch models when a message is flagged**, **Remote control at startup**) looked identical in both states: a gray track with a circle. The only difference was the 14px position of the thumb, which is barely readable. The reason: the colour the extension picks for the ON state comes from your theme, and the built-in VSCode themes leave it a near-black gray - darker than the OFF track, so the ON state actually read as the dimmer of the two.
+The switches in the settings menu (**Thinking**, **Switch models when a message is flagged**, **Remote control at startup**) looked the same whether they were on or off: gray on gray. The only way to tell was which side the little circle sat on, and 14 pixels is hard to see.
 
-The ON track now takes **your theme accent colour**, with the thumb painted in the colour that theme pairs against it. The switch adapts to whatever theme you run instead of a fixed shade, and stays readable on light themes too.
+Why it happened: the extension takes the colour of the ON state from your theme, and the built-in VSCode themes leave it a gray so dark it is almost black. That made the ON state look even darker than the OFF one.
+
+An ON switch now uses **your theme highlight colour**, with the circle in a colour that contrasts against it. One glance tells you what is on, on any theme, dark or light.
 
 <p align="right"><img src="screenshots/settings-toggle-color.jpg" alt="ON toggle painted in the theme accent colour, OFF toggle gray"/></p>
 
-<sub>Diagnosed and contributed by <a href="https://github.com/amipir8">amipir8</a> (#3).</sub>
+**Thanks Menachem!** (<a href="https://github.com/amipir8">amipir8</a>)
 
 ### PDFs (and every binary file) open in the right app
 
