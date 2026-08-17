@@ -16,9 +16,10 @@ export PATH
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings.
 COMPATIBLE_EXT_VERSION="2.1.233"
-CHANGELOG_VERS=(  "1.29.0" "1.28.0" "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "1"      "1"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+CHANGELOG_VERS=(  "1.30.0" "1.29.0" "1.28.0" "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "0"      "1"      "1"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "החבילה מתקינה את עצמה עכשיו גם ב-VSCode Insiders וב-Remote SSH ובקודספייסס, וגם ב-Cursor וב-Antigravity, שכל אחד מהם מחזיק עותק נפרד של התוסף. עד עכשיו נסרק רק VSCode היציב, ומי שעבד באחד מהאחרים לא קיבל את השיפורים בלי לדעת למה."
   "תוקנו שני מרוצים בין חבילת ה-UI לחבילת העברית, ששתיהן נטענות בפתיחת כל צאט. הראשון: שתיהן ערכו את אותו קובץ של התוסף באותו רגע, ולכן לפעמים אחת נטענה והשנייה לא, והיה צריך כמה Reload עד ששתיהן תפסו. עכשיו הן ממתינות אחת לשנייה. השני, נדיר אבל הרסני: כשקובץ ההגדרות settings.json לא היה ניתן לקריאה לרגע, הרישום העצמי כתב אותו מחדש מאפס ומחק את כל שאר ה-hooks, את המודל ואת ההרשאות. עכשיו הוא מדלג במקרה כזה, כותב רק כשבאמת השתנה משהו, והכתיבה עצמה אטומית."
   "מתחת לכל הודעה מופיעה עכשיו השעה: מתי שלחתם את הפרומפט ומתי קלוד סיים לענות, מדויק עד השנייה. שימושי כשגוללים אחורה בשיחה ארוכה ורוצים לדעת מתי כל דבר קרה. השעות נשמרות כל עוד החלון פתוח ומתאפסות בטעינה מחדש, ואפשר לכבות אותן עם show_message_time בקובץ ההגדרות."
   "המתגים בתפריט ההגדרות (Thinking, Switch models when a message is flagged, Remote control) נראו אותו דבר דלוקים וכבויים, אפור על אפור, והדרך היחידה לדעת הייתה באיזה צד יושב העיגול הקטן. עכשיו מתג דלוק מקבל את הצבע הבולט של ערכת הנושא שלכם, אז רואים במבט אחד מה דלוק ומה לא."
@@ -185,7 +186,18 @@ done
 [ "$LOCK_HELD" = true ] && trap 'rm -rf "$PATCH_LOCK" 2>/dev/null' EXIT
 
 FOUND=false
-for dir in "$HOME/.vscode/extensions"/anthropic.claude-code-*/webview; do
+# Scan every host that keeps its own copy of the extension:
+#   .vscode           stable, local install
+#   .vscode-insiders  Insiders build
+#   .vscode-server    Remote SSH / Codespaces / Dev Containers
+#   .cursor           Cursor
+#   .antigravity      Antigravity
+# Each root is optional - the [ -f "$css" ] guard below skips whatever is not
+# there, so a single-host machine is unaffected. The fork roots are best
+# effort: they are not tested here, they just stop a fork user from silently
+# getting one pack and not the other.
+for dir in "$HOME"/.vscode{,-insiders,-server}/extensions/anthropic.claude-code-*/webview \
+           "$HOME"/{.cursor,.antigravity}/extensions/anthropic.claude-code-*/webview; do
   css="$dir/index.css"
   js="$dir/index.js"
   [ -f "$css" ] || continue
