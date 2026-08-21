@@ -14,38 +14,40 @@ export PATH
 # flagged MAJOR=1 (substantial, user-facing fixes); cosmetic/meta tweaks
 # (MAJOR=0) still bump the version but stay OUT of the banner. Keep notes free of
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
-# the JS strings.
-COMPATIBLE_EXT_VERSION="2.1.233"
-CHANGELOG_VERS=(  "1.30.0" "1.29.0" "1.28.0" "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "0"      "1"      "1"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+# the JS strings. Notes are benefit-only and capped at 3 rendered lines - see
+# PROJECTS.md in the repo for the authoring rule.
+COMPATIBLE_EXT_VERSION="2.1.238"
+CHANGELOG_VERS=(  "1.32.0" "1.30.0" "1.29.0" "1.28.0" "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "1"      "0"      "1"      "1"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
-  "החבילה מתקינה את עצמה עכשיו גם ב-VSCode Insiders וב-Remote SSH ובקודספייסס, וגם ב-Cursor וב-Antigravity, שכל אחד מהם מחזיק עותק נפרד של התוסף. עד עכשיו נסרק רק VSCode היציב, ומי שעבד באחד מהאחרים לא קיבל את השיפורים בלי לדעת למה."
-  "תוקנו שני מרוצים בין חבילת ה-UI לחבילת העברית, ששתיהן נטענות בפתיחת כל צאט. הראשון: שתיהן ערכו את אותו קובץ של התוסף באותו רגע, ולכן לפעמים אחת נטענה והשנייה לא, והיה צריך כמה Reload עד ששתיהן תפסו. עכשיו הן ממתינות אחת לשנייה. השני, נדיר אבל הרסני: כשקובץ ההגדרות settings.json לא היה ניתן לקריאה לרגע, הרישום העצמי כתב אותו מחדש מאפס ומחק את כל שאר ה-hooks, את המודל ואת ההרשאות. עכשיו הוא מדלג במקרה כזה, כותב רק כשבאמת השתנה משהו, והכתיבה עצמה אטומית."
-  "מתחת לכל הודעה מופיעה עכשיו השעה: מתי שלחתם את הפרומפט ומתי קלוד סיים לענות, מדויק עד השנייה. שימושי כשגוללים אחורה בשיחה ארוכה ורוצים לדעת מתי כל דבר קרה. השעות נשמרות כל עוד החלון פתוח ומתאפסות בטעינה מחדש, ואפשר לכבות אותן עם show_message_time בקובץ ההגדרות."
-  "המתגים בתפריט ההגדרות (Thinking, Switch models when a message is flagged, Remote control) נראו אותו דבר דלוקים וכבויים, אפור על אפור, והדרך היחידה לדעת הייתה באיזה צד יושב העיגול הקטן. עכשיו מתג דלוק מקבל את הצבע הבולט של ערכת הנושא שלכם, אז רואים במבט אחד מה דלוק ומה לא."
-  "קליק על קישור בצ'אט לקובץ PDF (וכן תמונה, וורד, אקסל, זיפ, וידאו) פותח אותו עכשיו בתוכנה שמוגדרת לו במערכת, למשל אקרובט, במקום להציג ג'יבריש בעורך הטקסט. הסיבה: הצ'אט שולח כל קובץ לפקודה שמכריחה עורך טקסט ועוקפת את התוסף הרשום לסיומת, ולכן קבצים בינאריים נשלחים עכשיו בערוץ של קישורי אינטרנט, זה שמעביר למערכת ההפעלה."
-  "מד הקונטקסט משנה צבע עכשיו בארבע מדרגות במקום שלוש: תורקיז עד 30%, צהוב 30-40%, כתום 40-50%, אדום מעל 50% - התראה מוקדמת יותר על מילוי חלון ההקשר."
-  "הודעות המערכת האוטומטיות (task-notification וכו') כבר לא מתנהגות כמו פרומפט שכתבת: הוסרו מהן כפתור ה-Collapse שלנו, כפתור ה-Rewind הנייטיב וההיצמדות לראש המסך. הן נשארות פסיביות ומעומעמות."
-  "קליק ימני על קישור לקובץ ואז Copy Link מעתיק עכשיו את הנתיב המלא של הקובץ (כולל כונן), מוכן להדבקה בסייר הקבצים או בטרמינל - במקום הנתיב היחסי הגולמי שלא היה שמיש מחוץ ל-VSCode. קישורי אינטרנט נשארים כמו שהם."
-  "תיקון לתווית ה-Alt מ-1.21.0: היא מתעדכנת עכשיו אמינות גם אחרי שימוש ראשון (לחיצת Alt ב-Windows גנבה את פוקוס המקלדת לתפריט של VSCode, ומאז המקלדת לא הגיעה לצ׳אט; עכשיו המצב מסונכרן גם מתנועת העכבר)."
-  "קיפול הודעות משתמש עובד עכשיו פר-הודעה (Collapse/Expand במקום Minimize all, עם Alt+קליק לקיפול הכל), הודעות מערכת אוטומטיות כבר לא מוצגות עם מסגרת כאילו הן פרומפט שלך, ובאנר העדכון לא חוזר לקפוץ אחרי שנסגר בפתיחת חלון חדש."
-  "עדכונים נפרסים עכשיו תוך דקות במקום עד יממה: בדיקת העדכון רצה ברקע בכל פתיחת צ'אט בלי להאט אותו, וכשעדכון ירד והותקן - קלוד מודיע בצ'אט שצריך Reload כדי להפעיל אותו."
-  "שורת הגרסה (קליק ימני על מד הקונטקסט או על חצי הניווט) מציגה עכשיו גם את גרסת חבילת העברית, כשהיא מותקנת."
-  "ריחוף על הודעת משתמש מציג כפתור Minimize all שמקפל את כל ההודעות לשורה אחת (Expand all מחזיר). ההצללה וכפתור Show more מופיעים רק כשבאמת נחתך תוכן, ו-Show less כבר לא בורח לפינה השמאלית בהודעות בעברית."
-  "באנר העדכון שקט עכשיו גם כשהגרסה שנראתה חדשה מהאחרונה בלוג (השוואת גרסאות אמיתית במקום השוואה מדויקת)."
-  "מד הקונטקסט מזהה עכשיו את מודל Fable 5 החדש: חלון 1M מזוהה נכון גם מתחת ל-200K, והשם מוצג יפה בפירוט."
-  "עודכנה גרסת התאימות שנבדקה ל-Claude Code 2.1.169."
-  "כפתור מזעור ליד כפתור הסגירה בתיבת השאלה - מקפל אותה לשורה אחת כדי לקרוא את התשובה שמאחוריה, ולחיצה נוספת פותחת מחדש."
-  "הבאנר קופץ עכשיו רק כשיש שיפור מהותי חדש מאז הפעם האחרונה, ולא בכל בליטת גרסה."
-  "הוסר הטלאי שעקף את חלוניות ההרשאה של .claude - אנתרופיק תיקנו את הבאג, הוא כבר לא נחוץ."
-  "בלוקי קוד מופיעים עכשיו ב-50% מהמסך וללא גלילה אופקית (ניתן לכוונון בקובץ ההגדרות)."
-  "קליק ימני על מד הקונטקסט מציג פירוט מלא של ניצול חלון ההקשר לפי קטגוריות."
+  "צ'אט חדש נפתח עם הסמן כבר בתיבת ההקלדה. אפשר להתחיל לכתוב מיד, בלי להזיז את העכבר לשם."
+  "החבילה מתקינה את עצמה גם ב-Cursor, ב-Insiders וב-Remote SSH, לא רק ב-VSCode היציב."
+  "שתי החבילות נטענות יחד באמינות, בלי כמה Reload. וקובץ ההגדרות שלכם כבר לא בסכנת דריסה."
+  "מתחת לכל הודעה מופיעה השעה: מתי שלחתם ומתי קלוד סיים. נוח בגלילה אחורה בשיחה ארוכה."
+  "מתג דלוק בתפריט ההגדרות מקבל צבע בולט, אז רואים במבט אחד מה פעיל ומה לא."
+  "קליק על קישור ל-PDF, תמונה או וידאו פותח אותו בתוכנה הנכונה, לא כג'יבריש בעורך."
+  "מד הקונטקסט מתריע מוקדם יותר: ארבע מדרגות צבע במקום שלוש."
+  "הודעות מערכת אוטומטיות כבר לא נראות כמו פרומפט שכתבתם. שקטות ומעומעמות."
+  "Copy Link על קישור לקובץ מעתיק נתיב מלא, מוכן להדבקה בסייר הקבצים או בטרמינל."
+  "תווית ה-Alt על כפתור הקיפול מתעדכנת אמינות, גם אחרי השימוש הראשון."
+  "קיפול הודעות עובד פר-הודעה, עם Alt+קליק לקיפול הכל."
+  "עדכונים מגיעים אליכם תוך דקות במקום יממה, עם הודעה בצ'אט כשצריך Reload."
+  "שורת הגרסה מציגה גם את גרסת חבילת העברית."
+  "ריחוף על הודעה מציג כפתור שמקפל את כל ההודעות לשורה אחת."
+  "הבאנר לא קופץ יותר על גרסאות ישנות."
+  "מד הקונטקסט מזהה נכון את Fable 5 ואת חלון ה-1M."
+  "עודכנה בדיקת התאימות ל-Claude Code 2.1.169."
+  "כפתור מזעור בתיבת השאלה מקפל אותה לשורה, כדי לקרוא את התשובה שמאחוריה."
+  "הבאנר קופץ רק כשיש שיפור מהותי חדש, לא בכל בליטת גרסה."
+  "הוסר טלאי שכבר לא נחוץ, אנתרופיק תיקנו את הבאג."
+  "בלוקי קוד ברוחב מתאים ובלי גלילה אופקית."
+  "קליק ימני על מד הקונטקסט מציג פירוט מלא של הניצול."
   "הבאנר מציג רק שיפורים מהותיים, לא שינויים קוסמטיים."
-  "הבאנר מציג מספר גרסאות אחורה (changelog), לא רק את הנוכחית."
-  "קליק ימני על מד הקונטקסט (או על חצי הניווט) מציג את מספר הגרסה הרצה."
-  "הודעות עדכון מופיעות כבאנר בתוך הצ'אט במקום בפלט נסתר."
-  "אתחול הצ'אט כבר לא נתקע: ה-hook כמעט מיידי, במקום תקיעה של עד 60 שניות אחרי שינה."
-  "ההזרקה נטענת מיד ואמינה אחרי שינה/פתיחה מחדש, בלי לדרוש כמה reload-ים."
+  "הבאנר מציג כמה גרסאות אחורה, לא רק את הנוכחית."
+  "קליק ימני על מד הקונטקסט מציג את מספר הגרסה הרצה."
+  "הודעות עדכון מופיעות כבאנר בתוך הצ'אט."
+  "אתחול הצ'אט כבר לא נתקע אחרי שינה."
+  "ההזרקה נטענת מיד ואמינה אחרי שינה או פתיחה מחדש."
 )
 VERSION="${CHANGELOG_VERS[0]}"
 UPDATE_NOTE="${CHANGELOG_NOTES[0]}"
@@ -144,6 +146,15 @@ if [ -f "$CONF_FILE" ]; then
   [ -n "$val" ] && SHOW_MESSAGE_TIME="$val"
 fi
 
+# Read composer-autofocus flag (default: true). Gives the keyboard to the
+# prompt box when a new chat opens, which the extension stopped doing reliably.
+# See the JS block for the full why.
+COMPOSER_AUTOFOCUS="true"
+if [ -f "$CONF_FILE" ]; then
+  val="$(grep '^composer_autofocus=' "$CONF_FILE" | cut -d= -f2-)"
+  [ -n "$val" ] && COMPOSER_AUTOFOCUS="$val"
+fi
+
 # ── Signature for the fast path ───────────────────────────────────────
 # Short hash of THIS script + the ui.conf values that affect output. It is
 # written as a marker line into each patched file; if the marker is already
@@ -153,7 +164,7 @@ fi
 # if md5sum is unavailable.
 UI_SIG=""
 if command -v md5sum >/dev/null 2>&1; then
-  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s|%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" "$QUESTION_MINIMIZE" "$USER_MSG_MAX_H" "$USER_MSG_MINIMIZE" "$SHOW_MESSAGE_TIME" | md5sum 2>/dev/null | cut -c1-6)"
+  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s|%s|%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" "$QUESTION_MINIMIZE" "$USER_MSG_MAX_H" "$USER_MSG_MINIMIZE" "$SHOW_MESSAGE_TIME" "$COMPOSER_AUTOFOCUS" | md5sum 2>/dev/null | cut -c1-6)"
 fi
 UI_MARKER="Claude UI Extras sig:$UI_SIG"
 
@@ -1320,6 +1331,125 @@ CSSPATCH
     scan();
   }catch(err){ /* never break the bundle */ }
 })();
+
+/* ── Keyboard focus into the prompt box when a new chat opens ──────────
+   Anthropic focus the composer from a useEffect keyed on the session id:
+
+     if (isEditable(document.activeElement)) return;
+     R_e(() => composer.current?.focus(), () => ctx.ambientFocusAllowed());
+
+   and ambientFocusAllowed() is literally document.hasFocus(), while R_e is
+   "if (!pred()) return; fn();" - ONE synchronous shot, no rAF, no retry.
+   The chat tree is mounted with key=session.internalId, so New chat destroys
+   the whole tree including the button that was just clicked; activeElement
+   falls back to <body> and that single attempt loses the race against the
+   remount. The keyboard then belongs to nobody and the box has to be clicked.
+   Their own session-search field wraps the SAME check in a setTimeout and
+   therefore survives it, so this is an oversight, not a decision. Codex parks
+   a pending-focus request that the new composer claims on mount (rAF, 1s
+   expiry) - that is the shape copied here.
+
+   The guard stays IN, deliberately, because its intent is right: hasFocus()
+   is what stops this from yanking the caret out of the editor or out of
+   another app, and the idle() test means a box that already owns the keyboard
+   is never interrupted. We only ever act when nothing at all holds focus.
+
+   Anchor: aria-label="Message input" - verified the single occurrence in the
+   bundle on both 2.1.237 and 2.1.238, and it is a human-readable string, so
+   the minifier cannot rename it. If it ever disappears the selector simply
+   finds nothing and this block does nothing. */
+;(function(){
+  try{
+    if('__COMPOSER_AUTOFOCUS__'!=='true')return;
+    var SEL='[aria-label="Message input"][contenteditable]';
+    var seen=null;      /* composer node already handled - identity, not selector */
+    var raf=0, until=0, tail=0;
+
+    /* Is a real text field holding the keyboard? Only that may veto us.
+       This is Anthropic's own bN() test, and matching it matters: the
+       New-session button lives OUTSIDE the remounted chat subtree, so it keeps
+       dom focus straight through the rebuild. A focused button is not typing,
+       and treating it as such makes this block never fire at all. */
+    function typing(){
+      var a=document.activeElement;
+      if(!a||a===document.body||a===document.documentElement)return false;
+      if(a.tagName==='INPUT'||a.tagName==='TEXTAREA')return true;
+      return a.isContentEditable===true;
+    }
+    /* Last outcome, readable from the webview devtools console as
+       window.__ccAutofocus - this block is silent by design, so without it a
+       failure is indistinguishable from the block not running at all. */
+    function note(s){try{window.__ccAutofocus=s+' @'+new Date().toLocaleTimeString();}catch(_){}}
+    /* Caret to the end, the way the app leaves it after its own focus(). */
+    function caretEnd(el){
+      try{
+        var r=document.createRange(); r.selectNodeContents(el); r.collapse(false);
+        var s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      }catch(_){}
+    }
+    function pump(){
+      raf=0;
+      var el=seen;
+      if(!el||!el.isConnected){note('gone');return;}   /* replaced again - the next one re-arms */
+      if(typing()){note('vetoed by '+document.activeElement.tagName);return;}
+      if(document.hasFocus()){el.focus();caretEnd(el);tail=0;note('focused');return;}
+      if(Date.now()<until){raf=requestAnimationFrame(pump);return;}
+      /* ── The frame is never going to be handed focus on its own ──────────
+         On a freshly opened Claude tab NOTHING has focus: not the composer,
+         and not VSCode either - even Ctrl+Shift+P is swallowed and the command
+         palette will not open. document.hasFocus() is false and stays false;
+         one click anywhere in the box brings the whole window back to life.
+         So waiting is not a strategy; the frame focus has to be claimed.
+         Element.focus() pulls the containing iframe into the focus chain, so
+         calling it is exactly what a click does, minus the click.
+         Two conditions keep this safe. typing() above already guarantees
+         nothing in this document owns the keyboard. visibilityState proves
+         the webview is actually on screen rather than a hidden background
+         tab. And focusing an element in a NON-foreground window sets dom
+         focus only - Chromium will not raise the window or take the keyboard
+         away from another app - so a background VSCode stays untouched. */
+      if(document.visibilityState==='visible'){el.focus();caretEnd(el);tail=0;note('focused (claimed frame)');return;}
+      note('hidden - left alone');
+    }
+    /* Short, because the fallback below is the real path on a new tab. */
+    function arm(){until=Date.now()+300;tail=Date.now()+15000;if(!raf)raf=requestAnimationFrame(pump);}
+
+    /* The frame may not own the keyboard when the composer mounts. A brand new
+       webview panel can be handed focus a beat late, and the extension fires
+       workbench.action.lockEditorGroup right after opening one in a new column
+       - a workbench command, i.e. a plausible way for focus to bounce out of
+       the webview entirely. Measured in the harness: with hasFocus() false the
+       whole thing ends at activeElement=BODY, which is exactly the reported
+       symptom, and a fixed rAF deadline just gives up into it.
+       Spinning rAF for 15s would burn frames for nothing, so the short race is
+       polled and the long tail is event driven: the moment this frame actually
+       receives focus, re-run the same guarded attempt. */
+    window.addEventListener('focus',function(){
+      if(!seen||!seen.isConnected||raf||!tail||Date.now()>tail)return;
+      until=Date.now()+700;
+      raf=requestAnimationFrame(pump);
+    });
+
+    var queued=false;
+    function check(){
+      queued=false;
+      /* Cheap exit for the common case. The composer sits at the BOTTOM of the
+         document, so querySelector has to walk the whole transcript to reach
+         it - not something to repeat 60x a second on a long chat. While the
+         node we already hold is still attached there is by definition no new
+         composer, so only search once it has actually been torn out. */
+      if(seen&&seen.isConnected)return;
+      var el=document.querySelector(SEL);
+      if(el&&el!==seen){seen=el;arm();}     /* a composer we have not seen = new chat */
+    }
+    /* Coalesced to one check per frame - childList fires constantly while a
+       response streams. */
+    new MutationObserver(function(){
+      if(queued)return; queued=true; requestAnimationFrame(check);
+    }).observe(document.documentElement,{childList:true,subtree:true});
+    check();
+  }catch(err){ /* never break the bundle */ }
+})();
 JSPATCH
 
     cat >> "$jstmp" << 'JSEND'
@@ -1334,6 +1464,7 @@ JSEND
     sed -i "s|__USER_MSG_MAX_H__|$USER_MSG_MAX_H|g" "$jstmp"
     sed -i "s|__USER_MSG_MINIMIZE__|$USER_MSG_MINIMIZE|g" "$jstmp"
     sed -i "s|__SHOW_MESSAGE_TIME__|$SHOW_MESSAGE_TIME|g" "$jstmp"
+    sed -i "s|__COMPOSER_AUTOFOCUS__|$COMPOSER_AUTOFOCUS|g" "$jstmp"
     sed -i "s|__UI_SIG__|$UI_MARKER|g" "$jstmp"
     sed -i "s|__UI_VERSION__|$VERSION|g" "$jstmp"
     # The changelog JS array (built up top; apostrophes already U+2019-swapped,

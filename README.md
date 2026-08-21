@@ -15,7 +15,15 @@
 
 ## פיצ'רים
 
-### &rlm;🆕 שעה מתחת לכל הודעה
+### &rlm;🆕 צ'אט חדש נפתח עם הסמן כבר בתיבה
+
+<p dir="rtl">פותחים צ'אט חדש ומתחילים לכתוב. בלי להזיז את העכבר לתיבה, בלי קליק.</p>
+
+<p dir="rtl">בגרסאות האחרונות של התוסף, טאב צ'אט חדש נפתח כשאף אלמנט לא מחזיק במקלדת, וכל מה שמקלידים הולך לאיבוד עד שלוחצים בתוך התיבה. החבילה נותנת לתיבה את הפוקוס ברגע שהיא נוצרת.</p>
+
+<p dir="rtl">לא קורה כשהחלון ממוזער, ולא כשאתם באמצע הקלדה בשדה אחר. כיבוי: <code dir="ltr">composer_autofocus</code> ב-<code>ui.conf</code>.</p>
+
+### &rlm;שעה מתחת לכל הודעה
 
 <p dir="rtl">מתחת לכל בלוק בשיחה מופיעה עכשיו השעה: מתי שלחתם את הפרומפט, ומתי קלוד סיים לענות. מדויק עד השנייה, קטן ומעומעם בפינה, כמו בכל צ'אט אחר.</p>
 
@@ -259,6 +267,9 @@ user_msg_minimize=true
 
 # גובה הכיווץ של הודעות משתמש ארוכות, בפיקסלים (ברירת מחדל: 175, בערך 8 שורות)
 user_msg_max_height=175
+
+# פוקוס אוטומטי לתיבת ההקלדה בצ'אט חדש (true / false) - ברירת מחדל: דולק
+composer_autofocus=true
 ```
 
 <div dir="rtl">
@@ -305,7 +316,15 @@ irm https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/uni
 
 Ordered newest-first — when you come back after a while, the top of the list shows what's new.
 
-### 🆕 A time stamp under every message
+### 🆕 A new chat opens with the caret already in the box
+
+Open a new chat and start typing. No moving the mouse over, no click.
+
+Recent extension builds open a chat tab with nothing holding the keyboard, so anything you type is lost until you click inside the box. The pack hands the box focus the moment it is created.
+
+It stays out of the way when the window is minimized, or when another field already holds the caret. Turn it off with `composer_autofocus` in `ui.conf`.
+
+### A time stamp under every message
 
 Every block in the conversation now shows the time: when you sent your prompt, and when Claude finished answering. Down to the second, small and dim in the corner, like any other chat app.
 
@@ -505,6 +524,9 @@ user_msg_minimize=true
 
 # Collapse height of long user messages, in px (default: 175, ~8 lines)
 user_msg_max_height=175
+
+# Auto-focus the prompt box when a new chat opens (true / false) - default: on
+composer_autofocus=true
 ```
 
 Then re-run `bash scripts/inject-ui.sh` and reload VSCode.
