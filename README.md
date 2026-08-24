@@ -13,6 +13,63 @@
 
 </blockquote>
 
+<blockquote dir="rtl">
+
+🛑 <b>גם לכם נמאס לקבל כל הזמן שאלון-משוב על התנהגות קלוד בסשן?</b> הניחו את הקטע הזה בשיחה עם קלוד והוא ידאג להשבית את זה לתמיד.
+
+</blockquote>
+
+</div>
+
+<div dir="ltr">
+
+```
+Disable the Claude Code session feedback survey ("How is Claude doing this session?") permanently.
+
+Edit my global settings file ~/.claude/settings.json and add these two top-level keys, without removing or changing anything already in the file:
+
+  "feedbackSurveyRate": 0,
+  "env": { "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1" }
+
+Rules:
+- If an "env" key already exists, merge the variable into it. Do not replace the existing object.
+- If the file does not exist, create it containing only these keys.
+- Do not touch any other setting, hook or permission in the file.
+- When you are done, verify the file is still valid JSON and show me the final result.
+
+Both keys are real. "feedbackSurveyRate" is documented in claude-code-settings.schema.json that ships with the VSCode extension ("Probability (0-1) that the session quality survey appears when eligible"). CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY is an internal switch the CLI checks before it builds the survey config for the UI: when it is set, the config is never sent to the webview and the banner is never rendered.
+
+Then tell me to start a new session, because the setting is read when the CLI process starts.
+```
+
+</div>
+
+<div dir="rtl">
+
+> **שימו לב:** הפרומפט באנגלית בכוונה - כי קלוד צריך להבין את ההוראות ולבצע אותן.
+
+<details dir="rtl">
+<summary><b>למה הוא ממשיך לקפוץ, גם אחרי שעניתם וגם אחרי שסגרתם ב-✕</b></summary>
+<br/>
+
+<p dir="rtl">כי ה-✕ אינו ביטול. הוא נשלח כתשובה לכל דבר (<code dir="ltr">responded: "dismissed"</code>) ורק מאפס את הטיימר, ולכן לא משנה כמה פעמים עונים או סוגרים - השאלון חוזר. אין בבאנר עצמו שום מסלול של "אל תציג לי את זה שוב".</p>
+
+<p dir="rtl">והתדירות לא כתובה בקוד התוסף. היא נמשכת מהשרת בכל הפעלה, וגם הפיצ'ר כולו מגודר בדגל שכבוי כברירת מחדל. לכן חלק מהמשתמשים לא רואים אותו כמעט אף פעם, ואצל אחרים הוא קופץ כל הזמן, בלי שאיש מהם עשה משהו שונה. אלה הערכים שנמדדו במכונה אחת מול ערכי ברירת המחדל שבקוד:</p>
+
+<ul dir="rtl">
+<li><b>הסתברות להופעה:</b> 0.005 בברירת המחדל, מול <b>0.25</b> בפועל - פי 50</li>
+<li><b>המתנה בין הופעה להופעה:</b> ≈28 שעות בברירת המחדל, מול <b>12 שעות</b> בפועל</li>
+<li><b>מתי מתחילים להיות כשירים:</b> 10 דקות ו-5 תורות בברירת המחדל, מול <b>5 דקות ו-3 תורות</b> בפועל</li>
+</ul>
+
+<p dir="rtl">בהסתברות של 25% בכל תור, הסיכוי שהשאלון יופיע תוך 5 תורות הוא 76%, ותוך 10 תורות 94%. כלומר בפועל הוא מופיע כמעט בוודאות בכל פעם שחלון 12 השעות מתגלגל.</p>
+
+<p dir="rtl">שתי ההגדרות שבפרומפט חותכות אחרי שהקונפיג מהשרת כבר הגיע, ולכן הן מחזיקות בלי קשר למה שהשרת שולח. <b>אין טעם לערוך את הקאש המקומי</b> - הוא נמשך מחדש בכל פעם.</p>
+
+</details>
+
+---
+
 ## פיצ'רים
 
 ### &rlm;🆕 צ'אט חדש נפתח עם הסמן כבר בתיבה
