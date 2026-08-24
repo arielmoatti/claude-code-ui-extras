@@ -19,6 +19,8 @@
 
 </blockquote>
 
+<p align="right"><img src="screenshots/feedback-survey.png" alt="the session feedback survey banner sitting above the prompt box, with Bad / Fine / Good and a dismiss X in the corner"/></p>
+
 </div>
 
 <div dir="ltr">
