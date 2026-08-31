@@ -74,7 +74,17 @@ Then tell me to start a new session, because the setting is read when the CLI pr
 
 ## פיצ'רים
 
-### &rlm;🆕 צ'אט חדש נפתח עם הסמן כבר בתיבה
+### &rlm;🆕 ההתראה על התקרבות למכסה כבר לא חוזרת בכל צ'אט
+
+<p dir="rtl">הפס שמופיע מעל תיבת ההקלדה ומודיע שהתקרבתם למכסה - &rlm;<span dir="ltr">You’ve used 95% of your weekly limit</span> - נעלם.</p>
+
+<p dir="rtl">ה-✕ שלו לא באמת מכבה אותו. הוא מסלק אותו מהשיחה הנוכחית בלבד, וכל צ'אט חדש מחזיר אותו, שוב ושוב, עד שהמכסה מתאפסת. אין בתוסף שום דרך לבטל אותו לתמיד.</p>
+
+<p dir="rtl">ההודעה על מכסה שכבר נגמרה - &rlm;<span dir="ltr">You’ve hit your limit</span> - נשארת מוצגת. כשקלוד באמת נעצר, חשוב לראות למה.</p>
+
+<p dir="rtl">כיבוי: <code dir="ltr">hide_usage_warning</code> ב-<code>ui.conf</code>.</p>
+
+### &rlm;צ'אט חדש נפתח עם הסמן כבר בתיבה
 
 <p dir="rtl">פותחים צ'אט חדש ומתחילים לכתוב. בלי להזיז את העכבר לתיבה, בלי קליק.</p>
 
@@ -329,6 +339,9 @@ user_msg_max_height=175
 
 # פוקוס אוטומטי לתיבת ההקלדה בצ'אט חדש (true / false) - ברירת מחדל: דולק
 composer_autofocus=true
+
+# הסתרת ההתראה על התקרבות למכסה (true / false) - ברירת מחדל: דולק
+hide_usage_warning=true
 ```
 
 <div dir="rtl">
@@ -375,7 +388,17 @@ irm https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/uni
 
 Ordered newest-first — when you come back after a while, the top of the list shows what's new.
 
-### 🆕 A new chat opens with the caret already in the box
+### 🆕 The "approaching your limit" banner stops coming back
+
+The bar above the prompt box that warns you are nearing your quota — *You've used 95% of your weekly limit* — is gone.
+
+Its ✕ never really turned it off. It clears the banner for the current chat only, and every new chat brings it straight back, over and over until the quota resets. The extension offers no way to dismiss it for good.
+
+The message for a quota that has actually run out — *You've hit your limit* — is still shown. When Claude really stops, you want to know why.
+
+Turn it off with `hide_usage_warning` in `ui.conf`.
+
+### A new chat opens with the caret already in the box
 
 Open a new chat and start typing. No moving the mouse over, no click.
 
@@ -586,6 +609,9 @@ user_msg_max_height=175
 
 # Auto-focus the prompt box when a new chat opens (true / false) - default: on
 composer_autofocus=true
+
+# Hide the “approaching your limit” banner (true / false) - default: on
+hide_usage_warning=true
 ```
 
 Then re-run `bash scripts/inject-ui.sh` and reload VSCode.

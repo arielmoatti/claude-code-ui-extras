@@ -16,10 +16,11 @@ export PATH
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings. Notes are benefit-only and capped at 3 rendered lines - see
 # PROJECTS.md in the repo for the authoring rule.
-COMPATIBLE_EXT_VERSION="2.1.238"
-CHANGELOG_VERS=(  "1.32.0" "1.30.0" "1.29.0" "1.28.0" "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "1"      "0"      "1"      "1"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+COMPATIBLE_EXT_VERSION="2.1.251"
+CHANGELOG_VERS=(  "1.33.0" "1.32.0" "1.30.0" "1.29.0" "1.28.0" "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "0"      "1"      "0"      "1"      "1"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "ההתראה על התקרבות למכסה כבר לא חוזרת בכל צ'אט חדש. ההודעה על מכסה שנגמרה נשארת."
   "צ'אט חדש נפתח עם הסמן כבר בתיבת ההקלדה. אפשר להתחיל לכתוב מיד, בלי להזיז את העכבר לשם."
   "החבילה מתקינה את עצמה גם ב-Cursor, ב-Insiders וב-Remote SSH, לא רק ב-VSCode היציב."
   "שתי החבילות נטענות יחד באמינות, בלי כמה Reload. וקובץ ההגדרות שלכם כבר לא בסכנת דריסה."
@@ -93,6 +94,18 @@ if [ -f "$CONF_FILE" ]; then
   [ -n "$val" ] && RATE_LIMIT_DIAG="$val"
 fi
 
+# Read usage-warning suppression flag (default: true). Hides the advisory
+# "You've used 95% of your weekly limit" banner, which cannot be dismissed for
+# good: the extension remembers the X in a plain in-memory Set on the session
+# object (dismissedRateLimitKeys), so every new chat starts with an empty set
+# and the banner returns. The hard "You've hit your limit" message is NOT
+# hidden - see the JS block for why the split is done there and not in CSS.
+HIDE_USAGE_WARNING="true"
+if [ -f "$CONF_FILE" ]; then
+  val="$(grep '^hide_usage_warning=' "$CONF_FILE" | cut -d= -f2-)"
+  [ -n "$val" ] && HIDE_USAGE_WARNING="$val"
+fi
+
 # Read auto-update flag (default: true). Kill-switch for users who want to pin.
 AUTO_UPDATE="true"
 if [ -f "$CONF_FILE" ]; then
@@ -164,7 +177,7 @@ fi
 # if md5sum is unavailable.
 UI_SIG=""
 if command -v md5sum >/dev/null 2>&1; then
-  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s|%s|%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" "$QUESTION_MINIMIZE" "$USER_MSG_MAX_H" "$USER_MSG_MINIMIZE" "$SHOW_MESSAGE_TIME" "$COMPOSER_AUTOFOCUS" | md5sum 2>/dev/null | cut -c1-6)"
+  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" "$QUESTION_MINIMIZE" "$USER_MSG_MAX_H" "$USER_MSG_MINIMIZE" "$SHOW_MESSAGE_TIME" "$COMPOSER_AUTOFOCUS" "$HIDE_USAGE_WARNING" | md5sum 2>/dev/null | cut -c1-6)"
 fi
 UI_MARKER="Claude UI Extras sig:$UI_SIG"
 
@@ -287,6 +300,8 @@ $CSS_START
 [class*="trackOn_"] [class*="thumb_"]{background:var(--vscode-button-foreground,#fff) !important;}
 /* Per-message time stamp (the JS block below captures the times). The message block is align-items:flex-start, so the line needs its own full width before text-align can push it to the right edge. Latin digits stay LTR whatever the message language, and tabular numerals keep the line from jittering as the digits change. pointer-events:none so it can never swallow a click meant for the message. */
 .cc-msg-time{width:100%;direction:ltr;text-align:right;font-size:10px;line-height:1.4;opacity:0.45;margin-top:2px;user-select:none;font-variant-numeric:tabular-nums;pointer-events:none;}
+/* Advisory usage-limit banner. The class is put on by the JS scan below, which is the whole point: the SAME banner component renders both the advisory warning and the hard "you've hit your limit" stop, and only the text tells them apart - so this cannot be a :has([class*="usageLink_"]) rule, which would swallow the hard stop too. The banner class is hashed per build and is shared with the settings-error and browser-connection banners, hence the .cc-usage-warn qualifier rather than a bare prefix match. */
+[class*="banner_"].cc-usage-warn{display:none !important;}
 $CSS_END
 CSSPATCH
   if cmp -s "$csstmp" "$css"; then
@@ -1142,6 +1157,45 @@ CSSPATCH
   setInterval(scan,300);
 })();
 
+/* ── Hide the advisory usage-limit banner ──
+   "You've used 95% of your weekly limit · resets in 13h" reappears in every
+   new chat no matter how often it is dismissed, and it is not a bug we can
+   settle with a setting: the X calls dismissRateLimitWarning(), which records
+   the banner in `dismissedRateLimitKeys = new Set` - a plain field on the
+   session object, never written to localStorage or disk. A new chat is a new
+   session object, so the set is empty and the banner is back. The key is
+   `status:rateLimitType:resetsAt`, which also means a new reset window or a
+   status change re-shows it inside the SAME chat. With the sidebar usage
+   monitor showing the same numbers permanently, the banner is pure noise.
+
+   Why the class is applied here in JS instead of a pure CSS rule: the banner
+   component (U30 -> MV) renders BOTH the advisory warning and the hard stop
+   ("You've hit your weekly limit"), and both carry the same .usageLink_
+   button. Only the text separates them, and the hard stop is worth keeping -
+   when Claude actually stops, you want to know why. So we match the message
+   text and tag only the advisory ones; the CSS block does the hiding.
+   Re-tagged on every pass rather than latched, so a banner that turns from a
+   warning into a hard stop in place reappears correctly.
+   Gated by hide_usage_warning. */
+;(function(){
+  if('__HIDE_USAGE_WARNING__'!=='true')return;
+  /* "You've used 95% of your ..." and the percent-less "Approaching ...".
+     Both apostrophes: the bundle uses a curly one, but don't bet on it. */
+  var WARN=/^\s*(You('|’)ve used\s+\d+%\s+of\s+your|Approaching\s+)/;
+  function scan(){
+    var links=document.querySelectorAll('[class*="usageLink_"]');
+    for(var i=0;i<links.length;i++){
+      var b=links[i].closest('[class*="banner_"]');
+      if(!b)continue;
+      /* Drop the link label so it can never land inside the match. */
+      var t=(b.textContent||'').replace(/View usage/g,'');
+      b.classList.toggle('cc-usage-warn',WARN.test(t));
+    }
+  }
+  setInterval(scan,300);
+  scan();
+})();
+
 /* ── Update notification banner (in-webview, once per version) ──
    The SessionStart hook's stdout is NOT shown to the user in the VSCode
    extension, so the old "echo the update note" approach was invisible.
@@ -1465,6 +1519,7 @@ JSEND
     sed -i "s|__USER_MSG_MINIMIZE__|$USER_MSG_MINIMIZE|g" "$jstmp"
     sed -i "s|__SHOW_MESSAGE_TIME__|$SHOW_MESSAGE_TIME|g" "$jstmp"
     sed -i "s|__COMPOSER_AUTOFOCUS__|$COMPOSER_AUTOFOCUS|g" "$jstmp"
+    sed -i "s|__HIDE_USAGE_WARNING__|$HIDE_USAGE_WARNING|g" "$jstmp"
     sed -i "s|__UI_SIG__|$UI_MARKER|g" "$jstmp"
     sed -i "s|__UI_VERSION__|$VERSION|g" "$jstmp"
     # The changelog JS array (built up top; apostrophes already U+2019-swapped,
