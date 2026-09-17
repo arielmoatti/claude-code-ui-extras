@@ -17,9 +17,10 @@ export PATH
 # the JS strings. Notes are benefit-only and capped at 3 rendered lines - see
 # PROJECTS.md in the repo for the authoring rule.
 COMPATIBLE_EXT_VERSION="2.1.251"
-CHANGELOG_VERS=(  "1.33.0" "1.32.0" "1.30.0" "1.29.0" "1.28.0" "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "0"      "1"      "0"      "1"      "1"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+CHANGELOG_VERS=(  "1.34.0" "1.33.0" "1.32.0" "1.30.0" "1.29.0" "1.28.0" "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "0"      "0"      "1"      "0"    "1"      "1"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "כפתור המזעור שלנו בתיבת השאלות ירד. אנתרופיק הוסיפו כפתור קיפול משלהם, ליד ה-✕, והוא עושה את אותו דבר יותר טוב."
   "ההתראה על התקרבות למכסה כבר לא חוזרת בכל צ'אט חדש. ההודעה על מכסה שנגמרה נשארת."
   "צ'אט חדש נפתח עם הסמן כבר בתיבת ההקלדה. אפשר להתחיל לכתוב מיד, בלי להזיז את העכבר לשם."
   "החבילה מתקינה את עצמה גם ב-Cursor, ב-Insiders וב-Remote SSH, לא רק ב-VSCode היציב."
@@ -123,14 +124,10 @@ if [ -f "$CONF_FILE" ]; then
   [ -n "$val" ] && CODE_BLOCK_MAX_WIDTH="$val"
 fi
 
-# Read question-minimize flag (default: true). Adds a − button next to the ✕ in
-# the AskUserQuestion panel that collapses it to its one-line header, so the
-# answer floating behind the panel becomes readable; click again (⬜) to restore.
-QUESTION_MINIMIZE="true"
-if [ -f "$CONF_FILE" ]; then
-  val="$(grep '^question_minimize=' "$CONF_FILE" | cut -d= -f2-)"
-  [ -n "$val" ] && QUESTION_MINIMIZE="$val"
-fi
+# NOTE: the question_minimize flag (our − button on the AskUserQuestion panel)
+# was removed in v1.34.0 - see the NOTE next to the user-message collapse block
+# in the JS section. Reading the flag is gone too; a leftover question_minimize=
+# line in an old ui.conf is simply ignored.
 
 # Read user-message collapse height in px (default: 175, ~8 lines; native is 60).
 # Used BOTH as the displayed max-height (CSS) and as the overflow-decision
@@ -177,7 +174,7 @@ fi
 # if md5sum is unavailable.
 UI_SIG=""
 if command -v md5sum >/dev/null 2>&1; then
-  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s|%s|%s|%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" "$QUESTION_MINIMIZE" "$USER_MSG_MAX_H" "$USER_MSG_MINIMIZE" "$SHOW_MESSAGE_TIME" "$COMPOSER_AUTOFOCUS" "$HIDE_USAGE_WARNING" | md5sum 2>/dev/null | cut -c1-6)"
+  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s|%s|%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" "$USER_MSG_MAX_H" "$USER_MSG_MINIMIZE" "$SHOW_MESSAGE_TIME" "$COMPOSER_AUTOFOCUS" "$HIDE_USAGE_WARNING" | md5sum 2>/dev/null | cut -c1-6)"
 fi
 UI_MARKER="Claude UI Extras sig:$UI_SIG"
 
@@ -276,8 +273,6 @@ $CSS_START
 [class*="codeBlockWrapper_"] pre,.chat-markdown-part pre{white-space:pre-wrap !important;overflow-wrap:anywhere !important;overflow-x:visible !important;padding-top:36px !important;max-width:$CODE_BLOCK_MAX_WIDTH !important;}
 [class*="codeBlockWrapper_"] code{white-space:pre-wrap !important;overflow-wrap:anywhere !important;}
 [class*="codeBlockWrapper_"] [class*="copyButton_"]{right:calc(100% - $CODE_BLOCK_MAX_WIDTH + 20px) !important;border:2px solid $BORDER_COLOR !important;}
-/* Question-panel minimize: when the AskUserQuestion panel (the in-flow .permissionRequestContainer, keyed by its stable data-focused-index attr) carries the cc-q-min class, hide the question body / answer buttons / Esc hint, leaving only the one-line header (title + ✕ + our − button). Collapsing it also lets the extension's ResizeObserver shrink the transcript spacer, so the answer floating behind becomes readable. Sub-parts are hashed per build, matched by class prefix. */
-[data-focused-index].cc-q-min [class*="questionsContainer_"],[data-focused-index].cc-q-min [class*="buttonContainer_"],[data-focused-index].cc-q-min [class*="keyboardHints_"]{display:none !important;}
 /* User-message "Collapse": hovering any multi-line user message reveals a "Collapse" button (styled and anchored like the native Show more - the button lives INSIDE the position:relative expandableContainer so both share the same bottom anchor). Click folds THAT message to a single clipped line via the cc-msg-min class on its userMessage box - per-message, like the native Show more/less; Alt+click applies to ALL prompts at once. React re-renders wipe DOM classes, so the fold state lives in a JS-side set keyed by a hash of the message text and the 300ms scan re-applies the class (see the JS block). While folded we hide the native gradient + Show more/less + attachments and disable the wrapper's click-to-expand. The fold rule doubles an attribute selector to reach specificity (0,4,0): with a single one it ties/loses to our own 175px collapsed rule above (0,3,0) - both !important - and collapsed messages then refuse to fold (the v1.18.0-dev bug). When the native Show more (collapsed) or Show less (expanded) occupies the corner, our button shifts left of it via :has(); otherwise it takes the corner. Sub-part classes are hashed per build, matched by prefix. */
 .cc-msg-minbtn{display:none;position:absolute;bottom:0;right:0;margin:4px;padding:8px;border:none;border-radius:4px;cursor:pointer;font-size:.85em;align-items:center;color:var(--app-menu-background);background-color:var(--app-menu-foreground);opacity:.9;z-index:5;white-space:nowrap;}
 .cc-msg-minbtn:hover{opacity:1;transform:scale(1.05);}
@@ -990,71 +985,18 @@ CSSPATCH
   },true);
 })();
 
-/* ── Minimize button for the AskUserQuestion panel ──
-   Anthropic floats the question panel over the transcript (z-index 20, 680px
-   centered, up to 70vh tall), so when Claude answers AND asks in the same turn
-   the panel covers the answer, and the only escape today is Esc (which discards
-   the question). This injects a − button next to the panel's ✕ that collapses it
-   to its one-line header (which, since the input area is a bottom-anchored flex
-   column, parks on top of the prompt box); the glyph flips to ⬜ to restore.
-   Scoped strictly to the AskUserQuestion panel via the presence of radio/checkbox
-   options + the stable data-focused-index attr + the aria-label="Close" anchor. */
-;(function(){
-  if('__QUESTION_MINIMIZE__'!=='true')return;
-  var MIN='cc-q-min';
-  /* Swap the cloned button's icon to a minus (collapse) or square (restore),
-     matching the ✕ in size AND weight. The native ✕ is a fill-based Heroicons
-     glyph (viewBox 0 0 20 20): its strokes span ~5.2→14.8 (≈9.6 wide, centered)
-     at ~1.5 thickness. We derive our shapes from that geometry, scaled to the
-     cloned <svg>'s actual viewBox so it stays right if the icon size changes.
-     fill/stroke are set EXPLICITLY (an inherited <line> would be invisible and an
-     inherited <rect> solid, since the source icon is fill-based). Falls back to a
-     text glyph if there's no svg to clone. */
-  function setIcon(btn,restore){
-    var svg=btn.querySelector('svg');
-    if(svg){
-      var vb=(svg.getAttribute('viewBox')||'0 0 20 20').split(/\s+/);
-      var S=parseFloat(vb[2])||20, c=S/2, w=S*0.075, e=S*0.24;      /* center, stroke weight, half-extent */
-      var n=function(x){return Math.round(x*100)/100;};
-      svg.innerHTML=restore
-        ? '<rect x="'+n(c-e)+'" y="'+n(c-e)+'" width="'+n(2*e)+'" height="'+n(2*e)+'" rx="'+n(w)+'" fill="none" stroke="currentColor" stroke-width="'+n(w)+'"/>'  /* □ restore */
-        : '<rect x="'+n(c-e)+'" y="'+n(c-w/2)+'" width="'+n(2*e)+'" height="'+n(w)+'" rx="'+n(w/2)+'" fill="currentColor" stroke="none"/>';                          /* − minimize */
-    } else {
-      btn.textContent=restore?'□':'−';
-    }
-  }
-  /* Clone the native ✕ button so we inherit its exact iconButton classes and
-     icon sizing, then replace only the glyph + wire our own toggle. cloneNode
-     does NOT copy React's (delegated) onClick, so the clone won't also close. */
-  function makeBtn(panel,closeBtn){
-    var b=closeBtn.cloneNode(true);
-    b.classList.add('cc-q-minbtn');          /* marker for dedupe; carries no style */
-    setIcon(b,false);
-    b.setAttribute('aria-label','Minimize');
-    b.setAttribute('title','Minimize - read the answer behind this box');
-    b.addEventListener('mousedown',function(e){e.preventDefault();});  /* don't steal focus */
-    b.addEventListener('click',function(e){
-      e.preventDefault(); e.stopPropagation();
-      var min=panel.classList.toggle(MIN);
-      setIcon(b,min);
-      b.setAttribute('aria-label',min?'Restore':'Minimize');
-      b.setAttribute('title',min?'Restore the question':'Minimize - read the answer behind this box');
-    });
-    return b;
-  }
-  function scan(){
-    var panels=document.querySelectorAll('[data-focused-index]');
-    for(var i=0;i<panels.length;i++){
-      var p=panels[i];
-      if(p.querySelector('.cc-q-minbtn'))continue;
-      if(!p.querySelector('[role="radio"],[role="checkbox"]'))continue; /* AskUserQuestion only */
-      var x=p.querySelector('[aria-label="Close"]');
-      if(!x||!x.parentNode)continue;
-      x.parentNode.insertBefore(makeBtn(p,x),x);
-    }
-  }
-  setInterval(scan,300);
-})();
+/* NOTE: the v1.15.0 "− minimize button on the AskUserQuestion panel" was removed
+   in v1.34.0. Anthropic shipped a native equivalent: the question panel's own
+   navigation bar now renders a Collapse/Expand chevron right before the ✕, and
+   folding hides exactly what we hid (.questionsContainerFolded{display:none}
+   plus .folded > .buttonContainer / .keyboardHints). Verified in 2.1.273 and
+   2.1.274. Theirs is strictly better - the folded state is React state so it
+   survives a re-render, Escape while folded no longer cancels the question, and
+   clicking a question tab while folded reopens the panel; ours was a DOM class
+   re-applied by a 300ms scan. Keeping both just put two buttons that do the same
+   thing side by side. Full patch (CSS rule, JS block, question_minimize flag) is
+   preserved in git history at commit 3501abf / tag v1.15.0, to bring back if the
+   native chevron ever disappears or turns out to fold less than ours did. */
 
 /* ── "Collapse / Expand" button on user messages ──
    Hovering any multi-line user message reveals a "Collapse" button at its
@@ -1514,7 +1456,6 @@ JSEND
     sed -i "s|__BORDER_COLOR__|$BORDER_COLOR|g" "$jstmp"
     sed -i "s|__SHOW_CONTEXT_WINDOW__|$SHOW_CONTEXT_WINDOW|g" "$jstmp"
     sed -i "s|__RATE_LIMIT_DIAG__|$RATE_LIMIT_DIAG|g" "$jstmp"
-    sed -i "s|__QUESTION_MINIMIZE__|$QUESTION_MINIMIZE|g" "$jstmp"
     sed -i "s|__USER_MSG_MAX_H__|$USER_MSG_MAX_H|g" "$jstmp"
     sed -i "s|__USER_MSG_MINIMIZE__|$USER_MSG_MINIMIZE|g" "$jstmp"
     sed -i "s|__SHOW_MESSAGE_TIME__|$SHOW_MESSAGE_TIME|g" "$jstmp"

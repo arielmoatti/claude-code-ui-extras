@@ -143,19 +143,6 @@ Then tell me to start a new session, because the setting is read when the CLI pr
 <td width="50%" valign="top"><img src="screenshots/collapse-alt-all.jpg" alt="holding Alt switches the label to Collapse all" width="100%"/></td>
 </tr></table>
 
-### מזעור תיבת השאלות (AskUserQuestion)
-
-<p dir="rtl">כשקלוד שואל שאלה (<code dir="ltr">AskUserQuestion</code>) נפתחת תיבה צפה שמכסה את התשובה שמתחתיה, והדרך היחידה לקרוא את מה שמאחוריה הייתה ללחוץ <code dir="ltr">Esc</code> - מה שמבטל את השאלה. הפיצ'ר מוסיף כפתור <b>מזעור</b> (<code>−</code>) ליד ה-<code dir="ltr">✕</code>.</p>
-
-<ul dir="rtl">
-<li>לחיצה על <code>−</code> מקפלת את התיבה לשורה אחת שנדבקת לראש תיבת הפרומפט - והתשובה שמאחוריה נחשפת ונקראת במלואה.</li>
-<li>הכפתור מתחלף ל-<code>□</code> (מסגרת) להחזרת התיבה למצב מלא. השאלה לא מבוטלת - היא ממתינה כל הזמן.</li>
-<li>ניתן לכבות עם דגל <code>question_minimize</code> ב-<code>ui.conf</code> (ברירת מחדל: דולק).</li>
-</ul>
-
-<p align="right"><img src="screenshots/minimize-question.jpg" alt="minimize button on the question box" width="100%"/></p>
-<p align="right"><img src="screenshots/minimize-question-collapsed.jpg" alt="question box minimized, answer revealed behind it" width="100%"/></p>
-
 ### פירוט חלון הקונטקסט (קליק ימני)
 
 <p dir="rtl">קליק ימני על ה-badge של הקונטקסט פותח <b>פירוט מלא של מה שצורך את חלון ההקשר</b>, לפי קטגוריה - בדיוק כמו <code dir="ltr">/context</code> הנייטיב, אבל ישירות מה-badge בלי לפתוח פאנל.</p>
@@ -328,9 +315,6 @@ show_context_window=true
 # (כל ערך CSS: 50%, 65%, 720px; או 100% / none לביטול). ברירת מחדל: 50%
 code_block_max_width=50%
 
-# כפתור מזעור על תיבת השאלות (true / false) - ברירת מחדל: דולק
-question_minimize=true
-
 # כפתור Collapse/Expand על הודעות משתמש (true / false) - ברירת מחדל: דולק
 user_msg_minimize=true
 
@@ -454,17 +438,6 @@ Hovering any user message reveals a **Collapse** button - a click folds that mes
 <td width="50%" valign="top"><img src="screenshots/collapse-expanded.jpg" alt="expanded message with Show less pinned right" width="100%"/></td>
 <td width="50%" valign="top"><img src="screenshots/collapse-alt-all.jpg" alt="holding Alt switches the label to Collapse all" width="100%"/></td>
 </tr></table>
-
-### Minimize the question box (AskUserQuestion)
-
-When Claude asks a question (`AskUserQuestion`), it opens a floating box that covers the answer underneath it - and the only way to read what's behind it was to press `Esc`, which discards the question. This adds a **minimize** button (`−`) next to the `✕`.
-
-- Clicking `−` collapses the box to a single line parked on top of the prompt box - and the answer behind it is revealed and fully readable.
-- The glyph flips to `□` (outline) to restore the box. The question is never discarded - it stays pending the whole time.
-- Toggle via `question_minimize` flag in `ui.conf` (default: on).
-
-<p><img src="screenshots/minimize-question.jpg" alt="minimize button on the question box" width="100%"/></p>
-<p><img src="screenshots/minimize-question-collapsed.jpg" alt="question box minimized, answer revealed behind it" width="100%"/></p>
 
 ### Context window breakdown (right-click)
 
@@ -597,9 +570,6 @@ show_context_window=true
 # Max width of code blocks - the box soft-wraps instead of scrolling sideways
 # (any CSS width: 50%, 65%, 720px; or 100% / none to disable). Default: 50%
 code_block_max_width=50%
-
-# Minimize button on the question box (true / false) - default: on
-question_minimize=true
 
 # Collapse/Expand button on user messages (true / false) - default: on
 user_msg_minimize=true
