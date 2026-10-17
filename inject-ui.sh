@@ -16,10 +16,11 @@ export PATH
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings. Notes are benefit-only and capped at 3 rendered lines - see
 # PROJECTS.md in the repo for the authoring rule.
-COMPATIBLE_EXT_VERSION="2.1.274"
-CHANGELOG_VERS=(  "1.34.0" "1.33.0" "1.32.0" "1.30.0" "1.29.0" "1.28.0" "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "0"      "0"      "1"      "0"    "1"      "1"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+COMPATIBLE_EXT_VERSION="2.1.301"
+CHANGELOG_VERS=(  "1.35.0" "1.34.0" "1.33.0" "1.32.0" "1.30.0" "1.29.0" "1.28.0" "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "0"      "0"      "0"      "1"      "0"    "1"      "1"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "השעה שלנו מתחת להודעות ירדה. התוסף מציג עכשיו שעה משלו לכל הודעה, והיא נשארת נכונה גם אחרי Reload."
   "כפתור המזעור שלנו בתיבת השאלות ירד. אנתרופיק הוסיפו כפתור קיפול משלהם, ליד ה-✕, והוא עושה את אותו דבר יותר טוב."
   "ההתראה על התקרבות למכסה כבר לא חוזרת בכל צ'אט חדש. ההודעה על מכסה שנגמרה נשארת."
   "צ'אט חדש נפתח עם הסמן כבר בתיבת ההקלדה. אפשר להתחיל לכתוב מיד, בלי להזיז את העכבר לשם."
@@ -148,13 +149,9 @@ if [ -f "$CONF_FILE" ]; then
   [ -n "$val" ] && USER_MSG_MINIMIZE="$val"
 fi
 
-# Read message time-stamp flag (default: true). Puts the wall-clock time
-# under every block: when a prompt was sent, when an answer finished.
-SHOW_MESSAGE_TIME="true"
-if [ -f "$CONF_FILE" ]; then
-  val="$(grep '^show_message_time=' "$CONF_FILE" | cut -d= -f2-)"
-  [ -n "$val" ] && SHOW_MESSAGE_TIME="$val"
-fi
+# NOTE: the show_message_time flag (our clock under every message) was removed
+# in v1.35.0 - see the NOTE where the time-stamp block used to sit in the JS
+# section. A leftover show_message_time= line in an old ui.conf is ignored.
 
 # Read composer-autofocus flag (default: true). Gives the keyboard to the
 # prompt box when a new chat opens, which the extension stopped doing reliably.
@@ -174,7 +171,7 @@ fi
 # if md5sum is unavailable.
 UI_SIG=""
 if command -v md5sum >/dev/null 2>&1; then
-  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s|%s|%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" "$USER_MSG_MAX_H" "$USER_MSG_MINIMIZE" "$SHOW_MESSAGE_TIME" "$COMPOSER_AUTOFOCUS" "$HIDE_USAGE_WARNING" | md5sum 2>/dev/null | cut -c1-6)"
+  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s|%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" "$USER_MSG_MAX_H" "$USER_MSG_MINIMIZE" "$COMPOSER_AUTOFOCUS" "$HIDE_USAGE_WARNING" | md5sum 2>/dev/null | cut -c1-6)"
 fi
 UI_MARKER="Claude UI Extras sig:$UI_SIG"
 
@@ -293,8 +290,6 @@ $CSS_START
 /* Settings-menu on/off switches (Thinking, Switch models on flag, Remote control): the native ON track is background:var(--app-accent-color), which resolves to --vscode-inputOption-activeBorder, and the built-in themes leave that token a near-black gray (#2a2b2c on Dark Modern) - DARKER than the OFF track (--app-input-border, #333536) - so ON and OFF render identically and the only tell is the 14px thumb offset. Paint the ON track with the theme button accent, and the thumb with its PAIRED foreground rather than a hardcoded white: every theme defines button-foreground as contrasting with button-background, so this survives a light or white button colour, where a fixed white thumb would vanish - the same theme-token assumption that caused the original bug. Track/thumb classes are hashed per build, so match by prefix; the thumb is a child of the track, so the second rule only touches switches that are ON. */
 [class*="trackOn_"]{background:var(--vscode-button-background,#0078d4) !important;}
 [class*="trackOn_"] [class*="thumb_"]{background:var(--vscode-button-foreground,#fff) !important;}
-/* Per-message time stamp (the JS block below captures the times). The message block is align-items:flex-start, so the line needs its own full width before text-align can push it to the right edge. Latin digits stay LTR whatever the message language, and tabular numerals keep the line from jittering as the digits change. pointer-events:none so it can never swallow a click meant for the message. */
-.cc-msg-time{width:100%;direction:ltr;text-align:right;font-size:10px;line-height:1.4;opacity:0.45;margin-top:2px;user-select:none;font-variant-numeric:tabular-nums;pointer-events:none;}
 /* Advisory usage-limit banner. The class is put on by the JS scan below, which is the whole point: the SAME banner component renders both the advisory warning and the hard "you've hit your limit" stop, and only the text tells them apart - so this cannot be a :has([class*="usageLink_"]) rule, which would swallow the hard stop too. The banner class is hashed per build and is shared with the settings-error and browser-connection banners, hence the .cc-usage-warn qualifier rather than a bare prefix match. */
 [class*="banner_"].cc-usage-warn{display:none !important;}
 $CSS_END
@@ -1220,113 +1215,20 @@ CSSPATCH
   },10000);
 })();
 
-/* ── Per-message time stamp ──
-   A small dim clock under every block, like any chat app: the moment a prompt
-   was sent, and the moment Claude finished answering. Times live in memory
-   only - same contract as the collapse state above: they survive the React
-   re-renders you hit while scrolling, and reset on reload. Nothing is stored,
-   so there is nothing to grow or clean up. Gated by show_message_time. */
-;(function(){
-  if('__SHOW_MESSAGE_TIME__'!=='true')return;
-  try{
-    if(window.__ccMsgTimeInstalled)return;
-    window.__ccMsgTimeInstalled=true;
-
-    var CLS='cc-msg-time';
-    var times={};        /* key -> ms   (survives re-renders, resets on reload) */
-    var historical={};   /* keys that were already on screen when we started */
-    var ready=false;
-
-    function pad(n){return n<10?'0'+n:''+n;}
-    function fmt(ms){var d=new Date(ms);return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());}
-    /* Message blocks are NOT direct children of the container - the app wraps
-       each exchange in a turn_ element (messagesContainer_ > turn_ > message_),
-       and that layer could change again. So: match by descent, drop anything
-       nested inside another message block, and fall back to a document-wide
-       query if the container class is ever renamed. Note the lowercase m in
-       message_ - it deliberately misses userMessage_, errorMessage_,
-       slashCommandMessage_ and friends, which all capitalise it. */
-    function blocks(){
-      var all=document.querySelectorAll('[class*="messagesContainer_"] [class*="message_"]');
-      if(!all.length)all=document.querySelectorAll('[class*="message_"]');
-      var out=[];
-      for(var i=0;i<all.length;i++){
-        var el=all[i],p=el.parentElement;
-        if(p&&p.closest&&p.closest('[class*="message_"]'))continue;   /* nested block */
-        out.push(el);
-      }
-      return out;
-    }
-    function isUser(el){return !!el.querySelector('[class*="userMessage_"]');}
-
-    /* Same cheap djb2 the collapse block uses - no node cloning. Our own stamp
-       line is skipped, otherwise appending it would change the hash and the
-       key would drift on every pass. */
-    function hashOf(el){
-      var s='',k=el.childNodes;
-      for(var j=0;j<k.length;j++){
-        var c=k[j];
-        if(c.nodeType===1&&String(c.className||'').indexOf(CLS)!==-1)continue;
-        s+=c.textContent||'';
-      }
-      var h=5381,i=s.length;while(i)h=((h*33)^s.charCodeAt(--i))>>>0;
-      return h+'_'+s.length;
-    }
-    function keyOf(el,i){return i+'_'+hashOf(el);}
-
-    function stamp(el,ms){
-      var line=null,k=el.childNodes;
-      for(var j=0;j<k.length;j++){if(k[j].nodeType===1&&String(k[j].className||'').indexOf(CLS)!==-1){line=k[j];break;}}
-      if(!line){line=document.createElement('div');line.className=CLS;el.appendChild(line);}
-      var t=fmt(ms);
-      if(line.textContent!==t)line.textContent=t;
-    }
-
-    /* Blocks already on screen at startup are history (reload, or switching
-       back into an older session). There is no way to know when they actually
-       happened, so leave them blank rather than stamp them with "now". */
-    setTimeout(function(){
-      var list=blocks();
-      for(var i=0;i<list.length;i++)historical[keyOf(list[i],i)]=true;
-      ready=true;
-    },1500);
-
-    function scan(){
-      var list=blocks();
-      for(var i=0;i<list.length;i++){
-        var el=list[i],k=keyOf(el,i);
-        /* A prompt is final the moment it appears, so it is stamped here. An
-           answer is still streaming - its time is set by the result handler
-           below, once the turn is actually over. */
-        if(times[k]===undefined&&ready&&!historical[k]&&isUser(el))times[k]=Date.now();
-        if(times[k]!==undefined)stamp(el,times[k]);
-      }
-    }
-
-    /* result io_message = the turn is over (same event the cost badge uses).
-       The last block is whatever Claude just finished with, so that is the one
-       that gets the finish time. */
-    window.addEventListener('message',function(e){
-      try{
-        var d=e.data;
-        if(!d||d.type!=='from-extension')return;
-        var msg=d.message;
-        if(!msg||msg.type!=='io_message')return;
-        var m=msg.message;
-        if(!m||m.type!=='result')return;
-        var list=blocks();
-        if(!list.length)return;
-        var i=list.length-1,el=list[i];
-        if(isUser(el))return;          /* nothing was actually answered */
-        times[keyOf(el,i)]=Date.now();
-        scan();
-      }catch(_){}
-    });
-
-    setInterval(scan,300);
-    scan();
-  }catch(err){ /* never break the bundle */ }
-})();
+/* NOTE: the v1.28.0 per-message time stamp was removed in v1.35.0. The
+   extension now ships its own (claudeCode.showMessageTimestamps, on by
+   default; verified in 2.1.301): a <time> line on every prompt and answer, fed
+   by the message's createdAt - the timestamp recorded in the transcript - so it
+   stays right after a reload and in older sessions, adds a date line where the
+   day changes, and shows the full date on hover. Format comes from timeFormat
+   in ~/.claude/settings.json (auto = 12-hour, 12-hour, 24-hour, 24-hour-utc, or
+   a pattern such as %H:%M:%S). Ours had no real source, only the clock at the
+   moment a block first appeared, keyed by index + text: a session that loaded
+   after the 1.5s "already on screen" snapshot, or any change to a block's text
+   (the native stamp line now sits inside the same block), made every prompt
+   look new, and all of them got the same "now". Full patch (CSS rule, JS block,
+   show_message_time flag) is preserved in git history at commit 8ba30ec
+   (v1.34.0), to bring back if the native stamp ever disappears. */
 
 /* ── Keyboard focus into the prompt box when a new chat opens ──────────
    Anthropic focus the composer from a useEffect keyed on the session id:
@@ -1458,7 +1360,6 @@ JSEND
     sed -i "s|__RATE_LIMIT_DIAG__|$RATE_LIMIT_DIAG|g" "$jstmp"
     sed -i "s|__USER_MSG_MAX_H__|$USER_MSG_MAX_H|g" "$jstmp"
     sed -i "s|__USER_MSG_MINIMIZE__|$USER_MSG_MINIMIZE|g" "$jstmp"
-    sed -i "s|__SHOW_MESSAGE_TIME__|$SHOW_MESSAGE_TIME|g" "$jstmp"
     sed -i "s|__COMPOSER_AUTOFOCUS__|$COMPOSER_AUTOFOCUS|g" "$jstmp"
     sed -i "s|__HIDE_USAGE_WARNING__|$HIDE_USAGE_WARNING|g" "$jstmp"
     sed -i "s|__UI_SIG__|$UI_MARKER|g" "$jstmp"

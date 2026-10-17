@@ -92,16 +92,6 @@ Then tell me to start a new session, because the setting is read when the CLI pr
 
 <p dir="rtl">לא קורה כשהחלון ממוזער, ולא כשאתם באמצע הקלדה בשדה אחר. כיבוי: <code dir="ltr">composer_autofocus</code> ב-<code>ui.conf</code>.</p>
 
-### &rlm;שעה מתחת לכל הודעה
-
-<p dir="rtl">מתחת לכל בלוק בשיחה מופיעה עכשיו השעה: מתי שלחתם את הפרומפט, ומתי קלוד סיים לענות. מדויק עד השנייה, קטן ומעומעם בפינה, כמו בכל צ'אט אחר.</p>
-
-<p dir="rtl">זה עוזר בעיקר כשגוללים אחורה בשיחה ארוכה: רואים מיד מתי כל דבר קרה, וכמה זמן עבר בין הודעה להודעה.</p>
-
-<p dir="rtl">השעות נשמרות כל עוד החלון פתוח. אחרי Reload הודעות ישנות יופיעו בלי שעה, כי אין דרך לדעת בדיעבד מתי הן נשלחו. כיבוי: <code dir="ltr">show_message_time</code> ב-<code>ui.conf</code>.</p>
-
-<p align="right"><img src="screenshots/message-time.jpg" alt="the time under a prompt and under the answer that followed it" width="100%"/></p>
-
 ### &rlm;מתגי ההגדרות מראים סוף סוף אם הם דלוקים
 
 <p dir="rtl">המתגים בתפריט ההגדרות (<b>Thinking</b>, <b>Switch models when a message is flagged</b>, <b>Remote control at startup</b>) נראו אותו דבר בין אם הם דלוקים ובין אם לא: אפור על אפור. הדרך היחידה לדעת הייתה להסתכל באיזה צד יושב העיגול הקטן, והבדל של 14 פיקסלים כמעט ולא נראה.</p>
@@ -389,16 +379,6 @@ Open a new chat and start typing. No moving the mouse over, no click.
 Recent extension builds open a chat tab with nothing holding the keyboard, so anything you type is lost until you click inside the box. The pack hands the box focus the moment it is created.
 
 It stays out of the way when the window is minimized, or when another field already holds the caret. Turn it off with `composer_autofocus` in `ui.conf`.
-
-### A time stamp under every message
-
-Every block in the conversation now shows the time: when you sent your prompt, and when Claude finished answering. Down to the second, small and dim in the corner, like any other chat app.
-
-It helps most when you scroll back through a long conversation: you can see at a glance when things happened, and how much time passed between one message and the next.
-
-The times last as long as the window stays open. After a reload, older messages show no time - there is no way to know after the fact when they were sent. Turn it off with `show_message_time` in `ui.conf`.
-
-<p align="right"><img src="screenshots/message-time.jpg" alt="the time under a prompt and under the answer that followed it" width="100%"/></p>
 
 ### Settings toggles finally show whether they are ON
 
