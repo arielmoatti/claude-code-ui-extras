@@ -74,7 +74,15 @@ Then tell me to start a new session, because the setting is read when the CLI pr
 
 ## פיצ'רים
 
-### &rlm;🆕 ההתראה על התקרבות למכסה כבר לא חוזרת בכל צ'אט
+### &rlm;🆕 חץ למעלה כבר לא מוחק את מה שכתבתם
+
+<p dir="rtl">תיבת ההקלדה מחזירה פרומפטים קודמים כמו טרמינל: חץ למעלה, כשהסמן על התו הראשון בתיבה, מחליף את כל מה שבתוכה בפרומפט הקודם. בטיוטה ארוכה זו מלכודת. חץ למעלה בשורה העליונה מעביר קודם את הסמן לתחילת השורה, והחץ הבא מוחק הכל. Ctrl+Z לא מחזיר, וחץ למטה מחזיר רק אם הסמן בדיוק בסוף הטקסט.</p>
+
+<p dir="rtl">עכשיו ההיסטוריה נפתחת רק מתיבה ריקה. כשיש טקסט בתיבה, החיצים רק מזיזים את הסמן. בפרומפט שהבאתם מההיסטוריה אפשר להמשיך לדפדף כל עוד לא שיניתם אותו, וברגע שערכתם אותו גם הוא מוגן. הרשימות של <code>/</code> ושל <code>@</code> ממשיכות לעבוד עם החיצים כרגיל.</p>
+
+<p dir="rtl">כיבוי: <code dir="ltr">history_only_when_empty</code> ב-<code>ui.conf</code>.</p>
+
+### &rlm;ההתראה על התקרבות למכסה כבר לא חוזרת בכל צ'אט
 
 <p dir="rtl">הפס שמופיע מעל תיבת ההקלדה ומודיע שהתקרבתם למכסה - &rlm;<span dir="ltr">You’ve used 95% of your weekly limit</span> - נעלם.</p>
 
@@ -84,25 +92,13 @@ Then tell me to start a new session, because the setting is read when the CLI pr
 
 <p dir="rtl">כיבוי: <code dir="ltr">hide_usage_warning</code> ב-<code>ui.conf</code>.</p>
 
-### &rlm;צ'אט חדש נפתח עם הסמן כבר בתיבה
+### &rlm;צ'אט חדש מכפתור New session נפתח עם הסמן כבר בתיבה
 
-<p dir="rtl">פותחים צ'אט חדש ומתחילים לכתוב. בלי להזיז את העכבר לתיבה, בלי קליק.</p>
+<p dir="rtl">לוחצים על <b>New session</b> (למשל ב-Session Manager) ומתחילים לכתוב. בלי להזיז את העכבר לתיבה, בלי קליק.</p>
 
-<p dir="rtl">בגרסאות האחרונות של התוסף, טאב צ'אט חדש נפתח כשאף אלמנט לא מחזיק במקלדת, וכל מה שמקלידים הולך לאיבוד עד שלוחצים בתוך התיבה. החבילה נותנת לתיבה את הפוקוס ברגע שהיא נוצרת.</p>
+<p dir="rtl">צ'אט שנפתח מהכפתור הזה נפתח כשאף אלמנט לא מחזיק במקלדת, וכל מה שמקלידים הולך לאיבוד עד שלוחצים בתוך התיבה. החבילה נותנת לתיבה את הפוקוס ברגע שהיא נוצרת. צ'אט שנפתח מהסמל של Claude או משורת הסטטוס מקבל פוקוס מהתוסף עצמו, ושם אין לחבילה מה לעשות.</p>
 
 <p dir="rtl">לא קורה כשהחלון ממוזער, ולא כשאתם באמצע הקלדה בשדה אחר. כיבוי: <code dir="ltr">composer_autofocus</code> ב-<code>ui.conf</code>.</p>
-
-### &rlm;מתגי ההגדרות מראים סוף סוף אם הם דלוקים
-
-<p dir="rtl">המתגים בתפריט ההגדרות (<b>Thinking</b>, <b>Switch models when a message is flagged</b>, <b>Remote control at startup</b>) נראו אותו דבר בין אם הם דלוקים ובין אם לא: אפור על אפור. הדרך היחידה לדעת הייתה להסתכל באיזה צד יושב העיגול הקטן, והבדל של 14 פיקסלים כמעט ולא נראה.</p>
-
-<p dir="rtl">למה זה קרה: את הצבע של המצב הדלוק התוסף לוקח מערכת הנושא, וערכות ברירת המחדל של VSCode נותנות שם אפור כל כך כהה שהוא כמעט שחור. כך יצא שהמצב הדלוק נראה אפילו כהה יותר מהכבוי.</p>
-
-<p dir="rtl">עכשיו <b>מתג דלוק</b> מקבל את הצבע הבולט של ערכת הנושא שלכם, והעיגול שעליו נצבע בצבע שמנוגד לו. אפשר לראות במבט אחד מה דלוק ומה לא, בכל ערכה, כהה או בהירה.</p>
-
-<p align="right"><img src="screenshots/settings-toggle-color.jpg" alt="ON toggle painted in the theme accent colour, OFF toggle gray"/></p>
-
-<p dir="rtl"><b>תודה מנחם!</b> (<a href="https://github.com/amipir8">amipir8</a>)</p>
 
 ### &rlm;קובץ PDF (וכל קובץ בינארי) נפתח בתוכנה הנכונה
 
@@ -162,9 +158,10 @@ Then tell me to start a new session, because the setting is read when the CLI pr
 <p dir="rtl">‏Badge קטן בפינה הימנית של אזור הקלט שמציג <b>כמה מחלון הקונטקסט של השיחה הנוכחית נצרך כרגע</b>. לכל חלון VSCode חיווי משלו, בהתאם לשיחה שלו.</p>
 
 <ul dir="rtl">
-<li>פורמט: <code dir="ltr">349.4k / 1.0M (35%)</code> — טוקנים שנצרכו / תקרת המודל / אחוז</li>
-<li>זיהוי אוטומטי של תקרה — 200K או 1M (מודל עם חלון מורחב), מבוסס על ה-usage בפועל</li>
-<li>צבעים לפי שימוש: ירוק (&lt;50%), כתום (50-79%), אדום (≥80%)</li>
+<li>פורמט: <code dir="ltr">349.4k / 1.0M (35%)</code> - טוקנים שנצרכו / גודל החלון של המודל / אחוז</li>
+<li>התקרה היא הגודל האמיתי של חלון המודל, כפי ש-Claude Code מדווח אותו</li>
+<li>ריחוף על החיווי מראה כמה נשאר עד הדחיסה האוטומטית של השיחה, ובאיזו נקודה היא תקרה</li>
+<li>צבעים לפי שימוש: ירוק (מתחת ל-30%), צהוב (30-39%), כתום (40-49%), אדום (50% ומעלה)</li>
 <li>ניתן לכבות/להדליק עם דגל <code>show_context_window</code> ב-<code>ui.conf</code> (ברירת מחדל: דולק)</li>
 </ul>
 
@@ -314,6 +311,9 @@ user_msg_max_height=175
 # פוקוס אוטומטי לתיבת ההקלדה בצ'אט חדש (true / false) - ברירת מחדל: דולק
 composer_autofocus=true
 
+# היסטוריית פרומפטים בחצים רק מתיבה ריקה (true / false) - ברירת מחדל: דולק
+history_only_when_empty=true
+
 # הסתרת ההתראה על התקרבות למכסה (true / false) - ברירת מחדל: דולק
 hide_usage_warning=true
 ```
@@ -362,7 +362,15 @@ irm https://raw.githubusercontent.com/arielmoatti/claude-code-ui-extras/main/uni
 
 Ordered newest-first — when you come back after a while, the top of the list shows what's new.
 
-### 🆕 The "approaching your limit" banner stops coming back
+### 🆕 ArrowUp no longer wipes what you typed
+
+The prompt box recalls earlier prompts terminal-style: ArrowUp with the caret on the very first character replaces everything in the box with your previous prompt. On a long draft that is a trap. ArrowUp on the top line first moves the caret to the start of the line, and the next press wipes it all. Ctrl+Z does not bring it back, and ArrowDown only does if the caret sits exactly at the end of the text.
+
+Now history opens only from an empty box. With text in the box, the arrows just move the caret. A prompt you recalled can still be browsed as long as you have not changed it; once you edit it, it is protected too. The `/` and `@` suggestion lists keep working with the arrows as usual.
+
+Turn it off with `history_only_when_empty` in `ui.conf`.
+
+### The "approaching your limit" banner stops coming back
 
 The bar above the prompt box that warns you are nearing your quota — *You've used 95% of your weekly limit* — is gone.
 
@@ -372,25 +380,13 @@ The message for a quota that has actually run out — *You've hit your limit* �
 
 Turn it off with `hide_usage_warning` in `ui.conf`.
 
-### A new chat opens with the caret already in the box
+### New session opens with the caret already in the box
 
-Open a new chat and start typing. No moving the mouse over, no click.
+Click **New session** (in the Session Manager, for example) and start typing. No moving the mouse over, no click.
 
-Recent extension builds open a chat tab with nothing holding the keyboard, so anything you type is lost until you click inside the box. The pack hands the box focus the moment it is created.
+A chat opened from that button starts with nothing holding the keyboard, so anything you type is lost until you click inside the box. The pack hands the box focus the moment it is created. A chat opened from the Claude icon or the status bar already gets focus from the extension itself, so there the pack has nothing to do.
 
 It stays out of the way when the window is minimized, or when another field already holds the caret. Turn it off with `composer_autofocus` in `ui.conf`.
-
-### Settings toggles finally show whether they are ON
-
-The switches in the settings menu (**Thinking**, **Switch models when a message is flagged**, **Remote control at startup**) looked the same whether they were on or off: gray on gray. The only way to tell was which side the little circle sat on, and 14 pixels is hard to see.
-
-Why it happened: the extension takes the colour of the ON state from your theme, and the built-in VSCode themes leave it a gray so dark it is almost black. That made the ON state look even darker than the OFF one.
-
-An ON switch now uses **your theme highlight colour**, with the circle in a colour that contrasts against it. One glance tells you what is on, on any theme, dark or light.
-
-<p align="right"><img src="screenshots/settings-toggle-color.jpg" alt="ON toggle painted in the theme accent colour, OFF toggle gray"/></p>
-
-**Thanks Menachem!** (<a href="https://github.com/amipir8">amipir8</a>)
 
 ### PDFs (and every binary file) open in the right app
 
@@ -443,9 +439,10 @@ Code blocks (and copy blocks) are capped to a configurable width - default 50% o
 
 A small badge in the right corner of the input area showing **how much of the current conversation's context window is in use**. Each VSCode window has its own badge, reflecting its own session.
 
-- Format: `349.4k / 1.0M (35%)` — used tokens / model cap / percentage
-- Auto-detects cap — 200K or 1M (extended-window model), based on live usage data
-- Color thresholds: green (<50%), orange (50-79%), red (≥80%)
+- Format: `349.4k / 1.0M (35%)` - used tokens / the model's context window / percentage
+- The cap is the model's real context window, as Claude Code reports it
+- Hover the badge to see how much is left before the conversation is auto-compacted, and at what point that happens
+- Color thresholds: green (<30%), yellow (30-39%), orange (40-49%), red (≥50%)
 - Toggle via `show_context_window` flag in `ui.conf` (default: on)
 
 <p><img src="screenshots/context-window.jpg" alt="context window badge" height="90"/></p>
@@ -559,6 +556,9 @@ user_msg_max_height=175
 
 # Auto-focus the prompt box when a new chat opens (true / false) - default: on
 composer_autofocus=true
+
+# Arrow-key prompt history only from an empty box (true / false) - default: on
+history_only_when_empty=true
 
 # Hide the “approaching your limit” banner (true / false) - default: on
 hide_usage_warning=true

@@ -16,10 +16,14 @@ export PATH
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings. Notes are benefit-only and capped at 3 rendered lines - see
 # PROJECTS.md in the repo for the authoring rule.
-COMPATIBLE_EXT_VERSION="2.1.301"
-CHANGELOG_VERS=(  "1.35.0" "1.34.0" "1.33.0" "1.32.0" "1.30.0" "1.29.0" "1.28.0" "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "0"      "0"      "0"      "1"      "0"    "1"      "1"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+COMPATIBLE_EXT_VERSION="2.1.310"
+CHANGELOG_VERS=(  "1.39.0" "1.38.0" "1.37.0" "1.36.0" "1.35.0" "1.34.0" "1.33.0" "1.32.0" "1.30.0" "1.29.0" "1.28.0" "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "1"      "0"      "0"      "1"      "0"   "0"      "0"      "1"   "0"    "1"      "1"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "מד הקונטקסט מציג את גודל החלון האמיתי, ובריחוף כמה נשאר עד דחיסה אוטומטית."
+  "הצבע למתגים והטיפול בהודעות מערכת ירדו. התוסף עושה את שניהם בעצמו."
+  "הודעה שמוצגת במלואה כבר לא מקבלת הצללה וכפתור Show more מיותר."
+  "חץ למעלה כבר לא מחליף טיוטה שכתבתם בפרומפט הקודם. ההיסטוריה נפתחת רק מתיבה ריקה."
   "השעה שלנו מתחת להודעות ירדה. התוסף מציג עכשיו שעה משלו לכל הודעה, והיא נשארת נכונה גם אחרי Reload."
   "כפתור המזעור שלנו בתיבת השאלות ירד. אנתרופיק הוסיפו כפתור קיפול משלהם, ליד ה-✕, והוא עושה את אותו דבר יותר טוב."
   "ההתראה על התקרבות למכסה כבר לא חוזרת בכל צ'אט חדש. ההודעה על מכסה שנגמרה נשארת."
@@ -162,6 +166,15 @@ if [ -f "$CONF_FILE" ]; then
   [ -n "$val" ] && COMPOSER_AUTOFOCUS="$val"
 fi
 
+# Read arrow-key history guard flag (default: true). The prompt box recalls
+# earlier prompts terminal-style on ArrowUp, replacing whatever is in the box;
+# with this on, history can only be entered from an EMPTY box. See the JS block.
+HISTORY_ONLY_WHEN_EMPTY="true"
+if [ -f "$CONF_FILE" ]; then
+  val="$(grep '^history_only_when_empty=' "$CONF_FILE" | cut -d= -f2-)"
+  [ -n "$val" ] && HISTORY_ONLY_WHEN_EMPTY="$val"
+fi
+
 # ── Signature for the fast path ───────────────────────────────────────
 # Short hash of THIS script + the ui.conf values that affect output. It is
 # written as a marker line into each patched file; if the marker is already
@@ -171,7 +184,7 @@ fi
 # if md5sum is unavailable.
 UI_SIG=""
 if command -v md5sum >/dev/null 2>&1; then
-  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s|%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" "$USER_MSG_MAX_H" "$USER_MSG_MINIMIZE" "$COMPOSER_AUTOFOCUS" "$HIDE_USAGE_WARNING" | md5sum 2>/dev/null | cut -c1-6)"
+  UI_SIG="$(md5sum "${BASH_SOURCE[0]}" 2>/dev/null | cut -c1-10)-$(printf '%s|%s|%s|%s|%s|%s|%s|%s|%s' "$BORDER_COLOR" "$SHOW_CONTEXT_WINDOW" "$RATE_LIMIT_DIAG" "$CODE_BLOCK_MAX_WIDTH" "$USER_MSG_MAX_H" "$USER_MSG_MINIMIZE" "$COMPOSER_AUTOFOCUS" "$HIDE_USAGE_WARNING" "$HISTORY_ONLY_WHEN_EMPTY" | md5sum 2>/dev/null | cut -c1-6)"
 fi
 UI_MARKER="Claude UI Extras sig:$UI_SIG"
 
@@ -254,23 +267,34 @@ for dir in "$HOME"/.vscode{,-insiders,-server}/extensions/anthropic.claude-code-
   # and the cmp-skip below would never converge (file grows 1 byte/run).
   sed -i -e :a -e '/^[[:space:]]*$/{$d;N;ba}' "$csstmp"
 
+  # NOTE: the v1.27.0 settings-switch colour (two trackOn_ rules) was removed in
+  # v1.38.0. The extension fixed it upstream: --app-accent-color, which paints
+  # the ON track, now resolves to --app-button-background (the theme's button
+  # colour) instead of the near-black --vscode-inputOption-activeBorder - the
+  # very token our rule switched to, so the rule had stopped changing anything.
+  # Verified in 2.1.309. The rules are kept in git history (tag v1.37.0 and
+  # earlier) in case the token ever regresses.
+  # NOTE: the v1.21.0/v1.24.0 harness-message rules (cc-harness-msg: no border,
+  # dimmed, not sticky, no Rewind bar) were removed in v1.38.0 together with the
+  # tagging in the collapse scan. The webview now parses task notifications,
+  # wrapped system notices and slash-command output into their own content types
+  # (Z3: taskNotification / wrappedNotice / slashCommandResult) and renders them
+  # as a quiet row or not at all - never through the prompt bubble - so the tag
+  # never matched anything. Verified in 2.1.309 and live on 2.1.310 (a
+  # background-task notification rendered nothing). Kept in git history.
   cat >> "$csstmp" << CSSPATCH
 
 $CSS_START
 /* $UI_MARKER */
 [class*="userMessage_"]{border:2px solid $BORDER_COLOR !important;}
-.interactive-request .chat-markdown-part{border:2px solid $BORDER_COLOR !important;border-radius:4px;padding:4px 8px;}
 [class*="sessionItem_"]{height:auto !important;min-height:28px !important;align-items:flex-start !important;padding-top:4px !important;padding-bottom:4px !important;}
 [class*="sessionName_"]{white-space:normal !important;display:-webkit-box !important;-webkit-line-clamp:3 !important;-webkit-box-orient:vertical !important;overflow:hidden !important;}
 [class*="userMessage_"] [class*="content_"][class*="collapsed_"]{max-height:${USER_MSG_MAX_H}px !important;}
-[class*="sessionsButtonText_"]{white-space:normal !important;display:-webkit-box !important;-webkit-line-clamp:3 !important;-webkit-box-orient:vertical !important;overflow:hidden !important;}
-[class*="sessionsButtonContent_"]{max-width:unset !important;}
-[class*="sessionsButton_"]{max-width:unset !important;}
 /* Cap code/copy blocks to a configurable width (default 50%) + soft-wrap: visual wrap only (copy stays one logical line per paragraph), no horizontal scroll, box doesn't span the full chat. Cap the <pre> but keep the WRAPPER full width, so hovering anywhere across the full row still reveals the copy button (the hover lives on the wrapper). Position the button at the block's right edge via calc(100% - width) so it tracks the cap instead of sitting at the window edge. padding-top reserves a strip so the button doesn't cover the first line. Border matches the user-message border ($BORDER_COLOR). Wrapper/button classes are hashed per build, so match by prefix. */
-[class*="codeBlockWrapper_"] pre,.chat-markdown-part pre{white-space:pre-wrap !important;overflow-wrap:anywhere !important;overflow-x:visible !important;padding-top:36px !important;max-width:$CODE_BLOCK_MAX_WIDTH !important;}
+[class*="codeBlockWrapper_"] pre{white-space:pre-wrap !important;overflow-wrap:anywhere !important;overflow-x:visible !important;padding-top:36px !important;max-width:$CODE_BLOCK_MAX_WIDTH !important;}
 [class*="codeBlockWrapper_"] code{white-space:pre-wrap !important;overflow-wrap:anywhere !important;}
 [class*="codeBlockWrapper_"] [class*="copyButton_"]{right:calc(100% - $CODE_BLOCK_MAX_WIDTH + 20px) !important;border:2px solid $BORDER_COLOR !important;}
-/* User-message "Collapse": hovering any multi-line user message reveals a "Collapse" button (styled and anchored like the native Show more - the button lives INSIDE the position:relative expandableContainer so both share the same bottom anchor). Click folds THAT message to a single clipped line via the cc-msg-min class on its userMessage box - per-message, like the native Show more/less; Alt+click applies to ALL prompts at once. React re-renders wipe DOM classes, so the fold state lives in a JS-side set keyed by a hash of the message text and the 300ms scan re-applies the class (see the JS block). While folded we hide the native gradient + Show more/less + attachments and disable the wrapper's click-to-expand. The fold rule doubles an attribute selector to reach specificity (0,4,0): with a single one it ties/loses to our own 175px collapsed rule above (0,3,0) - both !important - and collapsed messages then refuse to fold (the v1.18.0-dev bug). When the native Show more (collapsed) or Show less (expanded) occupies the corner, our button shifts left of it via :has(); otherwise it takes the corner. Sub-part classes are hashed per build, matched by prefix. */
+/* User-message "Collapse": hovering any multi-line user message reveals a "Collapse" button (styled and anchored like the native Show more - the button lives INSIDE the position:relative expandableContainer so both share the same bottom anchor). Click folds THAT message to a single clipped line via the cc-msg-min class on its userMessage box - per-message, like the native Show more/less; Alt+click applies to ALL prompts at once. React re-renders wipe DOM classes, so the fold state lives in a JS-side set keyed by a hash of the message text and the 300ms scan re-applies the class (see the JS block). While folded we hide the native gradient + Show more/less + attachments. The fold rule doubles an attribute selector to reach specificity (0,4,0): with a single one it ties/loses to our own 175px collapsed rule above (0,3,0) - both !important - and collapsed messages then refuse to fold (the v1.18.0-dev bug). When the native Show more (collapsed) or Show less (expanded) occupies the corner, our button shifts left of it via :has(); otherwise it takes the corner. Sub-part classes are hashed per build, matched by prefix. */
 .cc-msg-minbtn{display:none;position:absolute;bottom:0;right:0;margin:4px;padding:8px;border:none;border-radius:4px;cursor:pointer;font-size:.85em;align-items:center;color:var(--app-menu-background);background-color:var(--app-menu-foreground);opacity:.9;z-index:5;white-space:nowrap;}
 .cc-msg-minbtn:hover{opacity:1;transform:scale(1.05);}
 [class*="userMessage_"]:hover .cc-msg-minbtn{display:flex;}
@@ -278,18 +302,8 @@ $CSS_START
 [class*="userMessage_"].cc-msg-min .cc-msg-minbtn{right:0 !important;padding:2px 8px;margin:1px 4px;}  /* folded box is one line (~20px); slim the button so it fits inside instead of bleeding over the border */
 [class*="userMessage_"].cc-msg-min [class*="content_"][class*="content_"]{max-height:1.5em !important;overflow:hidden !important;}
 [class*="userMessage_"].cc-msg-min [class*="truncationGradient_"],[class*="userMessage_"].cc-msg-min [class*="buttonContainer_"],[class*="userMessage_"].cc-msg-min [class*="userMessageAttachments_"]{display:none !important;}
-[class*="userMessage_"].cc-msg-min [class*="contentWrapper_"]{pointer-events:none !important;}
-/* Harness-injected notifications (task-notification etc.) are sent INTO the conversation as user-role messages, so the webview's user-message component (U8t) renders them with the FULL prompt chrome as if the user typed them: the border, the sticky-to-top header (stickyHeader is applied to any text message), and the Rewind/Fork action bar. The 300ms scan tags them cc-harness-msg by their leading XML tag; here we strip all that chrome so they read as passive system output, not as your prompt. (0,2,0) outranks the base border rule (0,1,0), both !important. */
-[class*="userMessage_"].cc-harness-msg{border:none !important;opacity:0.75;}
-/* Kill the sticky-to-top behaviour: stickyHeader lives on the ancestor message_ container, so reach it via :has() and pin it static. (0,3,0) + !important beats the native .message_.stickyHeader_ (0,2,0). */
-[class*="message_"][class*="stickyHeader_"]:has(.cc-harness-msg){position:static !important;}
-/* Hide the native Rewind/Fork action bar: inside the inner userMessageContainer_ it is the sibling rendered right before .userMessage_, so it is the only direct child that is NOT the userMessage box. (Attachments live INSIDE .userMessage_, so they are untouched.) */
-[class*="userMessageContainer_"]:has(> [class*="userMessage_"].cc-harness-msg) > :not([class*="userMessage_"]){display:none !important;}
 /* Native RTL quirk fix: Show less is an in-flow flex child (justify-content:flex-end), so in RTL prose flex-end resolves to the LEFT corner while the absolute Show more sits right - the two buttons end up at opposite corners. Forcing LTR on the button row pins both to the right. */
 [class*="userMessage_"] [class*="buttonContainer_"]{direction:ltr !important;}
-/* Settings-menu on/off switches (Thinking, Switch models on flag, Remote control): the native ON track is background:var(--app-accent-color), which resolves to --vscode-inputOption-activeBorder, and the built-in themes leave that token a near-black gray (#2a2b2c on Dark Modern) - DARKER than the OFF track (--app-input-border, #333536) - so ON and OFF render identically and the only tell is the 14px thumb offset. Paint the ON track with the theme button accent, and the thumb with its PAIRED foreground rather than a hardcoded white: every theme defines button-foreground as contrasting with button-background, so this survives a light or white button colour, where a fixed white thumb would vanish - the same theme-token assumption that caused the original bug. Track/thumb classes are hashed per build, so match by prefix; the thumb is a child of the track, so the second rule only touches switches that are ON. */
-[class*="trackOn_"]{background:var(--vscode-button-background,#0078d4) !important;}
-[class*="trackOn_"] [class*="thumb_"]{background:var(--vscode-button-foreground,#fff) !important;}
 /* Advisory usage-limit banner. The class is put on by the JS scan below, which is the whole point: the SAME banner component renders both the advisory warning and the hard "you've hit your limit" stop, and only the text tells them apart - so this cannot be a :has([class*="usageLink_"]) rule, which would swallow the hard stop too. The banner class is hashed per build and is shared with the settings-error and browser-connection banners, hence the .cc-usage-warn qualifier rather than a bare prefix match. */
 [class*="banner_"].cc-usage-warn{display:none !important;}
 $CSS_END
@@ -315,13 +329,19 @@ CSSPATCH
     # (scrollHeight > maxHeight -> collapsed class + fade gradient + Show more).
     # Our CSS only overrides the DISPLAY cap, so every message between 60px and
     # the CSS cap rendered fully yet still wore a pointless fade + Show more.
-    # Patch the one call site (",maxHeight:60}" appears exactly once in the
-    # bundle) to read our runtime global, with the conf value baked in as the
-    # fallback for renders that happen before our appended block runs.
-    # Idempotent: the patched text no longer contains ",maxHeight:60}". If a
-    # future bundle changes the literal, the sed no-ops and behavior falls back
-    # to the old display-only override (CSS) - degraded but never broken.
-    sed -i 's@,maxHeight:60}@,maxHeight:window.__ccUserMsgMaxH||'"$USER_MSG_MAX_H"'}@' "$jstmp"
+    # Patch the call sites to read our runtime global, with the conf value baked
+    # in as the fallback for renders that happen before our appended block runs.
+    # Two shapes, because the prop order is not ours to rely on: older bundles
+    # passed it last (",maxHeight:60}", one call site), newer ones pass it first
+    # ("F(<comp>,{maxHeight:60,children:...", two call sites - regular prompts
+    # and slash-command prompts, both inside the userMessage box). The first
+    # shape silently stopped matching when the order flipped, and the fade came
+    # back on every message taller than about 3 lines. maxHeight:60 appears
+    # nowhere else in the bundle.
+    # Idempotent: the patched text contains neither shape any more. If a future
+    # bundle changes the literal again, the sed no-ops and behavior falls back
+    # to the display-only override (CSS) - degraded but never broken.
+    sed -i -E 's@\(([A-Za-z_$][A-Za-z0-9_$]*),\{maxHeight:60,@(\1,{maxHeight:window.__ccUserMsgMaxH||'"$USER_MSG_MAX_H"',@g; s@,maxHeight:60\}@,maxHeight:window.__ccUserMsgMaxH||'"$USER_MSG_MAX_H"'}@g' "$jstmp"
 
     # ── Copy Link -> absolute path ──────────────────────────────────────
     # The link context menu's "Copy Link" writes the RAW href to the clipboard.
@@ -450,16 +470,52 @@ CSSPATCH
   /* Assistant io_message — fired ONCE per API call. message.usage = that call's actual
      context size. Direct display (no max tracking) — assistant usage is accurate and grows
      monotonically as the conversation grows. Duplicate events (streaming partial + final)
-     are filtered by comparing against the last displayed value. */
+     are filtered by comparing against the last displayed value.
+     Sub-agent calls (parent_tool_use_id set) are skipped: their usage is the sub-agent's
+     own context, not this chat's, and it made the badge jump while one ran.
+     The cap is the model's REAL context window, read from the result io_message
+     (modelUsage[<model>].contextWindow - the figure the extension's own indicator uses).
+     The name-based guess only covers the first turn of a chat, before any result. */
   if(SHOW_CONTEXT){
     var lastCtxRaw=-1;
+    var winByModel={};   /* model id without [..] suffix -> context window */
+    function normModel(s){return String(s||'').toLowerCase().replace(/\[[^\]]*\]$/,'');}
+    function capFor(model,raw){
+      var w=winByModel[normModel(model)];
+      if(w)return w;
+      /* Fallback guess: Opus/Fable are 1M; a [1m] tag is 1M; usage >200K = 1M */
+      return (/opus|fable/i.test(model)||/\[1m\]/i.test(model)||raw>200000)?1000000:200000;
+    }
+    function renderCtx(){
+      if(lastCtxRaw<0)return;
+      var x=document.getElementById('claude-ui-context-badge');
+      if(!x)return;
+      var raw=lastCtxRaw, cap=capFor(currentModel,raw);
+      var pct=Math.round(raw*100/cap);
+      x.textContent=fmtTokens(raw)+' / '+fmtCap(cap)+' ('+pct+'%)';
+      var col=pct>=50?'#f14c4c':pct>=40?'#e8ab3a':pct>=30?'#e8d24f':'#3dc9b0';
+      x.style.color=col;
+      x.style.borderColor=col;
+    }
     window.addEventListener('message',function(e){
       var d=e.data;
       if(!d||d.type!=='from-extension')return;
       var msg=d.message;
       if(!msg||msg.type!=='io_message')return;
       var m=msg.message;
-      if(!m||m.type!=='assistant')return;
+      if(!m)return;
+      if(m.type==='result'&&m.modelUsage){
+        for(var k in m.modelUsage){
+          var mu=m.modelUsage[k], w=mu&&mu.contextWindow;
+          if(w>0){
+            winByModel[normModel(k)]=w;
+            if(mu.canonicalModel)winByModel[normModel(mu.canonicalModel)]=w;
+          }
+        }
+        renderCtx();
+        return;
+      }
+      if(m.type!=='assistant'||m.parent_tool_use_id)return;
       var aMsg=m.message;
       if(!aMsg||!aMsg.usage)return;
       if(aMsg.model)currentModel=aMsg.model;
@@ -470,16 +526,34 @@ CSSPATCH
       if(raw===0)return;
       if(raw===lastCtxRaw)return; /* dedupe identical streaming events */
       lastCtxRaw=raw;
-      /* 1M detection: Opus/Fable are always 1M; models with [1m] tag are 1M; usage >200K = 1M */
-      var is1M=/opus|fable/i.test(currentModel)||/\[1m\]/i.test(currentModel)||raw>200000;
-      var cap=is1M?1000000:200000;
-      var pct=Math.round(raw*100/cap);
-      var x=document.getElementById('claude-ui-context-badge');
-      if(!x)return;
-      x.textContent=fmtTokens(raw)+' / '+fmtCap(cap)+' ('+pct+'%)';
-      var col=pct>=50?'#f14c4c':pct>=40?'#e8ab3a':pct>=30?'#e8d24f':'#3dc9b0';
-      x.style.color=col;
-      x.style.borderColor=col;
+      renderCtx();
+    });
+  }
+
+  /* Hover tooltip on the context badge: how much is left before auto-compact.
+     The point where Claude Code compacts is not the model's full window - it is
+     the window minus the autocompact buffer, and an autoCompactWindow setting
+     moves it. The CLI's own get_context_usage answer already carries it: its
+     "Free space" category is exactly what is left until auto-compact, and
+     rawMaxTokens minus the "Autocompact buffer" category is where it fires.
+     Fetched on hover (throttled), not per turn, so it costs nothing unless
+     someone looks. */
+  var ctxTipAt=0;
+  function refreshCtxTip(el){
+    if(Date.now()-ctxTipAt<5000)return;
+    ctxTipAt=Date.now();
+    fetchContextUsage(function(u){
+      var t='Context window usage (per-chat)';
+      if(u&&u.categories){
+        var free=null, buf=null;
+        u.categories.forEach(function(c){
+          if(c.name==='Free space')free=c.tokens;
+          else if(c.name==='Autocompact buffer')buf=c.tokens;
+        });
+        if(free!=null&&buf!=null&&u.rawMaxTokens)t+='\n'+fmtTokens(free)+' left until auto-compact (at '+fmtTokens(u.rawMaxTokens-buf)+')';
+        else if(free!=null)t+='\n'+fmtTokens(free)+' free';
+      }
+      el.title=t+'\nRight-click: full breakdown';
     });
   }
 
@@ -492,13 +566,12 @@ CSSPATCH
     var el=document.getElementById(ID);
     if(!getBorder()){
       if(!el){el=document.createElement('style');el.id=ID;document.head.appendChild(el);}
-      el.textContent='[class*="userMessage_"]{border:none !important;}.interactive-request .chat-markdown-part{border:none !important;}';
+      el.textContent='[class*="userMessage_"]{border:none !important;}';
     } else { if(el)el.remove(); }
   }
 
   function navigate(dir){
-    /* skip harness-injected notifications (cc-harness-msg, tagged by the collapse scan) - navigation is for the user's own prompts */
-    var msgs=Array.from(document.querySelectorAll('[class*="message_"][class*="userMessageContainer_"]')).filter(function(m){return !m.querySelector('.cc-harness-msg');});
+    var msgs=Array.from(document.querySelectorAll('[class*="message_"][class*="userMessageContainer_"]'));
     if(!msgs.length)return;
     if(navIdx<0||navIdx>=msgs.length) navIdx=dir===-1?msgs.length-1:0;
     else { navIdx+=dir; if(navIdx<0)navIdx=0; if(navIdx>=msgs.length)navIdx=msgs.length-1; }
@@ -744,7 +817,7 @@ CSSPATCH
       e.preventDefault(); e.stopPropagation();
       var scroller=document.querySelector('[class*="messagesContainer_"]');
       if(scroller&&scroller.lastElementChild){scroller.lastElementChild.scrollIntoView({behavior:'smooth',block:'end'});}
-      var msgs=Array.from(document.querySelectorAll('[class*="message_"][class*="userMessageContainer_"]')).filter(function(m){return !m.querySelector('.cc-harness-msg');});
+      var msgs=document.querySelectorAll('[class*="message_"][class*="userMessageContainer_"]');
       navIdx=msgs.length-1;
     });
     end.addEventListener('contextmenu',showToggle);
@@ -775,6 +848,7 @@ CSSPATCH
       ctx.title='Context window usage (per-chat) - right-click: full breakdown';
       ctx.style.cssText='font-size:10px;font-weight:700;padding:2px 5px;border:1px solid #3dc9b0;border-radius:3px;line-height:1;cursor:context-menu;margin-left:4px;align-self:center;color:#3dc9b0;display:inline-flex;';
       ctx.addEventListener('contextmenu',showVersionPopup);
+      ctx.addEventListener('mouseenter',function(){refreshCtxTip(ctx);});
       nav.appendChild(ctx);
     }
 
@@ -1003,10 +1077,6 @@ CSSPATCH
    the 300ms scan re-applies it after every re-render (two identical prompts
    share fate - acceptable). The button is skipped on single-line prompts
    (nothing to fold), measured against the content's computed line-height.
-   The same scan also tags harness-injected notifications (task-notification
-   & co, sent into the conversation as user-role messages) with cc-harness-msg
-   so the CSS can un-border them - that tagging runs even when the collapse
-   button is conf'd off.
    Also publishes the conf'd collapse threshold for the bundle-body maxHeight
    patch (window.__ccUserMsgMaxH) - keep this OUTSIDE the flag gate so disabling
    the button never un-fixes the collapse-decision alignment. */
@@ -1014,7 +1084,6 @@ CSSPATCH
   window.__ccUserMsgMaxH=parseInt('__USER_MSG_MAX_H__',10)||175;
   var BTN_ON='__USER_MSG_MINIMIZE__'==='true';
   var MIN='cc-msg-min';
-  var HARNESS=/^\s*<(task-notification|system-reminder|local-command-stdout|command-name|command-message)\b/;
   var folded={};   /* text-hash -> true; survives re-renders, resets on reload */
   /* Holding Alt switches the action to ALL prompts; the visible label says so
      live ("Collapse" <-> "Collapse all") while the key is down. Window blur
@@ -1077,11 +1146,6 @@ CSSPATCH
       var cont=box.querySelector('[class*="expandableContainer_"]');
       var c=contentOf(box);
       if(!cont||!c)continue;
-      var isHarness=HARNESS.test(c.textContent||'');
-      box.classList.toggle('cc-harness-msg',isHarness);
-      /* Never dress a harness notification with OUR collapse button - it is not
-         the user's prompt. Strip any leftover button/fold state and skip it. */
-      if(isHarness){var stale=box.querySelector('.cc-msg-minbtn');if(stale)stale.remove();box.classList.remove(MIN);continue;}
       if(!BTN_ON)continue;
       var on=!!folded[keyOf(c)];
       box.classList.toggle(MIN,on);
@@ -1348,6 +1412,81 @@ CSSPATCH
     check();
   }catch(err){ /* never break the bundle */ }
 })();
+
+/* ── Arrow-key prompt history only from an EMPTY box ──────────────────
+   The prompt box recalls earlier prompts terminal-style (the composer's
+   history hook, cycleMessage, called from its onKeyDown): ArrowUp with the
+   caret on the very first character swaps the whole box for the previous
+   prompt, ArrowDown with the caret on the very last character steps forward
+   again. On a draft that is a trap. ArrowUp on the top line first parks the
+   caret at the start, and the NEXT ArrowUp replaces everything. The draft is
+   kept in memory, but it only comes back through ArrowDown from the very END
+   of the recalled text, and the recall leaves the caret at the START - so one
+   ArrowDown just moves the caret and the draft looks gone. Ctrl+Z cannot help:
+   the swap is a textContent assignment, not an edit, so it never enters the
+   undo stack. And the kept draft is dropped for good once the box is emptied
+   or a prompt is sent. Shift does not stop it either (Shift+ArrowUp from a
+   selection that already starts at 0 recalls too).
+
+   The rule here: history may be ENTERED only from an empty box, and browsed
+   only while the recalled prompt is untouched. Once it is edited, both arrows
+   go back to plain caret keys. The key is swallowed at window capture phase,
+   so React's root listener never sees it. No preventDefault: the caret is
+   already at the edge, so the browser's own move is a no-op anyway.
+
+   The edge test mirrors the native one exactly (offset 0 / full length,
+   inside the first child), so we only ever touch a keypress the history would
+   have taken. An open suggestion list (slash commands, @-mentions) owns the
+   arrows, so it is left alone, and so are Ctrl/Alt/Meta chords - the webview
+   forwards those to VSCode keybindings. */
+;(function(){
+  try{
+    if('__HISTORY_ONLY_WHEN_EMPTY__'!=='true')return;
+    var SEL='[aria-label="Message input"][contenteditable]';
+    var owner=null;          /* composer the state below belongs to */
+    var recall=false;        /* history entered from an empty box */
+    var edited=false;        /* ...and the recalled prompt was changed since */
+    function own(el){ if(el!==owner){owner=el;recall=false;edited=false;} }
+    function listOpen(el){
+      if(el.getAttribute('aria-controls'))return true;
+      var l=document.querySelectorAll('[role="listbox"],[role="menu"]');
+      for(var i=0;i<l.length;i++){ if(l[i].getClientRects().length)return true; }
+      return false;
+    }
+    window.addEventListener('keydown',function(e){
+      try{
+        if(e.key!=='ArrowUp'&&e.key!=='ArrowDown')return;
+        if(e.ctrlKey||e.altKey||e.metaKey||e.isComposing)return;
+        var el=(e.target&&e.target.closest)?e.target.closest(SEL):null;
+        if(!el)return;
+        own(el);
+        var text=el.textContent||'';
+        if(text.trim()===''){ if(e.key==='ArrowUp'){recall=true;edited=false;} return; }
+        if(listOpen(el))return;
+        var s=window.getSelection();
+        if(!s||!s.rangeCount)return;
+        var r=s.getRangeAt(0), first=el.firstChild||el;
+        if(e.key==='ArrowUp'){
+          if(!(r.startOffset===0&&r.startContainer===first))return;
+          if(recall&&!edited)return;      /* browsing an untouched recall */
+        }else{
+          if(!(r.endContainer===first&&r.endOffset===text.length))return;
+          if(!(recall&&edited))return;    /* nothing of ours to lose */
+        }
+        e.stopImmediatePropagation(); e.stopPropagation();
+      }catch(_){}
+    },true);
+    window.addEventListener('input',function(e){
+      try{
+        var el=(e.target&&e.target.closest)?e.target.closest(SEL):null;
+        if(!el)return;
+        own(el);
+        if((el.textContent||'').trim()===''){recall=false;edited=false;}
+        else if(recall)edited=true;
+      }catch(_){}
+    },true);
+  }catch(err){ /* never break the bundle */ }
+})();
 JSPATCH
 
     cat >> "$jstmp" << 'JSEND'
@@ -1362,6 +1501,7 @@ JSEND
     sed -i "s|__USER_MSG_MINIMIZE__|$USER_MSG_MINIMIZE|g" "$jstmp"
     sed -i "s|__COMPOSER_AUTOFOCUS__|$COMPOSER_AUTOFOCUS|g" "$jstmp"
     sed -i "s|__HIDE_USAGE_WARNING__|$HIDE_USAGE_WARNING|g" "$jstmp"
+    sed -i "s|__HISTORY_ONLY_WHEN_EMPTY__|$HISTORY_ONLY_WHEN_EMPTY|g" "$jstmp"
     sed -i "s|__UI_SIG__|$UI_MARKER|g" "$jstmp"
     sed -i "s|__UI_VERSION__|$VERSION|g" "$jstmp"
     # The changelog JS array (built up top; apostrophes already U+2019-swapped,
