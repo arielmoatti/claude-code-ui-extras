@@ -16,10 +16,11 @@ export PATH
 # " \ | &  - ASCII apostrophes are auto-swapped to U+2019 so they can't break
 # the JS strings. Notes are benefit-only and capped at 3 rendered lines - see
 # PROJECTS.md in the repo for the authoring rule.
-COMPATIBLE_EXT_VERSION="2.1.310"
-CHANGELOG_VERS=(  "1.39.0" "1.38.0" "1.37.0" "1.36.0" "1.35.0" "1.34.0" "1.33.0" "1.32.0" "1.30.0" "1.29.0" "1.28.0" "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
-CHANGELOG_MAJOR=( "1"      "0"      "0"      "1"      "0"   "0"      "0"      "1"   "0"    "1"      "1"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
+COMPATIBLE_EXT_VERSION="2.1.331"
+CHANGELOG_VERS=(  "1.40.0" "1.39.0" "1.38.0" "1.37.0" "1.36.0" "1.35.0" "1.34.0" "1.33.0" "1.32.0" "1.30.0" "1.29.0" "1.28.0" "1.27.0" "1.26.0" "1.25.0" "1.24.0" "1.23.0" "1.22.0" "1.21.0" "1.20.0" "1.19.0" "1.18.0" "1.17.1" "1.17.0" "1.16.0" "1.15.0" "1.14.0" "1.13.0" "1.12.0" "1.11.0" "1.10.0" "1.9.0" "1.8.0" "1.7.0" "1.6.0" "1.5.0" )
+CHANGELOG_MAJOR=( "1"      "1"      "0"      "0"      "1"     "0"   "0"      "0"      "1"   "0"    "1"      "1"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "1"      "0"      "1"      "0"      "0"      "0"      "1"      "0"      "0"      "1"      "1"      "0"      "0"     "0"     "0"     "1"     "1"     )
 CHANGELOG_NOTES=(
+  "הכפתור שקופץ לתחתית השיחה עובד שוב, גם בגרסה החדשה של Claude Code."
   "מד הקונטקסט מציג את גודל החלון האמיתי, ובריחוף כמה נשאר עד דחיסה אוטומטית."
   "הצבע למתגים והטיפול בהודעות מערכת ירדו. התוסף עושה את שניהם בעצמו."
   "הודעה שמוצגת במלואה כבר לא מקבלת הצללה וכפתור Show more מיותר."
@@ -815,8 +816,12 @@ CSSPATCH
     var end=document.createElement('button'); end.title='Jump to bottom (⤓)'; end.innerHTML=END;
     end.addEventListener('click',function(e){
       e.preventDefault(); e.stopPropagation();
-      var scroller=document.querySelector('[class*="messagesContainer_"]');
-      if(scroller&&scroller.lastElementChild){scroller.lastElementChild.scrollIntoView({behavior:'smooth',block:'end'});}
+      /* Scroll the conversation box itself, never its last child: since 2.1.331
+         that child is a display:contents wrapper with no box of its own, and
+         scrollIntoView on it is a silent no-op. Prefer the main conversation
+         (role=region) over any other messagesContainer on the page. */
+      var scroller=document.querySelector('[role="region"][class*="messagesContainer_"]')||document.querySelector('[class*="messagesContainer_"]');
+      if(scroller){scroller.scrollTo({top:scroller.scrollHeight,behavior:'smooth'});}
       var msgs=document.querySelectorAll('[class*="message_"][class*="userMessageContainer_"]');
       navIdx=msgs.length-1;
     });
